@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- iOS aur Android ke liye perfect scaling aur no-zoom -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TRUE INVEST CRM - Elite Navy & Gold</title>
     
@@ -90,7 +91,6 @@
             text-rendering: optimizeLegibility;
             -webkit-tap-highlight-color: transparent; 
             min-height: 100dvh;
-            transition: background 0.3s ease, color 0.3s ease;
         }
 
         * { box-sizing: border-box; outline: none; }
@@ -143,20 +143,16 @@
         }
         .animate-fire { animation: fireFlicker 1.5s infinite ease-in-out; display: inline-block; color: var(--notify-red); }
         
-        /* PULSE DOT FOR STALE LEADS */
-        .pulse-dot { display: inline-block; width: 8px; height: 8px; background: var(--notify-red); border-radius: 50%; box-shadow: 0 0 0 0 rgba(220,38,38,0.7); animation: alertPulse 1.5s infinite; margin-left: 6px; vertical-align: middle;}
-        @keyframes alertPulse { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.7); } 70% { box-shadow: 0 0 0 6px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
-
         .glass-panel { 
             background: var(--card-bg); border: 1px solid var(--border-color); 
             box-shadow: var(--shadow-sm); border-radius: 20px; 
-            transition: box-shadow 0.3s var(--ease-apple), transform 0.3s var(--ease-apple), background-color 0.3s ease, border-color 0.3s ease; 
+            transition: box-shadow 0.3s var(--ease-apple), transform 0.3s var(--ease-apple); 
         }
         .glass-panel:hover { box-shadow: var(--shadow-lg); }
 
         .workspace-layout { display: flex; flex-direction: column; gap: 20px; max-width: 1800px; margin: 0 auto; padding: 20px; padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(30px, env(safe-area-inset-bottom)); width: 100%; min-height: 100dvh;}
 
-        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--nav-bg); border-radius: 20px; margin-bottom: 4px; width: 100%; border: 1px solid var(--border-color); border-bottom: 3px solid var(--golden); box-shadow: 0 8px 25px rgba(10,25,47,0.04); transition: background-color 0.3s ease;}
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--nav-bg); border-radius: 20px; margin-bottom: 4px; width: 100%; border: 1px solid var(--border-color); border-bottom: 3px solid var(--golden); box-shadow: 0 8px 25px rgba(10,25,47,0.04); }
         h1.main-title { font-size: 1.5rem; font-weight: 900; margin: 0; color: var(--text-color); letter-spacing: 0.5px; display: flex; align-items: center; transition: opacity 0.2s; }
         h1.main-title:active { opacity: 0.7; }
         h1.main-title span.brand { background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-right: 6px;}
@@ -179,7 +175,7 @@
         .expandable-stat-pill span { font-size: 15px; font-weight: 900; color: var(--text-color); }
         .expandable-stat-pill.hot span { color: var(--notify-red); }
 
-        .notification-btn { position: relative; height:44px; width:44px; padding:0; border-radius:50%; font-size:20px; margin:0; display:flex; align-items:center; justify-content:center; color: var(--text-color); border: 1.5px solid var(--border-color); background: var(--nav-bg); cursor: pointer; transition: border-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), background-color 0.3s ease; }
+        .notification-btn { position: relative; height:44px; width:44px; padding:0; border-radius:50%; font-size:20px; margin:0; display:flex; align-items:center; justify-content:center; color: var(--text-color); border: 1.5px solid var(--border-color); background: var(--nav-bg); cursor: pointer; transition: border-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce); }
         .notification-btn:hover { border-color: var(--golden); color: var(--golden-dark); transform: translateY(-3px); }
         .notification-btn:active { transform: scale(0.92); }
         .notification-badge { position: absolute; top: -2px; right: -2px; background: var(--notify-red); color: white; font-size: 10px; font-weight: 900; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--nav-bg); line-height: 1; display: none; }
@@ -201,8 +197,22 @@
         .login-card { max-width: 420px; margin: 15vh auto; text-align: center; animation: popIn 0.6s var(--ease-bounce) both; }
 
         label { display: block; font-size: 12px; font-weight: 800; margin-bottom: 6px; color: var(--text-color); opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;}
-        input, textarea, button, select { padding: 14px 16px; margin: 0 0 16px 0; width: 100%; border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--input-bg); color: var(--text-color); font-size: 14px; font-weight: 600; box-sizing: border-box; transition: border-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple); }
-        input[type="date"], input[type="time"], select { height: 50px; appearance: none; -webkit-appearance: none; cursor: pointer; }
+        
+        /* iOS ZOOM FIX & CROSS-PLATFORM NORMALIZATION */
+        input, textarea, select { 
+            font-size: 16px !important; /* Strict 16px prevents iOS Auto-Zoom */
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        button {
+            -webkit-appearance: none;
+            appearance: none;
+            display: flex; align-items: center; justify-content: center; gap: 6px; /* Perfect Icon/Text alignment */
+        }
+
+        input, textarea, button, select { padding: 14px 16px; margin: 0 0 16px 0; width: 100%; border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--input-bg); color: var(--text-color); font-weight: 600; box-sizing: border-box; transition: border-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple); }
+        button { font-size: 15px; } /* Buttons can safely remain 15px */
+        input[type="date"], input[type="time"], select { height: 50px; cursor: pointer; }
         input:focus, select:focus, textarea:focus { border-color: var(--golden); outline: none; background: var(--card-bg); box-shadow: 0 4px 15px rgba(197, 160, 89, 0.1); }
         
         select option[value="ADD_NEW"] { font-weight: 900; color: var(--golden-dark); background: #FFFBEB;}
@@ -213,20 +223,20 @@
 
         .segmented-control { display: flex; gap: 6px; background: var(--input-bg); padding: 4px; border-radius: 12px; border: 1.5px solid var(--border-color); margin-bottom: 16px; transition: background-color 0.3s var(--ease-apple); }
         .segmented-control input[type="radio"] { display: none; }
-        .segmented-control label { flex: 1; text-align: center; padding: 12px 0; margin: 0; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; color: #64748B; transition: color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), box-shadow 0.3s var(--ease-apple); letter-spacing: 0.5px; text-transform: uppercase; }
+        .segmented-control label { flex: 1; display: flex; align-items: center; justify-content: center; padding: 12px 0; margin: 0; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; color: #64748B; transition: color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), box-shadow 0.3s var(--ease-apple); letter-spacing: 0.5px; text-transform: uppercase; }
         .segmented-control label:hover { color: var(--text-color); }
         .segmented-control input[type="radio"]:checked + label { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .segmented-control input[type="radio"]:checked + .seg-hot { background: var(--hot-bg); color: var(--hot-text); border: 1px solid rgba(185, 28, 28, 0.2); }
         .segmented-control input[type="radio"]:checked + .seg-warm { background: #FFFBEB; color: #B45309; border: 1px solid rgba(180, 83, 9, 0.2); }
         .segmented-control input[type="radio"]:checked + .seg-cold { background: var(--cold-bg); color: var(--cold-text); border: 1px solid rgba(51, 65, 85, 0.2); }
 
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-block; border: 1px solid transparent; letter-spacing: 0.3px;}
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; letter-spacing: 0.3px;}
         .status-hot { background: var(--hot-bg); color: var(--hot-text); border-color: rgba(185, 28, 28, 0.2); }
         .status-closed { background: var(--closed-bg); color: var(--closed-text); border-color: rgba(22, 163, 74, 0.2); }
         .status-cold { background: var(--cold-bg); color: var(--cold-text); border-color: var(--border-color); }
         .status-default { background: var(--input-bg); color: var(--text-color); border-color: var(--border-color); }
         
-        .temp-badge, .score-badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-left: 6px; display: inline-block; vertical-align: middle;}
+        .temp-badge, .score-badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;}
         .score-badge { border: 1px solid; }
 
         .check-item { display: flex; align-items: center; gap: 12px; background: var(--input-bg); padding: 12px 16px; border-radius: 12px; border: 1.5px solid var(--border-color); margin-bottom: 16px; height: 50px; transition: border-color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), transform 0.2s var(--ease-apple); cursor: pointer; }
@@ -246,18 +256,18 @@
         .btn-secondary:active { transform: scale(0.96); }
 
         .controls-row { display: flex; gap: 10px; align-items: center; padding: 14px 16px; margin-bottom: 0; width: 100%; flex-wrap: wrap;}
-        .search-box { margin: 0; flex-grow: 1; border: 1.5px solid var(--border-color); height: 44px; border-radius: 12px; padding-left: 40px; font-weight: 600; font-size: 14px; background: var(--input-bg) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512"><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="%2394A3B8" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="%2394A3B8" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M338.29 338.29L448 448"/></svg>') no-repeat 14px center; transition: border-color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple); min-width: 200px;}
+        .search-box { margin: 0; flex-grow: 1; border: 1.5px solid var(--border-color); height: 44px; border-radius: 12px; padding-left: 40px; font-weight: 600; font-size: 16px !important; background: var(--input-bg) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512"><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="%2394A3B8" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="%2394A3B8" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M338.29 338.29L448 448"/></svg>') no-repeat 14px center; transition: border-color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple); min-width: 200px;}
         .search-box:focus { border-color: var(--golden); background-color: var(--card-bg); box-shadow: 0 4px 15px rgba(197, 160, 89, 0.12); }
         .controls-row button { height: 44px; margin: 0; padding: 0 16px; width: auto; border-radius: 10px; }
 
         .project-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; width: 100%; max-width: max-content; align-items: center; }
-        .tab-wrapper { position: relative; display: inline-flex; align-items: center; }
-        .tab-btn { background: var(--input-bg); color: var(--text-color); border: 1.5px solid var(--border-color); height: 34px; font-size: 13px; font-weight: 700; padding: 0 14px; margin: 0; border-radius: 8px; transition: border-color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), box-shadow 0.3s var(--ease-apple); box-shadow: none; }
+        .tab-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center;}
+        .tab-btn { background: var(--input-bg); color: var(--text-color); border: 1.5px solid var(--border-color); height: 34px; font-size: 13px; font-weight: 700; padding: 0 14px; margin: 0; border-radius: 8px; transition: border-color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), box-shadow 0.3s var(--ease-apple); box-shadow: none; display: inline-flex; align-items: center; justify-content: center;}
         .tab-btn:hover { border-color: var(--golden); background-color:var(--card-bg); color: var(--text-color); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(10,25,47,0.08);}
         .tab-btn:active { transform: scale(0.95); }
         .tab-btn.active { background: var(--btn-gradient); color: var(--golden); border-color: var(--golden-dark); font-weight: 800; box-shadow: 0 4px 12px rgba(10,25,47,0.2);}
         
-        .tab-delete-btn { position: absolute; top: -6px; right: -6px; background: var(--notify-red); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; padding: 0; z-index: 10; opacity: 0; transform: scale(0.5); transition: opacity 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), background-color 0.2s; pointer-events: none; font-weight: bold; }
+        .tab-delete-btn { position: absolute; top: -6px; right: -6px; background: var(--notify-red); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; padding: 0; z-index: 10; opacity: 0; transform: scale(0.5); transition: opacity 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), background-color 0.2s; pointer-events: none; font-weight: bold; display: flex; align-items: center; justify-content: center;}
         .tab-wrapper:hover .tab-delete-btn { opacity: 1; transform: scale(1); pointer-events: auto; }
         .tab-delete-btn:hover { background: #991b1b; transform: scale(1.15); }
         .tab-delete-btn:active { transform: scale(0.9); }
@@ -307,7 +317,7 @@
         .cal-day.empty { visibility: hidden; }
         .cal-day.has-leads { border-color: var(--golden); color: var(--golden-dark); background: rgba(197, 160, 89, 0.05); }
         .cal-day.today { background: var(--btn-gradient); color: var(--golden); border: none; }
-        .cal-lead-count { position: absolute; top: -6px; right: -6px; background: var(--notify-red); color: white; font-size: 11px; padding: 3px 7px; border-radius: 12px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .cal-lead-count { position: absolute; top: -6px; right: -6px; background: var(--notify-red); color: white; font-size: 11px; padding: 3px 7px; border-radius: 12px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; }
 
         /* Bulk Action Bar */
         #bulkActionBar {
@@ -327,7 +337,7 @@
         .history-item::before { content: ''; position: absolute; left: -23px; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--golden); border: 2px solid var(--bg-color); box-shadow: 0 0 0 1px var(--golden-light); }
         .history-item:last-child { margin-bottom: 0; }
         
-        .edit-history-btn, .delete-history-btn { cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; transition: background-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.2s var(--ease-bounce); user-select: none; }
+        .edit-history-btn, .delete-history-btn { cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; transition: background-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.2s var(--ease-bounce); user-select: none; display: inline-flex; align-items: center; justify-content: center;}
         .edit-history-btn { color: var(--text-color); }
         .edit-history-btn:hover { background-color: rgba(10, 25, 47, 0.08); color: var(--golden); transform: scale(1.1); }
         .edit-history-btn:active { transform: scale(0.9); }
@@ -411,21 +421,21 @@
         .toast.success { border-left-color: #059669; }
         .toast.error { border-left-color: #DC2626; }
         .toast.warning { border-left-color: var(--golden); }
-        .toast-icon { margin-right: 12px; font-size: 22px; animation: popIn 0.5s var(--ease-bounce) 0.1s both; }
+        .toast-icon { margin-right: 12px; font-size: 22px; display: flex; align-items: center; justify-content: center; animation: popIn 0.5s var(--ease-bounce) 0.1s both; }
 
         .mobile-hint { display: none; font-size: 11px; text-align: center; opacity: 0.6; padding-bottom: 12px; font-weight: 800; color: var(--golden-dark); letter-spacing: 0.5px;}
 
         /* CHIPS CSS */
         .chip-row { display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin-top:8px; scrollbar-width:none;}
         .chip-row::-webkit-scrollbar { display:none; }
-        .chip-btn { padding:8px 12px; border-radius:20px; background:var(--input-bg); border:1px solid var(--border-color); font-size:11px; font-weight:800; color:var(--text-color); cursor:pointer; white-space:nowrap; transition:all 0.2s; height: auto; margin:0; box-shadow:none;}
+        .chip-btn { padding:8px 12px; border-radius:20px; background:var(--input-bg); border:1px solid var(--border-color); font-size:11px; font-weight:800; color:var(--text-color); cursor:pointer; white-space:nowrap; transition:all 0.2s; height: auto; margin:0; box-shadow:none; display: inline-flex; align-items: center; justify-content: center;}
         .chip-btn:hover, .chip-btn:active { background:var(--golden); color:var(--accent-dark); border-color:var(--golden-dark); transform:scale(0.95);}
 
-        /* --- MOBILE OPTIMIZATIONS (GPU Focused & Bottom Nav) --- */
+        /* --- MOBILE OPTIMIZATIONS (GPU Focused & Perfect Safe Areas) --- */
         @media (max-width: 992px) {
             .glass-panel { box-shadow: none !important; border: 1px solid var(--border-color) !important; }
 
-            .workspace-layout { padding: 12px; gap: 16px; overflow-x: hidden; width: 100vw; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: calc(100px + env(safe-area-inset-bottom)); min-height: 100dvh; } /* Extra padding for bottom nav */
+            .workspace-layout { padding: 12px; gap: 16px; overflow-x: hidden; width: 100vw; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: calc(85px + max(10px, env(safe-area-inset-bottom))); min-height: 100dvh; }
             
             .top-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; border-radius: 16px;}
             .top-bar > div { flex-wrap: wrap; justify-content: center !important; gap: 6px; }
@@ -437,13 +447,13 @@
             .expandable-stat-pill span { font-size: 13px; }
             
             .top-bar .btn-secondary, .notification-btn { height: 40px; width: 40px; font-size: 18px; flex-shrink: 0; }
-            #viewToggleBtn { display: none; } /* Hide original toggle on mobile, handled by bottom nav */
+            #viewToggleBtn { display: none; } 
             
             .form-grid { grid-template-columns: 1fr; gap: 0; }
             .form-grid > div { width: 100%; }
 
             .controls-row { display: grid; grid-template-columns: 1fr 1fr; padding: 16px; gap: 10px;}
-            .search-box { grid-column: span 2; width: 100%; margin: 0 !important; height: 46px; font-size: 14px;}
+            .search-box { grid-column: span 2; width: 100%; margin: 0 !important; height: 46px;}
             .controls-row button { margin: 0 !important; width: 100%; height: 44px; font-size: 13px;}
             .controls-row button:last-child { grid-column: span 2; } 
 
@@ -464,24 +474,24 @@
             .toast { width: 100%; min-width: unset; justify-content: center; transform: translateY(-120%); font-size: 13px; border-radius: 16px; }
             .toast.show { transform: translateY(0); }
             
-            .fab-add { display: none !important; } /* Replaced by bottom nav */
+            .fab-add { display: none !important; } 
             
-            #bulkActionBar { width: 90vw; border-radius: 20px; flex-direction: column; bottom: 80px; }
+            #bulkActionBar { width: 90vw; border-radius: 20px; flex-direction: column; bottom: calc(85px + max(10px, env(safe-area-inset-bottom))); }
             #bulkActionBar select, #bulkActionBar button { width: 100%; }
 
             /* NATIVE APP BOTTOM NAVIGATION */
             .mobile-bottom-nav {
                 display: flex; position: fixed; bottom: 0; left: 0; width: 100%;
                 background: var(--nav-bg); border-top: 1px solid var(--border-color);
-                padding-bottom: env(safe-area-inset-bottom); z-index: 9998;
-                justify-content: space-around; align-items: center; height: 65px;
+                padding-bottom: max(10px, env(safe-area-inset-bottom)); z-index: 9998;
+                justify-content: space-around; align-items: center; height: calc(65px + max(10px, env(safe-area-inset-bottom)));
                 box-shadow: 0 -5px 15px rgba(0,0,0,0.05); transition: background-color 0.3s ease;
             }
-            .nav-item { display: flex; flex-direction: column; align-items: center; color: #64748B; font-size: 10px; font-weight: 700; gap: 4px; transition: color 0.2s; cursor: pointer; padding: 5px; min-width: 60px;}
+            .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748B; font-size: 10px; font-weight: 700; gap: 4px; transition: color 0.2s; cursor: pointer; padding: 5px; min-width: 60px;}
             .nav-item.active { color: var(--golden-dark); }
-            .nav-item ion-icon { font-size: 22px; }
+            .nav-item ion-icon { font-size: 22px; display: flex; align-items: center; justify-content: center;}
             .nav-item.fab-wrapper { position: relative; top: -15px; }
-            .nav-item .fab-circle { width: 56px; height: 56px; border-radius: 50%; background: var(--btn-gradient); color: var(--golden); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 10px 20px rgba(10,25,47,0.3); border: 2px solid var(--golden-dark); transition: transform 0.2s;}
+            .nav-item .fab-circle { width: 56px; height: 56px; border-radius: 50%; background: var(--btn-gradient); color: var(--golden); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 10px 20px rgba(10,25,47,0.3); border: 2px solid var(--golden-dark); transition: transform 0.2s; margin: 0; padding: 0;}
             .nav-item .fab-circle:active { transform: scale(0.9); }
         }
 
@@ -676,7 +686,7 @@
         <button class="modal-close" onclick="closeModal('addLeadModal')" style="margin: 16px 16px 0 0; position: absolute; right: 0; top: 0; z-index: 10;">×</button>
         
         <div style="padding: 24px; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
-            <h2 id="leadModalTitle" style="margin-top:0; color:var(--text-color); font-size:20px; font-weight:900;"><ion-icon name="person-add"></ion-icon> Add New Lead</h2>
+            <h2 id="leadModalTitle" style="margin-top:0; color:var(--text-color); font-size:20px; font-weight:900; display:flex; align-items:center; gap:6px;"><ion-icon name="person-add"></ion-icon> Add New Lead</h2>
             
             <form id="clientForm" style="padding:0; box-shadow:none; border:none; background:transparent; animation:none;">
                 <input type="hidden" id="editId" value="">
@@ -736,7 +746,7 @@
 
                 <div class="form-grid">
                     <div><label>Budget</label><input type="text" id="budget" placeholder="e.g. 1.25 Cr" onblur="formatBudgetInput(this)"></div>
-                    <div class="check-item" style="margin-bottom:0; align-items:center;" onclick="document.getElementById('visitDone').click();">
+                    <div class="check-item" style="margin-bottom:0; justify-content:center;" onclick="document.getElementById('visitDone').click();">
                         <input type="checkbox" id="visitDone" onclick="event.stopPropagation();">
                         <label for="visitDone" style="margin:0; cursor:pointer; font-size:14px; font-weight: 800;">Site Visit Done</label>
                     </div>
@@ -774,7 +784,7 @@
     <div class="modal-content glass-panel swipeable-sheet" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div>
         <button class="modal-close" onclick="closeModal('quickFollowupModal')" style="margin-top:10px;">×</button>
-        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900;"><ion-icon name="calendar"></ion-icon> Quick Follow-up</h2>
+        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900; display:flex; align-items:center; gap:6px;"><ion-icon name="calendar"></ion-icon> Quick Follow-up</h2>
         
         <input type="hidden" id="quickFupId">
         
@@ -814,7 +824,7 @@
     <div class="modal-content glass-panel swipeable-sheet" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div>
         <button class="modal-close" onclick="closeModal('assigneeModal')" style="margin-top:10px;">×</button>
-        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900;"><ion-icon name="people"></ion-icon> Team Distribution</h2>
+        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900; display:flex; align-items:center; gap:6px;"><ion-icon name="people"></ion-icon> Team Distribution</h2>
         <p style="font-size:12px; font-weight:700; color:var(--text-color); opacity:0.8; margin-bottom:16px;">Tap any assignee to smartly filter leads. (Based on current view)</p>
         <div id="assigneeStatsContainer" style="display:flex; flex-direction:column; gap:10px; max-height: 50vh; overflow-y: auto; padding-right: 4px;">
             <!-- Injected via JS -->
@@ -826,7 +836,7 @@
     <div class="modal-content glass-panel swipeable-sheet" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div>
         <button class="modal-close" onclick="closeModal('waModal')" style="margin-top:10px;">×</button>
-        <h2 style="margin-top:10px; color:var(--whatsapp-dark); font-size:20px; font-weight:900;"><ion-icon name="logo-whatsapp"></ion-icon> Quick WA</h2>
+        <h2 style="margin-top:10px; color:var(--whatsapp-dark); font-size:20px; font-weight:900; display:flex; align-items:center; gap:6px;"><ion-icon name="logo-whatsapp"></ion-icon> Quick WA</h2>
         <p style="font-size:14px; color:var(--text-color); margin-bottom:20px; font-weight:700; background-color:var(--bg-color); padding:12px; border-radius:12px;" id="waTargetName">Sending to: </p>
         <input type="hidden" id="waTargetPhone">
         
@@ -852,7 +862,7 @@
     <div class="modal-content glass-panel swipeable-sheet" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div>
         <button class="modal-close" onclick="closeModal('historyModal')" style="margin-top:10px;">×</button>
-        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900;"><ion-icon name="time"></ion-icon> Full History</h2>
+        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900; display:flex; align-items:center; gap:6px;"><ion-icon name="time"></ion-icon> Full History</h2>
         <p style="font-size:14px; color:var(--text-color); margin-bottom:12px; font-weight:700; background-color:var(--bg-color); padding:12px; border-radius:12px;" id="historyModalName"></p>
         
         <div class="history-container-box" id="fullHistoryWrapper" style="display:block;">
@@ -873,7 +883,7 @@
     <div class="modal-content glass-panel swipeable-sheet" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div>
         <button class="modal-close" onclick="closeModal('editRemarkModal')" style="margin-top:10px;">×</button>
-        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900;"><ion-icon name="create"></ion-icon> Edit Remark</h2>
+        <h2 style="margin-top:10px; color:var(--text-color); font-size:20px; font-weight:900; display:flex; align-items:center; gap:6px;"><ion-icon name="create"></ion-icon> Edit Remark</h2>
         
         <input type="hidden" id="editRemarkContext">
         <input type="hidden" id="editRemarkTargetId">
