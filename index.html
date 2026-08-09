@@ -90,6 +90,7 @@
             text-rendering: optimizeLegibility;
             -webkit-tap-highlight-color: transparent; 
             min-height: 100dvh;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         * { box-sizing: border-box; outline: none; }
@@ -142,16 +143,20 @@
         }
         .animate-fire { animation: fireFlicker 1.5s infinite ease-in-out; display: inline-block; color: var(--notify-red); }
         
+        /* PULSE DOT FOR STALE LEADS */
+        .pulse-dot { display: inline-block; width: 8px; height: 8px; background: var(--notify-red); border-radius: 50%; box-shadow: 0 0 0 0 rgba(220,38,38,0.7); animation: alertPulse 1.5s infinite; margin-left: 6px; vertical-align: middle;}
+        @keyframes alertPulse { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.7); } 70% { box-shadow: 0 0 0 6px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
+
         .glass-panel { 
             background: var(--card-bg); border: 1px solid var(--border-color); 
             box-shadow: var(--shadow-sm); border-radius: 20px; 
-            transition: box-shadow 0.3s var(--ease-apple), transform 0.3s var(--ease-apple); 
+            transition: box-shadow 0.3s var(--ease-apple), transform 0.3s var(--ease-apple), background-color 0.3s ease, border-color 0.3s ease; 
         }
         .glass-panel:hover { box-shadow: var(--shadow-lg); }
 
         .workspace-layout { display: flex; flex-direction: column; gap: 20px; max-width: 1800px; margin: 0 auto; padding: 20px; padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(30px, env(safe-area-inset-bottom)); width: 100%; min-height: 100dvh;}
 
-        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--nav-bg); border-radius: 20px; margin-bottom: 4px; width: 100%; border: 1px solid var(--border-color); border-bottom: 3px solid var(--golden); box-shadow: 0 8px 25px rgba(10,25,47,0.04); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--nav-bg); border-radius: 20px; margin-bottom: 4px; width: 100%; border: 1px solid var(--border-color); border-bottom: 3px solid var(--golden); box-shadow: 0 8px 25px rgba(10,25,47,0.04); transition: background-color 0.3s ease;}
         h1.main-title { font-size: 1.5rem; font-weight: 900; margin: 0; color: var(--text-color); letter-spacing: 0.5px; display: flex; align-items: center; transition: opacity 0.2s; }
         h1.main-title:active { opacity: 0.7; }
         h1.main-title span.brand { background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-right: 6px;}
@@ -174,7 +179,7 @@
         .expandable-stat-pill span { font-size: 15px; font-weight: 900; color: var(--text-color); }
         .expandable-stat-pill.hot span { color: var(--notify-red); }
 
-        .notification-btn { position: relative; height:44px; width:44px; padding:0; border-radius:50%; font-size:20px; margin:0; display:flex; align-items:center; justify-content:center; color: var(--text-color); border: 1.5px solid var(--border-color); background: var(--nav-bg); cursor: pointer; transition: border-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce); }
+        .notification-btn { position: relative; height:44px; width:44px; padding:0; border-radius:50%; font-size:20px; margin:0; display:flex; align-items:center; justify-content:center; color: var(--text-color); border: 1.5px solid var(--border-color); background: var(--nav-bg); cursor: pointer; transition: border-color 0.3s var(--ease-apple), color 0.3s var(--ease-apple), transform 0.3s var(--ease-bounce), background-color 0.3s ease; }
         .notification-btn:hover { border-color: var(--golden); color: var(--golden-dark); transform: translateY(-3px); }
         .notification-btn:active { transform: scale(0.92); }
         .notification-badge { position: absolute; top: -2px; right: -2px; background: var(--notify-red); color: white; font-size: 10px; font-weight: 900; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--nav-bg); line-height: 1; display: none; }
@@ -364,6 +369,7 @@
             .action-modal-content { border-radius: 24px; padding: 24px; border: 1px solid var(--border-highlight); transform: scale(0.95) translateY(20px); opacity: 0; transition: transform 0.25s var(--ease-bounce), opacity 0.2s var(--ease-smooth); box-shadow: 0 20px 50px rgba(0,0,0,0.3);}
             .action-modal-overlay.active .action-modal-content { transform: scale(1) translateY(0); opacity: 1; }
             .sheet-handle { display: none; }
+            .mobile-bottom-nav { display: none !important; } /* Hide bottom nav on desktop */
         }
         
         .action-btn-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -409,11 +415,17 @@
 
         .mobile-hint { display: none; font-size: 11px; text-align: center; opacity: 0.6; padding-bottom: 12px; font-weight: 800; color: var(--golden-dark); letter-spacing: 0.5px;}
 
-        /* --- MOBILE OPTIMIZATIONS (GPU Focused) --- */
+        /* CHIPS CSS */
+        .chip-row { display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin-top:8px; scrollbar-width:none;}
+        .chip-row::-webkit-scrollbar { display:none; }
+        .chip-btn { padding:8px 12px; border-radius:20px; background:var(--input-bg); border:1px solid var(--border-color); font-size:11px; font-weight:800; color:var(--text-color); cursor:pointer; white-space:nowrap; transition:all 0.2s; height: auto; margin:0; box-shadow:none;}
+        .chip-btn:hover, .chip-btn:active { background:var(--golden); color:var(--accent-dark); border-color:var(--golden-dark); transform:scale(0.95);}
+
+        /* --- MOBILE OPTIMIZATIONS (GPU Focused & Bottom Nav) --- */
         @media (max-width: 992px) {
             .glass-panel { box-shadow: none !important; border: 1px solid var(--border-color) !important; }
 
-            .workspace-layout { padding: 12px; gap: 16px; overflow-x: hidden; width: 100vw; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: calc(30px + env(safe-area-inset-bottom)); min-height: 100dvh; }
+            .workspace-layout { padding: 12px; gap: 16px; overflow-x: hidden; width: 100vw; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: calc(100px + env(safe-area-inset-bottom)); min-height: 100dvh; } /* Extra padding for bottom nav */
             
             .top-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; border-radius: 16px;}
             .top-bar > div { flex-wrap: wrap; justify-content: center !important; gap: 6px; }
@@ -425,6 +437,7 @@
             .expandable-stat-pill span { font-size: 13px; }
             
             .top-bar .btn-secondary, .notification-btn { height: 40px; width: 40px; font-size: 18px; flex-shrink: 0; }
+            #viewToggleBtn { display: none; } /* Hide original toggle on mobile, handled by bottom nav */
             
             .form-grid { grid-template-columns: 1fr; gap: 0; }
             .form-grid > div { width: 100%; }
@@ -451,10 +464,25 @@
             .toast { width: 100%; min-width: unset; justify-content: center; transform: translateY(-120%); font-size: 13px; border-radius: 16px; }
             .toast.show { transform: translateY(0); }
             
-            .fab-add { bottom: max(30px, env(safe-area-inset-bottom)); right: 20px; width: 58px; height: 58px; }
+            .fab-add { display: none !important; } /* Replaced by bottom nav */
             
             #bulkActionBar { width: 90vw; border-radius: 20px; flex-direction: column; bottom: 80px; }
             #bulkActionBar select, #bulkActionBar button { width: 100%; }
+
+            /* NATIVE APP BOTTOM NAVIGATION */
+            .mobile-bottom-nav {
+                display: flex; position: fixed; bottom: 0; left: 0; width: 100%;
+                background: var(--nav-bg); border-top: 1px solid var(--border-color);
+                padding-bottom: env(safe-area-inset-bottom); z-index: 9998;
+                justify-content: space-around; align-items: center; height: 65px;
+                box-shadow: 0 -5px 15px rgba(0,0,0,0.05); transition: background-color 0.3s ease;
+            }
+            .nav-item { display: flex; flex-direction: column; align-items: center; color: #64748B; font-size: 10px; font-weight: 700; gap: 4px; transition: color 0.2s; cursor: pointer; padding: 5px; min-width: 60px;}
+            .nav-item.active { color: var(--golden-dark); }
+            .nav-item ion-icon { font-size: 22px; }
+            .nav-item.fab-wrapper { position: relative; top: -15px; }
+            .nav-item .fab-circle { width: 56px; height: 56px; border-radius: 50%; background: var(--btn-gradient); color: var(--golden); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 10px 20px rgba(10,25,47,0.3); border: 2px solid var(--golden-dark); transition: transform 0.2s;}
+            .nav-item .fab-circle:active { transform: scale(0.9); }
         }
 
         .search-hidden-row { display: none !important; }
@@ -492,7 +520,7 @@
     <button class="btn-secondary" style="height: 44px; margin:0; border-radius: 50%; width: 44px; padding: 0;" onclick="clearBulkSelection()">×</button>
 </div>
 
-<!-- FAB for Adding Leads -->
+<!-- Desktop FAB for Adding Leads -->
 <div class="fab-add" onclick="openAddLeadModal()" title="Add New Lead (Shortcut: ALT+N)">
     <ion-icon name="add"></ion-icon>
 </div>
@@ -550,7 +578,7 @@
                     <span class="notification-badge" id="statFollowBadge">0</span>
                 </button>
 
-                <!-- VIEW TOGGLE BUTTON -->
+                <!-- VIEW TOGGLE BUTTON (Desktop only) -->
                 <button class="notification-btn" id="viewToggleBtn" onclick="toggleView()" title="Switch View (Table/Kanban/Calendar) (Alt+V)">
                     <ion-icon name="grid"></ion-icon>
                 </button>
@@ -616,6 +644,25 @@
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
+        </div>
+    </div>
+    
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <div class="mobile-bottom-nav">
+        <div class="nav-item active" id="navTable" onclick="setViewMode('table')">
+            <ion-icon name="grid"></ion-icon><span>Table</span>
+        </div>
+        <div class="nav-item" id="navKanban" onclick="setViewMode('kanban')">
+            <ion-icon name="list"></ion-icon><span>Board</span>
+        </div>
+        <div class="nav-item fab-wrapper" onclick="openAddLeadModal()">
+            <div class="fab-circle"><ion-icon name="add"></ion-icon></div>
+        </div>
+        <div class="nav-item" id="navCalendar" onclick="setViewMode('calendar')">
+            <ion-icon name="calendar"></ion-icon><span>Calendar</span>
+        </div>
+        <div class="nav-item" onclick="openModal('cleanModal')">
+            <ion-icon name="build"></ion-icon><span>Tools</span>
         </div>
     </div>
 </div>
@@ -714,7 +761,7 @@
                 </div>
                 
                 <button type="submit" id="saveBtn" class="btn-shine">Save Record</button>
-                <button type="button" class="btn-secondary" style="width:100%; margin-top:10px; border-radius:12px;" onclick="resetForm()">Clear Form</button>
+                <button type="button" class="btn-secondary" style="width:100%; margin-top:10px; border-radius:12px;" onclick="resetForm(true)">Clear Form</button>
             </form>
             
             <div class="watermark">SYSTEM DESIGNED BY<br><span style="font-size:12px;">ADITYA PACHAURI</span></div>
@@ -734,8 +781,16 @@
         <label style="margin-top:16px;">Next Follow-up Date</label>
         <input type="date" id="quickFupDate">
         
-        <label>Add Remark (Optional)</label>
-        <textarea id="quickFupRemark" rows="2" placeholder="e.g. 'Client asked to call at 5 PM'" style="resize:vertical;"></textarea>
+        <!-- SMART DATE CHIPS -->
+        <div class="chip-row">
+            <button type="button" class="chip-btn" onclick="setQuickDateChip(1)">+1 Day (Tom)</button>
+            <button type="button" class="chip-btn" onclick="setQuickDateChip(3)">+3 Days</button>
+            <button type="button" class="chip-btn" onclick="setQuickDateChip(7)">+1 Week</button>
+            <button type="button" class="chip-btn" onclick="setQuickDateChip(15)">+15 Days</button>
+        </div>
+        
+        <label style="margin-top:10px;">Add Remark (Optional)</label>
+        <textarea id="quickFupRemark" rows="2" placeholder="e.g. 'Client asked to call at 5 PM'" style="resize:vertical; margin-bottom: 8px;"></textarea>
         
         <button onclick="saveQuickFollowup(event)" class="btn-shine" style="width:100%; margin-top:8px;">Save Update</button>
         <button onclick="clearQuickFollowup(event)" class="btn-secondary" style="width:100%; margin-top:8px; color: var(--notify-red); border-color: rgba(220,38,38,0.3);">🗑️ Delete Follow-up</button>
@@ -944,6 +999,43 @@
         }
     });
 
+    // CRASH-PROOF DRAFT AUTO-SAVE LOGIC
+    function initAutoSave() {
+        const formInputs = document.querySelectorAll('#clientForm input[type="text"], #clientForm input[type="tel"], #clientForm textarea');
+        formInputs.forEach(el => {
+            el.addEventListener('input', () => {
+                const editId = document.getElementById('editId').value;
+                if(!editId) { // Only auto-save new records
+                    const draft = {
+                        name: document.getElementById('name').value,
+                        phone: document.getElementById('phone').value,
+                        budget: document.getElementById('budget').value,
+                        specificUnit: document.getElementById('specificUnit').value,
+                        remark: document.getElementById('newRemark').value
+                    };
+                    localStorage.setItem('crm_lead_draft', JSON.stringify(draft));
+                }
+            });
+        });
+    }
+
+    function checkAndRestoreDraft() {
+        const draftStr = localStorage.getItem('crm_lead_draft');
+        if(draftStr) {
+            try {
+                const draft = JSON.parse(draftStr);
+                if(draft.name || draft.phone || draft.remark) {
+                    if(document.getElementById('name')) document.getElementById('name').value = draft.name || '';
+                    if(document.getElementById('phone')) document.getElementById('phone').value = draft.phone || '';
+                    if(document.getElementById('budget')) document.getElementById('budget').value = draft.budget || '';
+                    if(document.getElementById('specificUnit')) document.getElementById('specificUnit').value = draft.specificUnit || '';
+                    if(document.getElementById('newRemark')) document.getElementById('newRemark').value = draft.remark || '';
+                    showNotification("Unsaved draft restored successfully!", "success");
+                }
+            } catch(e){}
+        }
+    }
+
     window.addEventListener('offline', () => { document.getElementById('networkBanner').classList.add('offline'); haptic('heavy'); });
     window.addEventListener('online', () => { document.getElementById('networkBanner').classList.remove('offline'); haptic('light'); });
 
@@ -972,9 +1064,10 @@
     }
 
     function openAddLeadModal() { 
-        haptic('light'); resetForm(); 
+        haptic('light'); resetForm(false); 
         document.getElementById('leadModalTitle').innerHTML = '<ion-icon name="person-add"></ion-icon> Add New Lead';
         document.getElementById('docSection').style.display = 'none'; // Only show docs in edit mode
+        checkAndRestoreDraft(); // Restore any unsaved typing
         openModal('addLeadModal'); 
     }
     
@@ -1021,6 +1114,14 @@
         document.getElementById('quickFupDate').value = dateVal;
         document.getElementById('quickFupRemark').value = '';
         openModal('quickFollowupModal');
+    }
+
+    // SMART DATE CHIPS LOGIC
+    function setQuickDateChip(daysToAdd) {
+        haptic('light');
+        let d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        d.setDate(d.getDate() + daysToAdd);
+        document.getElementById('quickFupDate').value = formatDateCore(d);
     }
 
     async function saveQuickFollowup(event) {
@@ -1246,6 +1347,8 @@
         if (typeof MobileDragDrop !== 'undefined' && typeof MobileDragDrop.polyfill === 'function') {
             MobileDragDrop.polyfill({ dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride });
         }
+        
+        initAutoSave();
     });
 
     function initNotifications() {
@@ -1394,12 +1497,12 @@
 
     document.addEventListener('focusin', (e) => {
         if (window.innerWidth <= 992 && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
-            document.querySelector('.fab-add').style.display = 'none';
+            document.querySelector('.mobile-bottom-nav').style.display = 'none';
         }
     });
     document.addEventListener('focusout', (e) => {
         if (window.innerWidth <= 992) {
-            document.querySelector('.fab-add').style.display = 'flex';
+            document.querySelector('.mobile-bottom-nav').style.display = 'flex';
         }
     });
 
@@ -1547,6 +1650,13 @@
         }
     }
 
+    function updateNavActiveState(mode) {
+        document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
+        if(mode === 'table') { const n = document.getElementById('navTable'); if(n) n.classList.add('active'); }
+        if(mode === 'kanban') { const n = document.getElementById('navKanban'); if(n) n.classList.add('active'); }
+        if(mode === 'calendar') { const n = document.getElementById('navCalendar'); if(n) n.classList.add('active'); }
+    }
+
     function setViewMode(mode) {
         haptic('light');
         const t = document.getElementById('tableView'); 
@@ -1577,6 +1687,8 @@
             if (toggleBtn) toggleBtn.innerHTML = '<ion-icon name="list"></ion-icon>';
             if (previousMode !== 'calendar') renderCalendar();
         }
+
+        updateNavActiveState(mode);
 
         requestAnimationFrame(() => {
             const searchVal = document.getElementById('search').value.toLowerCase().trim();
@@ -2224,11 +2336,12 @@
             } else haptic('medium'); 
             
             saveSuccess = true;
+            localStorage.removeItem('crm_lead_draft'); // Clear auto-save draft on success
         } catch (err) { showNotification("Error saving lead: " + err.message, 'error'); } 
         finally { 
             btn.disabled = false;
             if (saveSuccess) {
-                resetForm(); 
+                resetForm(true); 
                 closeModal('addLeadModal'); 
             } else { btn.innerText = oldText; }
         }
@@ -2606,6 +2719,13 @@
 
                 const mapLink = c.location || c.projectCategory ? `<a href="https://maps.google.com/?q=${encodeURIComponent(c.location || c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" title="Get Directions" style="text-decoration:none; margin-left: 6px; font-size: 14px;">📍</a>` : '';
 
+                // SMART INACTIVITY PULSE
+                const daysUntouched = Math.floor((Date.now() - (c.updatedAt || 0)) / 86400000);
+                let staleBadge = '';
+                if (daysUntouched >= 7 && c.status !== 'Closed' && c.status !== 'Not Interested') {
+                    staleBadge = `<span class="pulse-dot" title="Untouched for ${daysUntouched} days"></span>`;
+                }
+
                 const safeNameAttr = safeName.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                 const safeProjAttr = sanitizeText(c.projectCategory||'').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                 
@@ -2621,7 +2741,7 @@
                     <td onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" value="${c.id}" onchange="updateBulkBar()" ${isChecked}></td>
                     <td style="opacity:0.4; font-weight:800;">${serial++}</td>
                     <td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td>
-                    <td style="font-weight:800; white-space:nowrap; color:var(--text-color);">${safeName} <br> ${tempBadge} ${scoreBadge}</td>
+                    <td style="font-weight:800; white-space:nowrap; color:var(--text-color);">${safeName} ${staleBadge} <br> ${tempBadge} ${scoreBadge}</td>
                     <td class="copyable" onclick="event.stopPropagation(); copyToClipboard('${c.phone}', 'Phone Number')" title="Tap to copy" style="font-weight:700">${c.phone}</td>
                     <td style="font-size:12px; font-weight:700;">${safeAssign}</td>
                     <td><span class="badge ${badge}">${c.status}</span>${visitBadge}</td>
@@ -2703,6 +2823,13 @@
 
                 const mapLink = c.location || c.projectCategory ? `<a href="https://maps.google.com/?q=${encodeURIComponent(c.location || c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" title="Get Directions" style="text-decoration:none; margin-left: 6px; font-size: 14px;">📍</a>` : '';
 
+                // SMART INACTIVITY PULSE
+                const daysUntouched = Math.floor((Date.now() - (c.updatedAt || 0)) / 86400000);
+                let staleBadge = '';
+                if (daysUntouched >= 7 && c.status !== 'Closed' && c.status !== 'Not Interested') {
+                    staleBadge = `<span class="pulse-dot" title="Untouched for ${daysUntouched} days"></span>`;
+                }
+
                 const div = document.createElement('div');
                 div.className = "k-card"; div.style.cssText = `touch-action: none;`; div.setAttribute("draggable", "true");
                 div.dataset.id = c.id; div.dataset.phone = c.phone; div.dataset.name = safeName; div.dataset.proj = safeProj;
@@ -2710,7 +2837,7 @@
 
                 div.innerHTML = `
                     <div class="k-card-title">
-                        <span style="display:flex; align-items:center;">${safeName} ${tempIcon} ${visitIcon}</span>
+                        <span style="display:flex; align-items:center;">${safeName} ${staleBadge} ${tempIcon} ${visitIcon}</span>
                         <span class="action-dots" style="font-size: 16px; font-weight: bold;" onclick="event.stopPropagation(); triggerActionMenu(this)">⋮</span>
                     </div>
                     <div class="k-card-detail copyable" onclick="event.stopPropagation(); copyToClipboard('${c.phone}', 'Phone')" title="Tap to copy">📞 ${c.phone}</div>
@@ -2973,7 +3100,11 @@
         openModal('addLeadModal');
     }
 
-    function resetForm() {
+    function resetForm(isSuccessfulSave = true) {
+        if(isSuccessfulSave) {
+            localStorage.removeItem('crm_lead_draft'); // Clear draft ONLY if user intentionally clears or saves
+        }
+        
         const form = document.getElementById('clientForm'); if(form) form.reset(); 
         if(document.getElementById('editId')) document.getElementById('editId').value = "";
         if(document.getElementById('saveBtn')) document.getElementById('saveBtn').innerText = "Save Record"; 
