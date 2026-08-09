@@ -73,10 +73,24 @@
             --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        body.dark-mode {
+            --bg-color: #020617; 
+            --card-bg: #0F172A; 
+            --input-bg: #1E293B; 
+            --text-color: #F8FAFC; 
+            --border-color: #334155; 
+            --cold-bg: #1E293B; 
+            --cold-text: #94A3B8;
+            --nav-bg: rgba(15, 23, 42, 0.98);
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3); 
+            --shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.4);
+            --highlight-today: rgba(197, 160, 89, 0.15);
+        }
+
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             pointer-events: none; z-index: -1; opacity: 0.03;
-            background-image: radial-gradient(var(--accent-dark) 1.2px, transparent 1.2px);
+            background-image: radial-gradient(var(--golden) 1.2px, transparent 1.2px);
             background-size: 28px 28px;
         }
 
@@ -90,6 +104,7 @@
             text-rendering: optimizeLegibility;
             -webkit-tap-highlight-color: transparent; 
             min-height: 100dvh;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         * { box-sizing: border-box; outline: none; }
@@ -142,19 +157,19 @@
         .animate-fire { animation: fireFlicker 1.5s infinite ease-in-out; display: inline-block; color: var(--notify-red); }
         
         /* PULSE DOT FOR STALE LEADS */
-        .pulse-dot { display: inline-block; width: 8px; height: 8px; background: var(--notify-red); border-radius: 50%; box-shadow: 0 0 0 0 rgba(220,38,38,0.7); animation: alertPulse 1.5s infinite; vertical-align: middle;}
+        .pulse-dot { display: inline-block; width: 8px; height: 8px; background: var(--notify-red); border-radius: 50%; box-shadow: 0 0 0 0 rgba(220,38,38,0.7); animation: alertPulse 1.5s infinite; margin-left: 6px; vertical-align: middle;}
         @keyframes alertPulse { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.7); } 70% { box-shadow: 0 0 0 6px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
 
         .glass-panel { 
             background: var(--card-bg); border: 1px solid var(--border-color); 
             box-shadow: var(--shadow-sm); border-radius: 20px; 
-            transition: box-shadow 0.3s var(--ease-apple), transform 0.3s var(--ease-apple); 
+            transition: box-shadow 0.3s var(--ease-apple), transform 0.3s var(--ease-apple), background-color 0.3s ease, border-color 0.3s ease; 
         }
         .glass-panel:hover { box-shadow: var(--shadow-lg); }
 
         .workspace-layout { display: flex; flex-direction: column; gap: 20px; max-width: 1800px; margin: 0 auto; padding: 20px; padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(30px, env(safe-area-inset-bottom)); width: 100%; min-height: 100dvh;}
 
-        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--nav-bg); border-radius: 20px; margin-bottom: 4px; width: 100%; border: 1px solid var(--border-color); border-bottom: 3px solid var(--golden); box-shadow: 0 8px 25px rgba(10,25,47,0.04); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: var(--nav-bg); border-radius: 20px; margin-bottom: 4px; width: 100%; border: 1px solid var(--border-color); border-bottom: 3px solid var(--golden); box-shadow: 0 8px 25px rgba(10,25,47,0.04); transition: background-color 0.3s ease;}
         h1.main-title { font-size: 1.5rem; font-weight: 900; margin: 0; color: var(--text-color); letter-spacing: 0.5px; display: flex; align-items: center; transition: opacity 0.2s; }
         h1.main-title:active { opacity: 0.7; }
         h1.main-title span.brand { background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-right: 6px;}
@@ -201,14 +216,14 @@
         
         /* iOS ZOOM FIX & CROSS-PLATFORM NORMALIZATION */
         input, textarea, select { 
-            font-size: 16px !important; 
+            font-size: 16px !important; /* Strict 16px prevents iOS Auto-Zoom */
             -webkit-appearance: none;
             appearance: none;
         }
         button {
             -webkit-appearance: none;
             appearance: none;
-            display: flex; align-items: center; justify-content: center; gap: 6px; 
+            display: flex; align-items: center; justify-content: center; gap: 6px; /* Perfect Icon/Text alignment */
         }
 
         input, textarea, button, select { padding: 14px 16px; margin: 0 0 16px 0; width: 100%; border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--input-bg); color: var(--text-color); font-weight: 600; box-sizing: border-box; transition: border-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple); }
@@ -217,6 +232,7 @@
         input:focus, select:focus, textarea:focus { border-color: var(--golden); outline: none; background: var(--card-bg); box-shadow: 0 4px 15px rgba(197, 160, 89, 0.1); }
         
         select option[value="ADD_NEW"] { font-weight: 900; color: var(--golden-dark); background: #FFFBEB;}
+        body.dark-mode select option[value="ADD_NEW"] { background: #332912; color: #E3CFA8;}
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .flex-row { display: flex; gap: 10px; width: 100%; }
@@ -229,6 +245,7 @@
         .segmented-control input[type="radio"]:checked + label { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .segmented-control input[type="radio"]:checked + .seg-hot { background: var(--hot-bg); color: var(--hot-text); border: 1px solid rgba(185, 28, 28, 0.2); }
         .segmented-control input[type="radio"]:checked + .seg-warm { background: #FFFBEB; color: #B45309; border: 1px solid rgba(180, 83, 9, 0.2); }
+        body.dark-mode .segmented-control input[type="radio"]:checked + .seg-warm { background: #332912; color: #E3CFA8; border-color: rgba(227, 207, 168, 0.2);}
         .segmented-control input[type="radio"]:checked + .seg-cold { background: var(--cold-bg); color: var(--cold-text); border: 1px solid rgba(51, 65, 85, 0.2); }
 
         .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; letter-spacing: 0.3px;}
@@ -278,14 +295,10 @@
 
         .table-container { overflow-x: auto; padding: 0; -webkit-overflow-scrolling: touch; width: 100%; border-radius: 20px; position: relative; min-height: 200px; overscroll-behavior-x: contain; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 950px; overflow: hidden; }
-        
-        /* PERFECT TABLE ALIGNMENT */
-        th, td { padding: 12px 14px; border-bottom: 1px solid var(--border-color); text-align: left; vertical-align: middle; transition: background-color 0.2s var(--ease-smooth); white-space: nowrap;}
-        th { background: var(--input-bg); font-weight: 800; font-size: 12px; color: var(--text-color); text-transform: uppercase; position: sticky; top: 0; z-index: 5; letter-spacing: 0.5px; cursor: pointer; border-bottom: 2px solid var(--border-color); }
-        th:first-child, td:first-child, th:nth-child(2), td:nth-child(2), th:last-child, td:last-child { text-align: center; } /* Center specific columns */
+        th, td { padding: 12px 14px; border-bottom: 1px solid var(--border-color); text-align: center; vertical-align: middle; transition: background-color 0.2s var(--ease-smooth);}
+        th { background: var(--input-bg); font-weight: 800; font-size: 12px; color: var(--text-color); text-transform: uppercase; position: sticky; top: 0; z-index: 5; letter-spacing: 0.5px; cursor: pointer; border-bottom: 2px solid var(--border-color); white-space: nowrap; }
         th:hover { background: var(--border-color); color: var(--text-color); }
-        
-        .date-cell { font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+        .date-cell { white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
 
         tbody tr { cursor: pointer; background-color: transparent; transition: background-color 0.2s var(--ease-smooth); } 
         tbody tr:hover { background-color: var(--input-bg); border-radius: 8px; z-index: 2; position: relative; box-shadow: inset 3px 0 0 var(--golden), inset -3px 0 0 var(--golden); }
@@ -294,6 +307,7 @@
 
         .skeleton-loader { position: absolute; top: 50px; left: 0; width: 100%; height: calc(100% - 50px); background: transparent; overflow: hidden; z-index: 10; border-radius: 0 0 20px 20px; display: flex; align-items: center; justify-content: center; color: var(--text-color); font-weight: 700; letter-spacing: 1px;}
         .skeleton-loader::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%); animation: shimmer 1.5s infinite linear; z-index: -1;}
+        body.dark-mode .skeleton-loader::after { background: linear-gradient(90deg, rgba(15,23,42,0) 0%, rgba(255,255,255,0.05) 50%, rgba(15,23,42,0) 100%); }
         @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
         .kanban-container { display: flex; gap: 16px; overflow-x: auto; padding: 20px; background: transparent; min-height: 500px; -webkit-overflow-scrolling: touch; border-radius: 20px; border: none; overscroll-behavior-x: contain; }
@@ -304,7 +318,7 @@
         .k-card:hover { border-color: var(--golden); transform: translateY(-3px); box-shadow: 0 6px 15px rgba(10, 25, 47, 0.06); }
         .k-card:active { cursor: grabbing; transform: scale(0.96); }
         
-        .k-card-title { font-weight: 800; font-size: 14px; color: var(--text-color); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .k-card-title { font-weight: 800; font-size: 14px; color: var(--text-color); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .k-card-detail { font-size: 12px; color: var(--text-color); opacity: 0.85; margin-bottom: 6px; display:flex; align-items:center; gap:6px; font-weight: 600;}
         
         .kanban-dropzone { min-height: 120px; flex-grow: 1; border-radius: 8px; transition: background-color 0.3s var(--ease-apple), border-color 0.3s var(--ease-apple); max-height: 65vh; overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
@@ -384,7 +398,7 @@
             .action-modal-content { border-radius: 24px; padding: 24px; border: 1px solid var(--border-highlight); transform: scale(0.95) translateY(20px); opacity: 0; transition: transform 0.25s var(--ease-bounce), opacity 0.2s var(--ease-smooth); box-shadow: 0 20px 50px rgba(0,0,0,0.3);}
             .action-modal-overlay.active .action-modal-content { transform: scale(1) translateY(0); opacity: 1; }
             .sheet-handle { display: none; }
-            .mobile-bottom-nav { display: none !important; } 
+            .mobile-bottom-nav { display: none !important; } /* Hide bottom nav on desktop */
         }
         
         .action-btn-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -640,7 +654,7 @@
                             <th onclick="handleSort('budget')">Budget ⇕</th>
                             <th onclick="handleSort('followup')">Follow-up ⇕</th>
                             <th style="max-width: 140px;">Latest Remark</th>
-                            <th style="width: 60px;">Actions</th>
+                            <th style="width: 60px; text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="clientTable"></tbody>
@@ -2450,7 +2464,7 @@
         // Self-Heal: Immediately trigger modal open logic, completely bypassing OS visibility events
         setTimeout(() => { 
             openCallLogModal(); 
-        }, 800); 
+        }, 1000); 
     }
 
     function openCallLogModal() { haptic('medium'); setCallStatus('Connected'); document.getElementById('callLogRemark').value = ""; document.getElementById('callLogModal').classList.add('active'); }
@@ -2786,38 +2800,42 @@
 
                     // Fixed Alignment Wrappers
                     tr.innerHTML = `
-                        <td onclick="event.stopPropagation()" style="text-align:center;"><input type="checkbox" class="bulk-cb" value="${c.id}" onchange="updateBulkBar()" ${isChecked}></td>
-                        <td style="opacity:0.4; font-weight:800; text-align:center;">${serial++}</td>
+                        <td onclick="event.stopPropagation()"><div style="display:flex; align-items:center; justify-content:center;"><input type="checkbox" class="bulk-cb" value="${c.id}" onchange="updateBulkBar()" ${isChecked}></div></td>
+                        <td style="opacity:0.4; font-weight:800;">${serial++}</td>
                         <td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td>
-                        <td style="font-weight:800; color:var(--text-color);">
-                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:5px;">${safeName} ${staleBadge}</div>
-                            <div style="display:flex; align-items:center; gap:4px;">${tempBadge} ${scoreBadge}</div>
+                        <td style="font-weight:800; white-space:nowrap; color:var(--text-color); vertical-align:middle;">
+                            <div style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;">
+                                <span style="display:flex; align-items:center; gap:4px;">${safeName} ${staleBadge}</span>
+                                <span style="display:flex; align-items:center; justify-content:center; gap:4px;">${tempBadge} ${scoreBadge}</span>
+                            </div>
                         </td>
-                        <td class="copyable" onclick="event.stopPropagation(); copyToClipboard('${c.phone}', 'Phone Number')" title="Tap to copy" style="font-weight:700">📞 ${c.phone}</td>
+                        <td class="copyable" onclick="event.stopPropagation(); copyToClipboard('${c.phone}', 'Phone Number')" title="Tap to copy" style="font-weight:700">${c.phone}</td>
                         <td style="font-size:12px; font-weight:700;">${safeAssign}</td>
-                        <td>
-                            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:5px;">
+                        <td style="vertical-align:middle;">
+                            <div style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;">
                                 <span class="badge ${badge}">${c.status}</span>
                                 ${visitBadge}
                             </div>
                         </td>
                         <td style="font-size:11px; font-weight:800; opacity:0.7;">${c.leadSource || '-'}</td>
-                        <td style="font-size:12px; font-weight:800; color:var(--text-color);">
-                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">${sanitizeText(c.projectCategory) || '-'} ${mapLink}</div>
-                            ${unitDisp}
+                        <td style="font-size:12px; font-weight:800; color:var(--text-color); vertical-align:middle;">
+                            <div style="display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;">
+                                <span style="display:flex; align-items:center; gap:4px;">${sanitizeText(c.projectCategory) || '-'}${mapLink}</span>
+                                ${unitDisp}
+                            </div>
                         </td>
-                        <td style="color:var(--golden-dark); font-weight:900">💰 ${sanitizeText(c.budget) || '-'}</td>
+                        <td style="color:var(--golden-dark); font-weight:900">${sanitizeText(c.budget) || '-'}</td>
                         
                         <td class="date-cell" style="font-weight:900; color:var(--text-color); cursor:pointer;" onclick="event.stopPropagation(); openQuickFollowupModal('${c.id}', '${c.followup}')" title="Quick Edit Follow-up">
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                📅 ${formatDisplayDate(c.followup)} <span style="font-size:13px; opacity:0.8;">✏️</span>
+                            <div style="display:inline-flex; align-items:center; justify-content:center; gap:4px;">
+                                ${formatDisplayDate(c.followup)} <span style="font-size:12px; opacity:0.8;">✏️</span>
                             </div>
                         </td>
                         
-                        <td style="font-size:12px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 600;">
+                        <td style="font-size:12px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 600;">
                             <span class="history-link" onclick="event.stopPropagation(); openHistoryModal('${c.id}')" title="Tap to read full history">${sanitizeText(latestNote)}</span>
                         </td>
-                        <td style="text-align:center;">
+                        <td style="vertical-align:middle;">
                             <div style="display:flex; justify-content:center; align-items:center;">
                                 ${tickButton}
                                 <span class="action-dots" style="font-size: 16px; font-weight: bold;" onclick="event.stopPropagation(); triggerActionMenu(this)">⋮</span>
@@ -2879,11 +2897,11 @@
                     const c = exportData[i]; if(c.status === 'Not Interested' || fragmentChunks[c.status] === undefined) continue; 
                     
                     const tempVal = c.leadTemperature || 'Warm'; let tempIcon = '';
-                    if(tempVal === 'Hot') tempIcon = '<span title="Hot Priority" style="font-size:14px; margin-left:4px;">🔥</span>';
-                    else if(tempVal === 'Warm') tempIcon = '<span title="Warm Priority" style="font-size:14px; margin-left:4px;">☀️</span>';
-                    else if(tempVal === 'Cold') tempIcon = '<span title="Cold Priority" style="font-size:14px; margin-left:4px;">❄️</span>';
+                    if(tempVal === 'Hot') tempIcon = '<span title="Hot Priority" style="font-size:14px;">🔥</span>';
+                    else if(tempVal === 'Warm') tempIcon = '<span title="Warm Priority" style="font-size:14px;">☀️</span>';
+                    else if(tempVal === 'Cold') tempIcon = '<span title="Cold Priority" style="font-size:14px;">❄️</span>';
 
-                    let visitIcon = c.visitDone ? '<span title="Site Visit Done" style="font-size:12px; margin-left:4px;">✅</span>' : '';
+                    let visitIcon = c.visitDone ? '<span title="Site Visit Done" style="font-size:12px;">✅</span>' : '';
                     let safeName = sanitizeText(c.name).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                     let safeProj = sanitizeText(c.projectCategory||'').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                     let safeUnit = sanitizeText(c.specificUnit||'');
@@ -2895,7 +2913,7 @@
                         staleBadge = `<span class="pulse-dot" title="Untouched for ${daysUntouched} days"></span>`;
                     }
 
-                    const mapLink = c.location || c.projectCategory ? `<a href="https://maps.google.com/?q=${encodeURIComponent(c.location || c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" title="Get Directions" style="text-decoration:none; margin-left: 6px; font-size: 14px;">📍</a>` : '';
+                    const mapLink = c.location || c.projectCategory ? `<a href="https://maps.google.com/?q=${encodeURIComponent(c.location || c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" title="Get Directions" style="text-decoration:none; font-size: 14px;">📍</a>` : '';
 
                     const div = document.createElement('div');
                     div.className = "k-card"; div.style.cssText = `touch-action: none;`; div.setAttribute("draggable", "true");
@@ -2904,10 +2922,8 @@
 
                     div.innerHTML = `
                         <div class="k-card-title">
-                            <span style="display:flex; align-items:center; gap:6px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                <span style="overflow:hidden; text-overflow:ellipsis;">${safeName}</span> ${staleBadge} ${tempIcon} ${visitIcon}
-                            </span>
-                            <span class="action-dots" style="font-size: 16px; font-weight: bold; flex-shrink:0;" onclick="event.stopPropagation(); triggerActionMenu(this)">⋮</span>
+                            <span style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${safeName} ${staleBadge} ${tempIcon} ${visitIcon}</span>
+                            <span class="action-dots" style="font-size: 16px; font-weight: bold;" onclick="event.stopPropagation(); triggerActionMenu(this)">⋮</span>
                         </div>
                         <div class="k-card-detail copyable" onclick="event.stopPropagation(); copyToClipboard('${c.phone}', 'Phone')" title="Tap to copy">📞 ${c.phone}</div>
                         <div class="k-card-detail" style="color:var(--text-color); font-weight:800; display:flex; justify-content:space-between; align-items:center;">
