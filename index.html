@@ -192,7 +192,7 @@
         .fab-add:hover { transform: translateY(-6px) scale(1.05); box-shadow: 0 15px 35px rgba(197,160,89,0.4); }
         .fab-add:active { transform: scale(0.9); }
 
-        form, .table-container, .kanban-container, .login-card { padding: 24px; width: 100%; contain: content;}
+        form, .table-container, .kanban-container, .calendar-container, .login-card { padding: 24px; width: 100%; contain: content;}
         .login-card { max-width: 420px; margin: 15vh auto; text-align: center; animation: popIn 0.6s var(--ease-bounce) both; }
 
         label { display: block; font-size: 12px; font-weight: 800; margin-bottom: 6px; color: var(--text-color); opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -240,8 +240,8 @@
         .btn-secondary:hover { border-color: var(--golden); background: var(--card-bg); color: var(--golden-dark); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(197, 160, 89, 0.12); }
         .btn-secondary:active { transform: scale(0.96); }
 
-        .controls-row { display: flex; gap: 10px; align-items: center; padding: 14px 16px; margin-bottom: 0; width: 100%; }
-        .search-box { margin: 0; flex-grow: 1; border: 1.5px solid var(--border-color); height: 44px; border-radius: 12px; padding-left: 40px; font-weight: 600; font-size: 14px; background: var(--input-bg) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512"><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="%2394A3B8" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="%2394A3B8" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M338.29 338.29L448 448"/></svg>') no-repeat 14px center; transition: border-color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple); }
+        .controls-row { display: flex; gap: 10px; align-items: center; padding: 14px 16px; margin-bottom: 0; width: 100%; flex-wrap: wrap;}
+        .search-box { margin: 0; flex-grow: 1; border: 1.5px solid var(--border-color); height: 44px; border-radius: 12px; padding-left: 40px; font-weight: 600; font-size: 14px; background: var(--input-bg) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512"><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="%2394A3B8" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="%2394A3B8" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M338.29 338.29L448 448"/></svg>') no-repeat 14px center; transition: border-color 0.3s var(--ease-apple), background-color 0.3s var(--ease-apple), box-shadow 0.3s var(--ease-apple); min-width: 200px;}
         .search-box:focus { border-color: var(--golden); background-color: var(--card-bg); box-shadow: 0 4px 15px rgba(197, 160, 89, 0.12); }
         .controls-row button { height: 44px; margin: 0; padding: 0 16px; width: auto; border-radius: 10px; }
 
@@ -291,6 +291,30 @@
         .kanban-dropzone::-webkit-scrollbar { width: 4px; }
         .kanban-dropzone::-webkit-scrollbar-thumb { background: rgba(10, 25, 47, 0.15); border-radius: 4px;}
         .drag-over { background: var(--accent-glow); border: 2px dashed var(--golden); }
+
+        /* Calendar View Styles */
+        .calendar-container { padding: 20px; background: var(--card-bg); min-height: 500px; border-radius: 20px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; font-weight: 900; font-size: 18px; color: var(--text-color); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 10px; }
+        .cal-day-name { text-align: center; font-size: 12px; font-weight: 900; color: #64748B; text-transform: uppercase; }
+        .cal-day { padding: 16px 10px; border: 1.5px solid var(--border-color); border-radius: 12px; cursor: pointer; text-align: center; font-size: 15px; font-weight: 700; transition: all 0.2s var(--ease-apple); position: relative; background: var(--input-bg); min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        .cal-day:hover { border-color: var(--golden); background: var(--card-bg); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(10, 25, 47, 0.05); }
+        .cal-day.empty { visibility: hidden; }
+        .cal-day.has-leads { border-color: var(--golden); color: var(--golden-dark); background: rgba(197, 160, 89, 0.05); }
+        .cal-day.today { background: var(--btn-gradient); color: var(--golden); border: none; }
+        .cal-lead-count { position: absolute; top: -6px; right: -6px; background: var(--notify-red); color: white; font-size: 11px; padding: 3px 7px; border-radius: 12px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* Bulk Action Bar */
+        #bulkActionBar {
+            position: fixed; bottom: max(30px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(150px);
+            z-index: 9999; display: flex; gap: 12px; padding: 14px 24px; border-radius: 50px;
+            background: var(--nav-bg); box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            transition: transform 0.4s var(--ease-bounce), opacity 0.3s var(--ease-smooth);
+            opacity: 0; pointer-events: none; border: 2px solid var(--golden);
+            align-items: center; flex-wrap: wrap; justify-content: center;
+        }
+        #bulkActionBar.active { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+        .bulk-cb { width: 18px; height: 18px; cursor: pointer; accent-color: var(--golden); }
 
         .history-container-box { max-height: 250px; overflow-y: auto; overflow-x: hidden; padding: 4px; margin-bottom: 16px; display: none; }
         .timeline-track { border-left: 2px solid rgba(197, 160, 89, 0.4); margin-left: 8px; padding-left: 16px; padding-top: 4px; padding-bottom: 4px; }
@@ -428,6 +452,9 @@
             .toast.show { transform: translateY(0); }
             
             .fab-add { bottom: max(30px, env(safe-area-inset-bottom)); right: 20px; width: 58px; height: 58px; }
+            
+            #bulkActionBar { width: 90vw; border-radius: 20px; flex-direction: column; bottom: 80px; }
+            #bulkActionBar select, #bulkActionBar button { width: 100%; }
         }
 
         .search-hidden-row { display: none !important; }
@@ -436,6 +463,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -450,6 +478,19 @@
 </div>
 
 <div id="toastContainer"></div>
+
+<!-- Floating Action Bar for Bulk Updates -->
+<div id="bulkActionBar">
+    <span id="bulkCount" style="font-weight: 800; font-size: 14px;">0 Selected</span>
+    <select id="bulkAssign" style="width: auto; height: 44px; margin:0;" onchange="executeBulkAssign(this.value)">
+        <option value="">Assign To...</option>
+    </select>
+    <select id="bulkStatus" style="width: auto; height: 44px; margin:0;" onchange="executeBulkStatus(this.value)">
+        <option value="">Status...</option>
+    </select>
+    <button class="btn-secondary" style="height: 44px; margin:0; color: var(--notify-red); border-color: rgba(220,38,38,0.3);" onclick="executeBulkDelete()">🗑️ Delete</button>
+    <button class="btn-secondary" style="height: 44px; margin:0; border-radius: 50%; width: 44px; padding: 0;" onclick="clearBulkSelection()">×</button>
+</div>
 
 <!-- FAB for Adding Leads -->
 <div class="fab-add" onclick="openAddLeadModal()" title="Add New Lead (Shortcut: ALT+N)">
@@ -489,6 +530,9 @@
             <h1 class="main-title" onclick="window.location.reload();" style="cursor: pointer;" title="Refresh Page"><span class="brand">TRUE</span> INVEST <span style="font-size:11px; font-weight:900; opacity:0.8; padding-left:6px; vertical-align:super; color:var(--text-color);">PRO</span></h1>
             
             <div class="header-actions-group">
+                <!-- PWA Install Button -->
+                <button id="installAppBtn" class="btn-secondary" style="display:none; height:44px; padding:0 12px; border-radius:12px; font-weight:800; color:var(--golden-dark); gap:6px; margin:0;" onclick="installPWA()"><ion-icon name="download"></ion-icon> Install App</button>
+
                 <!-- TOTAL LEADS PILL -->
                 <div class="expandable-stat-pill" id="filterAll" title="Total System Leads" style="cursor: default;">
                     <div class="stat-icon">📊</div>
@@ -507,7 +551,7 @@
                 </button>
 
                 <!-- VIEW TOGGLE BUTTON -->
-                <button class="notification-btn" id="viewToggleBtn" onclick="toggleView()" title="Switch to Board View (Alt+V)">
+                <button class="notification-btn" id="viewToggleBtn" onclick="toggleView()" title="Switch View (Table/Kanban/Calendar) (Alt+V)">
                     <ion-icon name="grid"></ion-icon>
                 </button>
 
@@ -529,7 +573,7 @@
                 <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
                 <button class="btn-secondary" onclick="document.getElementById('csvFileInput').click()"><ion-icon name="download"></ion-icon> Import</button>
                 <button class="btn-secondary" onclick="downloadCSV()"><ion-icon name="share"></ion-icon> Export</button>
-                <button class="btn-secondary" onclick="openModal('cleanModal')" style="color: var(--notify-red); border-color: rgba(220, 38, 38, 0.4);" title="Clean Options"><ion-icon name="trash"></ion-icon> Clean</button>
+                <button class="btn-secondary" onclick="openModal('cleanModal')" style="color: var(--notify-red); border-color: rgba(220, 38, 38, 0.4);" title="Clean Options"><ion-icon name="build"></ion-icon> Tools</button>
             </div>
 
             <div class="project-tabs glass-panel" id="projectTabs"></div>
@@ -541,6 +585,7 @@
                 <table title="Single-click any row to Edit">
                     <thead>
                         <tr>
+                            <th style="width: 30px;"><input type="checkbox" id="selectAllCb" class="bulk-cb" onclick="toggleAllBulk(this)"></th>
                             <th style="width: 40px;">S.No</th>
                             <th onclick="handleSort('leadDate')">Date ⇕</th>
                             <th onclick="handleSort('name')">Name ⇕</th>
@@ -561,6 +606,15 @@
 
             <div class="kanban-container hidden glass-panel" id="kanbanView">
                 <!-- Dynamically populated via customStatuses -->
+            </div>
+
+            <div class="calendar-container hidden glass-panel" id="calendarView">
+                <div class="calendar-header">
+                    <button class="btn-secondary" style="width: auto; padding: 0 16px;" onclick="changeMonth(-1)">◀ Prev</button>
+                    <span id="calMonthYear"></span>
+                    <button class="btn-secondary" style="width: auto; padding: 0 16px;" onclick="changeMonth(1)">Next ▶</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
             </div>
         </div>
     </div>
@@ -649,6 +703,14 @@
                 <label>Add Follow-up Remark <span style="font-size: 10px; color:var(--golden); float:right;">AI Auto-Fills All Details</span></label>
                 <div class="remark-wrapper">
                     <textarea id="newRemark" placeholder="Type info (e.g. 'Rahul 9876543210 50L 2BHK kal call' to auto-fill form)" rows="2" style="resize:vertical;"></textarea>
+                </div>
+
+                <!-- Firebase Document Upload Section (Visible only in Edit Mode) -->
+                <div id="docSection" style="display:none; margin-bottom: 16px; border: 1.5px dashed var(--golden); border-radius: 12px; padding: 12px; background: rgba(197, 160, 89, 0.05);">
+                    <label style="color:var(--golden-dark);">📄 Attached Documents</label>
+                    <div id="docList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px; font-size:12px; font-weight:700;"></div>
+                    <input type="file" id="docUploadInput" style="display:none;" onchange="handleDocUpload(event)" accept="image/*,.pdf,.doc,.docx">
+                    <button type="button" id="uploadDocBtn" class="btn-secondary" onclick="document.getElementById('docUploadInput').click()" style="width:100%; border-color:var(--golden); color:var(--golden-dark);"><ion-icon name="cloud-upload"></ion-icon> Upload Site Visit / ID Proof</button>
                 </div>
                 
                 <button type="submit" id="saveBtn" class="btn-shine">Save Record</button>
@@ -775,10 +837,11 @@
 <div id="cleanModal" class="action-modal-overlay" onclick="closeModal('cleanModal')">
     <div class="action-modal-content swipeable-sheet" style="flex-direction:column; gap:12px; align-items:stretch;" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div>
-        <h3 style="margin:0; margin-top:16px; color:var(--text-color); text-align:center; font-weight:900; font-size:16px;">🧹 Data Cleanup</h3>
-        <p style="text-align:center; font-size:12px; font-weight:600; margin:0; opacity:0.8; color:var(--text-color);">Choose what you want to clean</p>
+        <h3 style="margin:0; margin-top:16px; color:var(--text-color); text-align:center; font-weight:900; font-size:16px;">🛠️ CRM Tools & Cleanup</h3>
+        <p style="text-align:center; font-size:12px; font-weight:600; margin:0; opacity:0.8; color:var(--text-color);">Advanced database actions</p>
         
-        <button class="btn-secondary" onclick="removeDuplicates()" style="margin-top:12px;">🗑️ Remove Duplicates Only</button>
+        <button class="btn-secondary" onclick="reviveDeadLeads()" style="margin-top:12px; background-color:#F0FDF4; color:#15803D; border-color:rgba(21,128,61,0.2);">♻️ Auto-Revive Dead Leads (30+ Days)</button>
+        <button class="btn-secondary" onclick="removeDuplicates()" style="margin-top:0;">🧹 Remove Duplicates Only</button>
         <button class="btn-secondary" onclick="deleteAllLeads()" style="background-color:#FEF2F2; color:var(--notify-red); border:1px solid rgba(220,38,38,0.2); margin-top:0;">⚠️ Delete ALL Leads</button>
     </div>
 </div>
@@ -833,6 +896,28 @@
 </div>
 
 <script>
+    // PWA INSTALL LOGIC
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = document.getElementById('installAppBtn');
+        if(btn) btn.style.display = 'flex';
+    });
+
+    function installPWA() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    showNotification("App Installed Successfully!", "success");
+                    document.getElementById('installAppBtn').style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
+    }
+
     // KEYBOARD SHORTCUT LOGIC
     document.addEventListener('keydown', (e) => {
         // Alt + N : New Lead
@@ -847,7 +932,7 @@
             e.preventDefault();
             document.getElementById('search').focus();
         }
-        // Alt + V : Toggle View (Table/Kanban)
+        // Alt + V : Toggle View (Table/Kanban/Calendar)
         if (e.altKey && e.key.toLowerCase() === 'v') {
             e.preventDefault();
             toggleView();
@@ -889,6 +974,7 @@
     function openAddLeadModal() { 
         haptic('light'); resetForm(); 
         document.getElementById('leadModalTitle').innerHTML = '<ion-icon name="person-add"></ion-icon> Add New Lead';
+        document.getElementById('docSection').style.display = 'none'; // Only show docs in edit mode
         openModal('addLeadModal'); 
     }
     
@@ -1190,7 +1276,7 @@
     }
 
     let isFirstRender = true;
-    let currentViewMode = 'table';
+    let currentViewMode = 'table'; // Can be 'table', 'kanban', or 'calendar'
     let renderTableRequestId = null;
     let renderKanbanRequestId = null;
 
@@ -1236,6 +1322,7 @@
         if(currentProjectFilter !== 'All') baseData = baseData.filter(c => c.projectCategory && c.projectCategory.includes(currentProjectFilter));
         if(currentQuickFilter === 'Hot') baseData = baseData.filter(c => c.leadTemperature === 'Hot' || c.status === 'Hot');
         else if (currentQuickFilter === 'Today') { const today = getToday(); baseData = baseData.filter(c => c.followup === today && c.status !== 'Closed'); }
+        else if (currentQuickFilter === 'Date' && currentFilterDate) { baseData = baseData.filter(c => c.followup === currentFilterDate && c.status !== 'Closed'); }
 
         baseData.forEach(c => {
             if (c.assignBy && c.assignBy.trim() !== '') {
@@ -1300,7 +1387,8 @@
         let phone = document.getElementById('waTargetPhone').value.replace(/[^0-9]/g, '');
         let msg = encodeURIComponent(document.getElementById('waMessageText').value);
         if (phone.length === 10) phone = "91" + phone;
-        window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+        // Upgraded WhatsApp deep link for mobile/desktop
+        window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${msg}`, '_blank');
         closeModal('waModal');
     }
 
@@ -1463,38 +1551,43 @@
         haptic('light');
         const t = document.getElementById('tableView'); 
         const k = document.getElementById('kanbanView');
+        const c = document.getElementById('calendarView');
         const toggleBtn = document.getElementById('viewToggleBtn');
-        if (!t || !k) return;
+        if (!t || !k || !c) return;
 
         const previousMode = currentViewMode;
         currentViewMode = mode; 
         
+        t.classList.add('hidden');
+        k.classList.add('hidden');
+        c.classList.add('hidden');
+        
         if(mode === 'table') { 
-            k.classList.add('hidden'); t.classList.remove('hidden'); 
+            t.classList.remove('hidden'); 
             if (toggleBtn) toggleBtn.innerHTML = '<ion-icon name="grid"></ion-icon>';
             if (previousMode !== 'table') renderTableOptimized(true);
-            requestAnimationFrame(() => {
-                const searchVal = document.getElementById('search').value.toLowerCase().trim();
-                if (searchVal) applyDOMFilters(searchVal);
-            });
         }
-        if(mode === 'kanban') { 
-            t.classList.add('hidden'); k.classList.remove('hidden'); 
-            if (toggleBtn) toggleBtn.innerHTML = '<ion-icon name="list"></ion-icon>';
+        else if(mode === 'kanban') { 
+            k.classList.remove('hidden'); 
+            if (toggleBtn) toggleBtn.innerHTML = '<ion-icon name="calendar"></ion-icon>';
             if (previousMode !== 'kanban') renderKanban(true);
-            requestAnimationFrame(() => {
-                const searchVal = document.getElementById('search').value.toLowerCase().trim();
-                if (searchVal) applyDOMFilters(searchVal);
-            });
         }
+        else if(mode === 'calendar') {
+            c.classList.remove('hidden');
+            if (toggleBtn) toggleBtn.innerHTML = '<ion-icon name="list"></ion-icon>';
+            if (previousMode !== 'calendar') renderCalendar();
+        }
+
+        requestAnimationFrame(() => {
+            const searchVal = document.getElementById('search').value.toLowerCase().trim();
+            if (searchVal) applyDOMFilters(searchVal);
+        });
     }
 
     function toggleView() {
-        if (currentViewMode === 'table') {
-            setViewMode('kanban');
-        } else {
-            setViewMode('table');
-        }
+        if (currentViewMode === 'table') setViewMode('kanban');
+        else if (currentViewMode === 'kanban') setViewMode('calendar');
+        else setViewMode('table');
     }
 
     function showNotification(message, type = 'success') {
@@ -1564,12 +1657,13 @@
         appId: safeAtob("MTo3OTEzODE0MDc1Mzc6d2ViOjQ1ZTk5NDZhOTM5ZjhkMjNiNTYyMTA=") 
     };
 
-    let auth, db;
+    let auth, db, storage;
     try {
         if (typeof firebase !== 'undefined') {
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth(); 
             db = firebase.firestore();
+            try { storage = firebase.storage(); } catch(e){ console.warn("Storage not enabled"); }
             try {
                 db.enableMultiTabIndexedDbPersistence().catch(function(err) {
                     console.warn("Persistence fallback activated", err);
@@ -1587,7 +1681,8 @@
     let customAssignees = ['Vanshikha']; 
     
     let currentProjectFilter = 'All'; 
-    let currentQuickFilter = 'All'; 
+    let currentQuickFilter = 'All';
+    let currentFilterDate = null; // Used for calendar filtering
     let initialLoad = true;
     let unsubscribeSnapshot = null; 
     let hasSanitized = false; 
@@ -1804,9 +1899,26 @@
         }
 
         const selAssign = document.getElementById('assignBy'); const curAssign = selAssign ? selAssign.value : '';
-        if(selAssign) {
-            selAssign.innerHTML = '<option value="">-- Unassigned --</option>' + customAssignees.map(s => `<option value="${s}">${s}</option>`).join('') + `<option value="ADD_NEW">➕ Add Custom...</option>`;
-            if(customAssignees.includes(curAssign)) selAssign.value = curAssign; else selAssign.value = "";
+        
+        // Update both the main form assignBy and the Bulk assignBy dropdown
+        const assignDropdowns = [document.getElementById('assignBy'), document.getElementById('bulkAssign')];
+        assignDropdowns.forEach((sel, i) => {
+            if(sel) {
+                let optionsHtml = (i===1) ? '<option value="">Assign To...</option>' : '<option value="">-- Unassigned --</option>';
+                optionsHtml += customAssignees.map(s => `<option value="${s}">${s}</option>`).join('');
+                if(i===0) optionsHtml += `<option value="ADD_NEW">➕ Add Custom...</option>`;
+                
+                sel.innerHTML = optionsHtml;
+                if(i===0) {
+                    if(customAssignees.includes(curAssign)) sel.value = curAssign; else sel.value = "";
+                }
+            }
+        });
+
+        // Update bulk status
+        const bStat = document.getElementById('bulkStatus');
+        if(bStat) {
+            bStat.innerHTML = '<option value="">Status...</option>' + customStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
         }
 
         const kanbanContainer = document.getElementById('kanbanView');
@@ -1866,7 +1978,7 @@
         haptic('light'); currentProjectFilter = filterVal;
         document.querySelectorAll('#projectTabs .tab-btn').forEach(btn => btn.classList.remove('active'));
         if(btnElement) btnElement.classList.add('active');
-        document.getElementById('search').value = ''; currentQuickFilter = 'All';
+        document.getElementById('search').value = ''; currentQuickFilter = 'All'; currentFilterDate = null;
         
         document.querySelectorAll('.expandable-stat-pill').forEach(c => c.classList.remove('active'));
         renderData(false); 
@@ -1880,6 +1992,7 @@
         }
         
         currentQuickFilter = type;
+        currentFilterDate = null;
         
         document.querySelectorAll('.expandable-stat-pill').forEach(c => c.classList.remove('active'));
         
@@ -2132,6 +2245,7 @@
 
         if(currentQuickFilter === 'Hot') { data = data.filter(c => c.leadTemperature === 'Hot' || c.status === 'Hot'); } 
         else if (currentQuickFilter === 'Today') { const today = getToday(); data = data.filter(c => c.followup === today && c.status !== 'Closed'); }
+        else if (currentQuickFilter === 'Date' && currentFilterDate) { data = data.filter(c => c.followup === currentFilterDate && c.status !== 'Closed'); }
         
         data.sort((a, b) => {
             let valA = (a[sortColumn] || '').toString().toLowerCase(); let valB = (b[sortColumn] || '').toString().toLowerCase();
@@ -2338,14 +2452,105 @@
     let searchTimeout;
     document.getElementById('search').addEventListener('input', e => {
         const searchVal = e.target.value.toLowerCase().trim(); clearTimeout(searchTimeout);
-        // Debounce increased for absolute zero lag while typing
         searchTimeout = setTimeout(() => { requestAnimationFrame(() => applyDOMFilters(searchVal)); }, 150); 
     });
 
     function renderData(animate = false) { 
         if (currentViewMode === 'table') renderTableOptimized(animate); 
         else if (currentViewMode === 'kanban') renderKanban(animate); 
+        else if (currentViewMode === 'calendar') renderCalendar();
     }
+
+    // ---------------------------------
+    // BULK ACTIONS LOGIC
+    // ---------------------------------
+    function toggleAllBulk(sourceCb) {
+        const cbs = document.querySelectorAll('.bulk-cb:not(#selectAllCb)');
+        cbs.forEach(cb => { cb.checked = sourceCb.checked; });
+        updateBulkBar();
+    }
+
+    function updateBulkBar() {
+        const cbs = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked'));
+        const bar = document.getElementById('bulkActionBar');
+        const count = document.getElementById('bulkCount');
+        
+        if (cbs.length > 0) {
+            count.innerText = `${cbs.length} Selected`;
+            bar.classList.add('active');
+        } else {
+            bar.classList.remove('active');
+            document.getElementById('selectAllCb').checked = false;
+        }
+    }
+
+    function clearBulkSelection() {
+        document.querySelectorAll('.bulk-cb').forEach(cb => cb.checked = false);
+        updateBulkBar();
+    }
+
+    async function executeBulkAssign(assignVal) {
+        if(!assignVal) return;
+        const ids = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
+        if(ids.length === 0) return;
+        
+        if(!confirm(`Assign ${ids.length} leads to ${assignVal}?`)) { document.getElementById('bulkAssign').value = ''; return; }
+        
+        showNotification("Updating...", "warning");
+        let batch = db.batch();
+        ids.forEach(id => {
+            batch.update(db.collection("leads").doc(id), { assignBy: assignVal, updatedAt: Date.now() });
+        });
+        
+        try {
+            await batch.commit();
+            showNotification(`Assigned ${ids.length} leads!`, "success");
+            clearBulkSelection();
+            document.getElementById('bulkAssign').value = '';
+        } catch(e) { showNotification("Error updating", "error"); }
+    }
+
+    async function executeBulkStatus(statusVal) {
+        if(!statusVal) return;
+        const ids = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
+        if(ids.length === 0) return;
+        
+        if(!confirm(`Move ${ids.length} leads to ${statusVal}?`)) { document.getElementById('bulkStatus').value = ''; return; }
+        
+        showNotification("Updating...", "warning");
+        let batch = db.batch();
+        ids.forEach(id => {
+            batch.update(db.collection("leads").doc(id), { status: statusVal, updatedAt: Date.now() });
+        });
+        
+        try {
+            await batch.commit();
+            showNotification(`Moved ${ids.length} leads!`, "success");
+            if(statusVal === 'Closed') fireConfetti(true);
+            clearBulkSelection();
+            document.getElementById('bulkStatus').value = '';
+        } catch(e) { showNotification("Error updating", "error"); }
+    }
+
+    async function executeBulkDelete() {
+        const ids = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
+        if(ids.length === 0) return;
+        
+        if(!confirm(`⚠️ WARNING: Permanently delete ${ids.length} leads? This cannot be undone.`)) return;
+        
+        showNotification("Deleting...", "warning");
+        let batch = db.batch();
+        ids.forEach(id => {
+            batch.delete(db.collection("leads").doc(id));
+        });
+        
+        try {
+            await batch.commit();
+            showNotification(`Deleted ${ids.length} leads!`, "success");
+            clearBulkSelection();
+        } catch(e) { showNotification("Error deleting", "error"); }
+    }
+
 
     function renderTableOptimized(animate = false) {
         if (renderTableRequestId) { cancelAnimationFrame(renderTableRequestId); renderTableRequestId = null; }
@@ -2361,11 +2566,13 @@
         if(currentHeight > 0) tableContainer.style.minHeight = currentHeight + 'px';
         tableBody.innerHTML = ''; 
         
-        // Reset Search Index globally
         searchIndexTable = [];
         
         const today = getToday(); const exportData = getFilteredData();
         const CHUNK_SIZE = 100; let currentIndex = 0; let serial = 1;
+        
+        // Preserve bulk selection if any
+        const previouslySelected = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
 
         function renderChunk(timestamp) {
             const fragment = document.createDocumentFragment();
@@ -2397,12 +2604,13 @@
                 const tickButton = (c.followup === today && c.status !== 'Closed') ? 
                     `<span class="action-dots" style="color:var(--whatsapp-green); margin-right:4px;" onclick="event.stopPropagation(); markFollowupDone('${c.id}')" title="Mark Follow-up Done">✔️</span>` : '';
 
-                // GEO ROUTING MAP LINK
                 const mapLink = c.location || c.projectCategory ? `<a href="https://maps.google.com/?q=${encodeURIComponent(c.location || c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" title="Get Directions" style="text-decoration:none; margin-left: 6px; font-size: 14px;">📍</a>` : '';
 
                 const safeNameAttr = safeName.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                 const safeProjAttr = sanitizeText(c.projectCategory||'').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                 
+                const isChecked = previouslySelected.includes(c.id) ? 'checked' : '';
+
                 const tr = document.createElement('tr');
                 tr.className = `${highlight}`;
                 tr.title = "Single-click to Edit, Tap ⋮ for Actions";
@@ -2410,6 +2618,7 @@
                 tr.onclick = () => editLead(c.id);
 
                 tr.innerHTML = `
+                    <td onclick="event.stopPropagation()"><input type="checkbox" class="bulk-cb" value="${c.id}" onchange="updateBulkBar()" ${isChecked}></td>
                     <td style="opacity:0.4; font-weight:800;">${serial++}</td>
                     <td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td>
                     <td style="font-weight:800; white-space:nowrap; color:var(--text-color);">${safeName} <br> ${tempBadge} ${scoreBadge}</td>
@@ -2434,7 +2643,6 @@
                 `;
                 fragment.appendChild(tr);
                 
-                // Add to search index array directly to avoid DOM reads later
                 searchIndexTable.push({
                     el: tr,
                     text: `${safeNameAttr} ${c.phone} ${safeProjAttr}`.toLowerCase()
@@ -2446,6 +2654,7 @@
             if (currentIndex < exportData.length) { renderTableRequestId = requestAnimationFrame(renderChunk); } 
             else {
                 renderTableRequestId = null; tableContainer.style.minHeight = ''; tableContainer.scrollTop = tableScrollTop; tableContainer.scrollLeft = tableScrollLeft; window.scrollTo(scrollX, scrollY);
+                updateBulkBar();
                 const searchVal = document.getElementById('search').value.toLowerCase().trim();
                 if (searchVal) applyDOMFilters(searchVal);
             }
@@ -2492,7 +2701,6 @@
                 let safeProj = sanitizeText(c.projectCategory||'').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                 let safeUnit = sanitizeText(c.specificUnit||'');
 
-                // GEO ROUTING MAP LINK
                 const mapLink = c.location || c.projectCategory ? `<a href="https://maps.google.com/?q=${encodeURIComponent(c.location || c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" title="Get Directions" style="text-decoration:none; margin-left: 6px; font-size: 14px;">📍</a>` : '';
 
                 const div = document.createElement('div');
@@ -2540,6 +2748,160 @@
         if(exportData.length > 0) renderKanbanRequestId = requestAnimationFrame(renderKanbanChunk);
         else { customStatuses.forEach(status => { const zone = document.querySelector(`.kanban-dropzone[data-status="${status}"]`); if(zone) zone.style.minHeight = ''; }); }
     }
+
+    // ---------------------------------
+    // CALENDAR VIEW LOGIC
+    // ---------------------------------
+    let calCurrentDate = new Date();
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const headerTitle = document.getElementById('calMonthYear');
+        if(!grid || !headerTitle) return;
+
+        const year = calCurrentDate.getFullYear();
+        const month = calCurrentDate.getMonth();
+        
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        headerTitle.innerText = `${months[month]} ${year}`;
+
+        grid.innerHTML = `
+            <div class="cal-day-name">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div>
+            <div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>
+        `;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Count follow-ups per day
+        let followMap = {};
+        clients.forEach(c => {
+            if(c.followup && c.status !== 'Closed' && c.status !== 'Not Interested') {
+                const parts = c.followup.split('-');
+                if(parts.length === 3 && parseInt(parts[0]) === year && parseInt(parts[1]) - 1 === month) {
+                    const d = parseInt(parts[2]);
+                    followMap[d] = (followMap[d] || 0) + 1;
+                }
+            }
+        });
+
+        const todayObj = new Date();
+        const isCurrentMonth = (todayObj.getMonth() === month && todayObj.getFullYear() === year);
+
+        for (let i = 0; i < firstDay; i++) {
+            grid.innerHTML += `<div class="cal-day empty"></div>`;
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            let classes = "cal-day";
+            let countsHTML = "";
+            let fullDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            if(isCurrentMonth && day === todayObj.getDate()) classes += " today";
+            if(followMap[day]) {
+                classes += " has-leads";
+                countsHTML = `<span class="cal-lead-count">${followMap[day]}</span>`;
+            }
+
+            grid.innerHTML += `
+                <div class="${classes}" onclick="filterByCalendarDate('${fullDateStr}')">
+                    ${day}
+                    ${countsHTML}
+                </div>
+            `;
+        }
+    }
+
+    function changeMonth(dir) {
+        haptic('light');
+        calCurrentDate.setMonth(calCurrentDate.getMonth() + dir);
+        renderCalendar();
+    }
+
+    function filterByCalendarDate(dateStr) {
+        haptic('medium');
+        currentQuickFilter = 'Date';
+        currentFilterDate = dateStr;
+        document.querySelectorAll('.expandable-stat-pill').forEach(c => c.classList.remove('active'));
+        setViewMode('table');
+        showNotification(`Filtering for Follow-ups on: ${formatDisplayDate(dateStr)}`, 'success');
+    }
+
+    // ---------------------------------
+    // FIREBASE DOCUMENT STORAGE LOGIC
+    // ---------------------------------
+    async function handleDocUpload(e) {
+        const file = e.target.files[0];
+        const leadId = document.getElementById('editId').value;
+        if(!file || !leadId) return;
+        
+        if(!storage) { showNotification("Storage not initialized. Check connection.", "error"); return; }
+
+        const btn = document.getElementById('uploadDocBtn');
+        btn.innerHTML = '<ion-icon name="sync" class="rotating"></ion-icon> Uploading Securely...';
+        btn.disabled = true;
+
+        try {
+            const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+            const storageRef = storage.ref(`leads/${leadId}/${Date.now()}_${cleanName}`);
+            await storageRef.put(file);
+            const url = await storageRef.getDownloadURL();
+            
+            const lead = clients.find(c => c.id === leadId);
+            let docs = lead.documents || [];
+            docs.push({ name: file.name, url: url });
+            
+            await db.collection("leads").doc(leadId).update({ documents: docs, updatedAt: Date.now() });
+            
+            showNotification("Document uploaded successfully!", "success");
+            renderDocs(leadId, docs);
+        } catch(err) {
+            showNotification("Upload failed: " + err.message, "error");
+        } finally {
+            btn.innerHTML = '<ion-icon name="cloud-upload"></ion-icon> Upload Site Visit / ID Proof';
+            btn.disabled = false;
+            e.target.value = '';
+        }
+    }
+
+    function renderDocs(leadId, docsArray = null) {
+        const list = document.getElementById('docList');
+        if(!list) return;
+        
+        let docs = docsArray;
+        if(!docs) {
+            const lead = clients.find(c => c.id === leadId);
+            docs = lead ? (lead.documents || []) : [];
+        }
+
+        if(docs.length === 0) {
+            list.innerHTML = "<span style='opacity:0.6;'>No documents attached yet.</span>";
+            return;
+        }
+
+        list.innerHTML = docs.map((d, index) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border-color);">
+                <a href="${d.url}" target="_blank" style="color:var(--text-color); text-decoration:none; display:flex; align-items:center; gap:6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:80%;"><ion-icon name="document-text" style="color:var(--golden);"></ion-icon> ${sanitizeText(d.name)}</a>
+                <ion-icon name="trash" style="color:var(--notify-red); cursor:pointer; font-size:16px;" onclick="deleteDocument('${leadId}', ${index})" title="Delete"></ion-icon>
+            </div>
+        `).join('');
+    }
+
+    async function deleteDocument(leadId, index) {
+        if(!confirm("Remove this document?")) return;
+        haptic('medium');
+        try {
+            const lead = clients.find(c => c.id === leadId);
+            let docs = lead.documents || [];
+            
+            // Note: In a true prod env you'd also delete from Storage bucket. 
+            // For safety and speed here, we simply remove the reference.
+            docs.splice(index, 1);
+            await db.collection("leads").doc(leadId).update({ documents: docs, updatedAt: Date.now() });
+            showNotification("Document reference removed", "success");
+            renderDocs(leadId, docs);
+        } catch(e) { showNotification("Failed to delete", "error"); }
+    }
+
 
     let draggedCardId = null;
     function initDragAndDrop() {
@@ -2604,6 +2966,10 @@
         if (document.getElementById('newRemark')) document.getElementById('newRemark').value = '';
         renderHistoryTimeline();
 
+        // Show Documents section only in Edit mode
+        document.getElementById('docSection').style.display = 'block';
+        renderDocs(c.id);
+
         openModal('addLeadModal');
     }
 
@@ -2625,8 +2991,10 @@
         window.currentEditHistory = []; renderHistoryTimeline();
         if(document.getElementById('tempWarm')) document.getElementById('tempWarm').checked = true;
         
-        currentQuickFilter = 'All'; 
+        currentQuickFilter = 'All'; currentFilterDate = null;
         document.querySelectorAll('.expandable-stat-pill').forEach(c => c.classList.remove('active'));
+        document.getElementById('docSection').style.display = 'none';
+        
         renderData(false);
     }
 
@@ -2770,6 +3138,52 @@
 
                 showNotification(`🧹 ${deletedCount} duplicate leads delete ho gayi!`, "success"); haptic('heavy');
             } catch (err) { showNotification("Error cleaning duplicates", "error"); }
+        }, 350);
+    }
+
+    async function reviveDeadLeads() {
+        closeModal('cleanModal');
+        if(!auth || !auth.currentUser) return;
+        
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+        // Find leads not updated in 30 days, skipping already closed/dead ones
+        const deadLeads = clients.filter(c => (c.updatedAt || 0) < thirtyDaysAgo && !['Closed', 'Not Interested'].includes(c.status));
+        
+        if(deadLeads.length === 0) { showNotification("No dead leads found! Database is fresh.", "success"); return; }
+        
+        setTimeout(async () => {
+            if(!confirm(`Found ${deadLeads.length} leads untouched for > 30 days.\n\nRevive them to 'Follow-up' status & 'Cold' priority?`)) return;
+            
+            showNotification(`Reviving ${deadLeads.length} leads...`, "warning");
+            
+            try {
+                let batch = db.batch();
+                let count = 0;
+                
+                for(let c of deadLeads) {
+                    let history = c.history ? [...c.history] : [];
+                    let remark = "♻️ AI Auto-Revival: Lead untouched for 30+ days. Moved to Follow-up queue.";
+                    history.unshift({ date: formatDisplayDate(getToday()), time: getTime(), note: remark });
+                    
+                    batch.update(db.collection("leads").doc(c.id), { 
+                        status: 'Follow-up', 
+                        leadTemperature: 'Cold', 
+                        history: history, 
+                        remark: remark, 
+                        updatedAt: Date.now() 
+                    });
+                    
+                    count++;
+                    if(count % 400 === 0) { await batch.commit(); batch = db.batch(); }
+                }
+                if(count % 400 !== 0) await batch.commit();
+                
+                showNotification(`Successfully revived ${count} dead leads!`, "success");
+                fireConfetti();
+                haptic('heavy');
+            } catch (err) {
+                showNotification("Error reviving leads", "error");
+            }
         }, 350);
     }
 
