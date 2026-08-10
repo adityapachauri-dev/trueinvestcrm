@@ -1007,6 +1007,33 @@
         }
     }, 4000);
 
+    // --- VANSHIKHA SMART WHATSAPP NOTIFICATION LOGIC ---
+    function notifyVanshikhaViaWhatsApp(leadData) {
+        const targetPhone = "919910857739";
+        const safeName = leadData.name ? leadData.name.trim() : "Unknown";
+        const safePhone = leadData.phone || "N/A";
+        const safeProj = leadData.projectCategory || "N/A";
+        const safeBudget = leadData.budget || "N/A";
+
+        const msg = `🚨 *New Lead Assigned* 🚨\n\n*Name:* ${safeName}\n*Phone:* ${safePhone}\n*Project:* ${safeProj}\n*Budget:* ${safeBudget}\n*Priority:* ${leadData.leadTemperature || 'Warm'}\n\nPlease check the CRM!`;
+
+        showNotification("Opening WhatsApp to notify Vanshikha...", "success");
+        setTimeout(() => {
+            window.open(`https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+        }, 1200);
+    }
+
+    function notifyVanshikhaBulkViaWhatsApp(count) {
+        const targetPhone = "919910857739";
+        const msg = `🚨 *Bulk Leads Assigned* 🚨\n\nHi Vanshikha, *${count} new leads* have just been assigned to you.\n\nPlease check the CRM!`;
+
+        showNotification("Opening WhatsApp to notify Vanshikha...", "success");
+        setTimeout(() => {
+            window.open(`https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`, '_blank');
+        }, 1200);
+    }
+    // ----------------------------------------------------
+
     // PWA INSTALL LOGIC
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -2344,6 +2371,19 @@
         const newRemarkText = document.getElementById('newRemark').value.trim();
         const btn = document.getElementById('saveBtn'); 
         
+        // CHECK IF IT'S A NEW ASSIGNMENT TO VANSHIKHA
+        let isNewAssignToVanshikha = false;
+        if (assignByVal === 'Vanshikha') {
+            if (id) {
+                const existingLead = clients.find(x => x.id === id);
+                if (existingLead && existingLead.assignBy !== 'Vanshikha') {
+                    isNewAssignToVanshikha = true;
+                }
+            } else {
+                isNewAssignToVanshikha = true; // Complete new lead
+            }
+        }
+
         const p1 = document.getElementById('projectCategory').value; const p2 = document.getElementById('projectCategory2').value;
         let pArray = []; if(p1) pArray.push(p1); if(p2 && p2 !== p1) pArray.push(p2);
         const finalProjectCategory = pArray.join(' + ');
@@ -2397,6 +2437,9 @@
         finally { 
             btn.disabled = false;
             if (saveSuccess) {
+                // TRIGGER WHATSAPP POPUP FOR VANSHIKHA
+                if (isNewAssignToVanshikha) notifyVanshikhaViaWhatsApp(data);
+
                 resetForm(true); 
                 closeModal('addLeadModal'); 
             } else { btn.innerText = oldText; }
@@ -2678,6 +2721,12 @@
         try {
             await batch.commit();
             showNotification(`Assigned ${ids.length} leads!`, "success");
+            
+            // TRIGGER VANSHIKHA BULK NOTIFICATION
+            if (assignVal === 'Vanshikha') {
+                notifyVanshikhaBulkViaWhatsApp(ids.length);
+            }
+
             clearBulkSelection();
             document.getElementById('bulkAssign').value = '';
         } catch(e) { showNotification("Error updating", "error"); }
@@ -3445,6 +3494,4 @@
         } catch(e) {}
     })();
 
-</script>
-</body>
-</html>
+</script>I encountered an error doing what you asked. Could you try again?
