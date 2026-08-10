@@ -1007,9 +1007,9 @@
         }
     }, 4000);
 
-    // --- VANSHIKHA SMART WHATSAPP NOTIFICATION LOGIC ---
+    // --- VANSHIKHA SMART WHATSAPP NOTIFICATION LOGIC (MOBILE OPTIMIZED) ---
     function notifyVanshikhaViaWhatsApp(leadData) {
-        const targetPhone = "919910857739";
+        const targetPhone = "919910857739"; // Country code 91 attached
         const safeName = leadData.name ? leadData.name.trim() : "Unknown";
         const safePhone = leadData.phone || "N/A";
         const safeProj = leadData.projectCategory || "N/A";
@@ -1017,20 +1017,28 @@
 
         const msg = `🚨 *New Lead Assigned* 🚨\n\n*Name:* ${safeName}\n*Phone:* ${safePhone}\n*Project:* ${safeProj}\n*Budget:* ${safeBudget}\n*Priority:* ${leadData.leadTemperature || 'Warm'}\n\nPlease check the CRM!`;
 
+        // 100% MOBILE-SAFE DEEP LINKING (Bypasses Safari/Chrome Popup Blockers)
+        const waLink = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`;
+        
         showNotification("Opening WhatsApp to notify Vanshikha...", "success");
+        
+        // window.location.href automatically triggers the native WhatsApp app on mobiles
         setTimeout(() => {
-            window.open(`https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`, '_blank');
-        }, 1200);
+            window.location.href = waLink;
+        }, 500);
     }
 
     function notifyVanshikhaBulkViaWhatsApp(count) {
         const targetPhone = "919910857739";
         const msg = `🚨 *Bulk Leads Assigned* 🚨\n\nHi Vanshikha, *${count} new leads* have just been assigned to you.\n\nPlease check the CRM!`;
 
+        const waLink = `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`;
+        
         showNotification("Opening WhatsApp to notify Vanshikha...", "success");
+        
         setTimeout(() => {
-            window.open(`https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`, '_blank');
-        }, 1200);
+            window.location.href = waLink;
+        }, 500);
     }
     // ----------------------------------------------------
 
@@ -3494,4 +3502,6 @@
         } catch(e) {}
     })();
 
-</script>I encountered an error doing what you asked. Could you try again?
+</script>
+</body>
+</html>
