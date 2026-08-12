@@ -1287,11 +1287,21 @@
     }
 
     function formatBudgetInput(el) {
-        let val = el.value.replace(/[^0-9.]/g, '');
-        if(!val) return;
-        let num = parseFloat(val);
-        if(num >= 10000000) el.value = (num / 10000000).toFixed(2) + ' Cr';
-        else if(num >= 100000) el.value = (num / 100000).toFixed(2) + ' Lakh';
+        const raw = String(el.value || '').trim();
+        if (!raw) return;
+        const parsedUnit = raw.match(/^(\d+(?:\.\d+)?)\s*(cr|crore|lakh|lac|l|k)$/i);
+        if (parsedUnit) {
+            const num = parseFloat(parsedUnit[1]);
+            const unit = parsedUnit[2].toLowerCase();
+            if (unit.startsWith('c')) el.value = `${num} Cr`;
+            else if (unit.startsWith('l')) el.value = `${num} Lakh`;
+            else if (unit === 'k') el.value = num >= 100 ? `${(num / 100).toFixed(2)} Lakh` : `${num} K`;
+            return;
+        }
+        const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
+        if (!Number.isFinite(num)) return;
+        if (num >= 10000000) el.value = (num / 10000000).toFixed(2) + ' Cr';
+        else if (num >= 100000) el.value = (num / 100000).toFixed(2) + ' Lakh';
     }
 
     function extractSmartDate(text) {
@@ -1586,14 +1596,21 @@
         closeModal('waModal');
     }
 
+    let mobileNavRestoreTimer = null;
     document.addEventListener('focusin', (e) => {
-        if (window.innerWidth <= 992 && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
-            document.querySelector('.mobile-bottom-nav').style.display = 'none';
+        const nav = document.querySelector('.mobile-bottom-nav');
+        if (nav && window.innerWidth <= 992 && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) {
+            clearTimeout(mobileNavRestoreTimer);
+            nav.style.display = 'none';
         }
     });
-    document.addEventListener('focusout', (e) => {
-        if (window.innerWidth <= 992) {
-            document.querySelector('.mobile-bottom-nav').style.display = 'flex';
+    document.addEventListener('focusout', () => {
+        const nav = document.querySelector('.mobile-bottom-nav');
+        if (nav && window.innerWidth <= 992) {
+            clearTimeout(mobileNavRestoreTimer);
+            mobileNavRestoreTimer = setTimeout(() => {
+                if (!document.querySelector('input:focus, textarea:focus, select:focus')) nav.style.display = 'flex';
+            }, 100);
         }
     });
 
@@ -1617,13 +1634,13 @@
         const rate = parseFloat(document.getElementById('emiRate').value);
         const years = parseFloat(document.getElementById('emiYears').value);
 
-        if (!amount || !rate || !years || amount <= 0 || rate <= 0 || years <= 0) {
-            showNotification("Please enter valid positive numbers to calculate EMI", "warning"); return;
+        if (!Number.isFinite(amount) || !Number.isFinite(rate) || !Number.isFinite(years) || amount <= 0 || rate < 0 || years <= 0) {
+            showNotification("Please enter a valid amount, non-negative rate and positive tenure.", "warning"); return;
         }
 
         const r = (rate / 12) / 100;
         const n = years * 12;
-        const emi = amount * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+        const emi = r === 0 ? amount / n : amount * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
         const totalPayment = emi * n;
         const totalInterest = totalPayment - amount;
 
@@ -1672,9 +1689,7 @@
         clients.forEach(c => {
             let updates = {};
 
-            if (c.status === 'Follow-up Done') updates.status = 'Follow-up'; 
-            if (c.specificUnit && c.specificUnit.includes('835 sq ft')) updates.specificUnit = c.specificUnit.replace('835', '830');
-            if (c.projectCategory && c.projectCategory.includes('Lock & key')) updates.projectCategory = c.projectCategory.replace('Lock & key', 'Lock n key');
+            // Do not silently rewrite user business data. Only recover genuinely missing fields below.
             
             let textToAnalyze = "";
             if (c.history && c.history.length > 0) textToAnalyze = c.history[0].note;
@@ -1721,10 +1736,7 @@
         }
     }
 
-    const sanitizeText = (str) => {
-        if(!str) return '';
-        const div = document.createElement('div'); div.innerText = str; return div.innerHTML;
-    };
+    const sanitizeText = (str) => escapeHtml(str ?? '');
 
     function haptic(type = 'light') {
         try {
@@ -1806,7 +1818,10 @@
         if(type === 'error') icon = '<ion-icon name="close-circle"></ion-icon>';
         if(type === 'warning') icon = '<ion-icon name="warning"></ion-icon>';
 
-        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${message}</span>`;
+        toast.innerHTML = `<span class="toast-icon">${icon}</span>`;
+        const messageEl = document.createElement('span');
+        messageEl.textContent = String(message ?? '');
+        toast.appendChild(messageEl);
         container.appendChild(toast);
         requestAnimationFrame(() => {
             setTimeout(() => toast.classList.add('show'), 10);
@@ -1814,14 +1829,30 @@
         });
     }
 
-    function copyToClipboard(text, type) {
+    async function copyToClipboard(text, type) {
         if(!text || text === '-') return;
         try {
-            navigator.clipboard.writeText(text).then(() => {
-                haptic('light'); showNotification(`${type} Copied!`, 'success');
-            }).catch(err => { showNotification('Failed to copy', 'error'); });
-        } catch (e) { showNotification('Clipboard not supported', 'warning'); }
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(String(text));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = String(text);
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                ta.remove();
+                if (!ok) throw new Error('Copy command failed');
+            }
+            haptic('light');
+            showNotification(`${type} Copied!`, 'success');
+        } catch (e) {
+            showNotification('Failed to copy. Please copy manually.', 'error');
+        }
     }
+
 
     document.querySelectorAll('.swipeable-sheet').forEach(sheet => {
         let startY = 0; let currentY = 0; let isDragging = false; let ticking = false; 
@@ -1991,7 +2022,7 @@
         if(unsubscribeSnapshot) unsubscribeSnapshot();
 
         try {
-            unsubscribeSnapshot = db.collection("leads").where("ownerId", "in", [auth.currentUser.uid, "WEBSITE_LEAD"]).limit(1500) 
+            unsubscribeSnapshot = db.collection("leads").where("ownerId", "in", [auth.currentUser.uid, "WEBSITE_LEAD"]) 
                 .onSnapshot(snap => {
                 clients = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 
@@ -2005,10 +2036,9 @@
                     }
                 }
 
-                if (!hasSanitized && clients.length > 0) {
-                    setTimeout(() => silentDataSanitizer(), 5000); 
-                    hasSanitized = true; 
-                }
+                // Avoid silent database rewrites during every app load.
+                hasSanitized = true;
+                setTimeout(restorePendingCallLog, 0);
 
                 let dbProjects = []; let addedDefaults = false;
                 
@@ -2072,17 +2102,17 @@
 
     function renderDropdownsAndTabs() {
         const select1 = document.getElementById('projectCategory'); const select2 = document.getElementById('projectCategory2');
-        const currentVal1 = select1.value; const currentVal2 = select2.value;
+        const currentVal1 = select1 ? select1.value : ''; const currentVal2 = select2 ? select2.value : '';
         if(select1) select1.innerHTML = '<option value="">Select Project 1</option>'; 
         if(select2) select2.innerHTML = '<option value="">-- Optional 2nd --</option>';
         const tabsContainer = document.getElementById('projectTabs');
         if (tabsContainer) {
             tabsContainer.innerHTML = `<button class="tab-btn ${currentProjectFilter === 'All' ? 'active' : ''}" onclick="setProjectFilter('All', this)">All</button>`;
             customProjects.forEach(p => {
-                const safeP = p.replace(/'/g, "\\'");
-                if(select1) select1.innerHTML += `<option value="${p}">${p}</option>`; 
-                if(select2) select2.innerHTML += `<option value="${p}">${p}</option>`;
-                tabsContainer.innerHTML += `<div class="tab-wrapper"><button class="tab-btn ${currentProjectFilter === p ? 'active' : ''}" onclick="setProjectFilter('${safeP}', this)">${p}</button><button class="tab-delete-btn" onclick="deleteProject(event, '${safeP}')" title="Delete">×</button></div>`;
+                const safeP = escapeHtml(escapeJsArg(p));
+                if(select1) select1.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`);
+                if(select2) select2.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`);
+                tabsContainer.insertAdjacentHTML('beforeend', `<div class="tab-wrapper"><button class="tab-btn ${currentProjectFilter === p ? 'active' : ''}" onclick="setProjectFilter('${safeP}', this)">${escapeHtml(p)}</button><button class="tab-delete-btn" onclick="deleteProject(event, '${safeP}')" title="Delete">×</button></div>`);
             });
             tabsContainer.innerHTML += `<button class="tab-add-btn" onclick="addNewProject()" title="Add New Project Site"><ion-icon name="add"></ion-icon></button>`;
             if(select1) select1.value = currentVal1; 
@@ -2091,13 +2121,13 @@
 
         const selSource = document.getElementById('leadSource'); const curSource = selSource ? selSource.value : '';
         if(selSource) {
-            selSource.innerHTML = customSources.map(s => `<option value="${s}">${s}</option>`).join('') + `<option value="ADD_NEW">➕ Add Custom...</option>`;
+            selSource.innerHTML = customSources.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('') + `<option value="ADD_NEW">➕ Add Custom...</option>`;
             if(customSources.includes(curSource)) selSource.value = curSource; else selSource.value = customSources[0] || "";
         }
 
         const selStatus = document.getElementById('status'); const curStatus = selStatus ? selStatus.value : '';
         if(selStatus) {
-            selStatus.innerHTML = customStatuses.map(s => `<option value="${s}">${s}</option>`).join('') + `<option value="ADD_NEW">➕ Add Custom...</option>`;
+            selStatus.innerHTML = customStatuses.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('') + `<option value="ADD_NEW">➕ Add Custom...</option>`;
             if(customStatuses.includes(curStatus)) selStatus.value = curStatus; else selStatus.value = customStatuses[0] || "";
         }
 
@@ -2108,7 +2138,7 @@
         assignDropdowns.forEach((sel, i) => {
             if(sel) {
                 let optionsHtml = (i===1) ? '<option value="">Assign To...</option>' : '<option value="">-- Unassigned --</option>';
-                optionsHtml += customAssignees.map(s => `<option value="${s}">${s}</option>`).join('');
+                optionsHtml += customAssignees.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
                 if(i===0) optionsHtml += `<option value="ADD_NEW">➕ Add Custom...</option>`;
                 
                 sel.innerHTML = optionsHtml;
@@ -2121,7 +2151,7 @@
         // Update bulk status
         const bStat = document.getElementById('bulkStatus');
         if(bStat) {
-            bStat.innerHTML = '<option value="">Status...</option>' + customStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
+            bStat.innerHTML = '<option value="">Status...</option>' + customStatuses.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
         }
 
         const kanbanContainer = document.getElementById('kanbanView');
@@ -2480,6 +2510,56 @@
         return data;
     }
 
+    // Robust runtime state/helpers
+    const selectedLeadIds = new Set();
+    let pendingCallLog = null;
+
+    const escapeHtml = (value = '') => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const escapeJsArg = (value = '') => String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, '\\r')
+        .replace(/\n/g, '\\n');
+
+    function normalizePhone(value) {
+        let phone = String(value ?? '').replace(/\D/g, '');
+        if (phone.length === 12 && phone.startsWith('91')) phone = phone.slice(2);
+        if (phone.length === 11 && phone.startsWith('0')) phone = phone.slice(1);
+        return phone;
+    }
+
+    function isValidIndianPhone(value) { return /^[6-9]\d{9}$/.test(normalizePhone(value)); }
+
+    function chunkArray(arr, size = 450) {
+        const chunks = [];
+        for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+        return chunks;
+    }
+
+    async function commitInChunks(ids, operationBuilder) {
+        if (!db) throw new Error('Database not connected');
+        for (const chunk of chunkArray(ids, 450)) {
+            const batch = db.batch();
+            chunk.forEach(id => operationBuilder(batch, id));
+            if (chunk.length) await batch.commit();
+        }
+    }
+
+    function getSelectedLeadIds() { return Array.from(selectedLeadIds); }
+
+    function handleBulkCheckbox(cb) {
+        if (!cb || !cb.value) return;
+        if (cb.checked) selectedLeadIds.add(cb.value);
+        else selectedLeadIds.delete(cb.value);
+        updateBulkBar();
+    }
+
     let bsActionId = '', bsActionPhone = '', bsActionName = '', bsActionProj = '';
     let isCalling = false; let callTargetId = null; let callStartTime = 0;
 
@@ -2503,23 +2583,67 @@
         } catch(e) { showNotification("Error: " + e.message, "error"); }
     }
 
-    function executeSwipeCall() { 
-        closeActionMenu(); 
-        callTargetId = bsActionId; 
-        callStartTime = Date.now(); 
-        document.getElementById('callLogName').innerText = "Logging call for " + bsActionName; 
-        
-        // Open dialer instantly
-        window.location.href = 'tel:' + bsActionPhone; 
-        
-        // Self-Heal: Immediately trigger modal open logic, completely bypassing OS visibility events
-        setTimeout(() => { 
-            openCallLogModal(); 
-        }, 1000); 
+    function executeSwipeCall() {
+        const id = bsActionId;
+        const phone = normalizePhone(bsActionPhone);
+        const name = bsActionName || 'Lead';
+        closeActionMenu();
+
+        if (!isValidIndianPhone(phone)) {
+            showNotification('This lead has an invalid phone number.', 'error');
+            return;
+        }
+
+        callTargetId = id;
+        callStartTime = Date.now();
+        pendingCallLog = { id, phone, name, startedAt: callStartTime };
+        localStorage.setItem('crm_pending_call', JSON.stringify(pendingCallLog));
+        document.getElementById('callLogName').innerText = "Logging call for " + name;
+
+        window.location.href = 'tel:' + phone;
+        setTimeout(() => {
+            if (document.visibilityState === 'visible' && callTargetId === id) openCallLogModal();
+        }, 1200);
     }
 
-    function openCallLogModal() { haptic('medium'); setCallStatus('Connected'); document.getElementById('callLogRemark').value = ""; document.getElementById('callLogModal').classList.add('active'); }
-    function closeCallLogModal() { document.getElementById('callLogModal').classList.remove('active'); setTimeout(() => { callTargetId = null; callStartTime = 0; }, 300); }
+    function restorePendingCallLog() {
+        try {
+            const raw = localStorage.getItem('crm_pending_call');
+            if (!raw) return;
+            const pending = JSON.parse(raw);
+            if (!pending?.id || !pending?.startedAt) return;
+            if (!clients.some(c => c.id === pending.id)) return;
+            callTargetId = pending.id;
+            callStartTime = Number(pending.startedAt) || Date.now();
+            pendingCallLog = pending;
+            document.getElementById('callLogName').innerText = "Logging call for " + (pending.name || 'Lead');
+            openCallLogModal();
+        } catch (e) {
+            localStorage.removeItem('crm_pending_call');
+        }
+    }
+
+    window.addEventListener('pageshow', () => setTimeout(restorePendingCallLog, 150));
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') setTimeout(restorePendingCallLog, 150);
+    });
+
+    function openCallLogModal() {
+        haptic('medium');
+        setCallStatus('Connected');
+        document.getElementById('callLogRemark').value = "";
+        document.getElementById('callLogModal').classList.add('active');
+    }
+
+    function closeCallLogModal(cancelled = true) {
+        document.getElementById('callLogModal').classList.remove('active');
+        if (cancelled) {
+            callTargetId = null;
+            callStartTime = 0;
+            pendingCallLog = null;
+            localStorage.removeItem('crm_pending_call');
+        }
+    }
 
     function setCallStatus(status) {
         haptic('light'); document.getElementById('callLogStatus').value = status;
@@ -2550,13 +2674,19 @@
                     const payload = { history: history, remark: finalRemark, updatedAt: Date.now() };
                     if(extractedDate) payload.followup = extractedDate;
 
-                    if(db) await db.collection("leads").doc(callTargetId).update(payload);
+                    if(!db) throw new Error('Database not connected');
+                    await db.collection("leads").doc(callTargetId).update(payload);
                     if(extractedDate) showNotification(`Smart Date: Follow-up auto-set to ${formatDisplayDate(extractedDate)}`, "success");
-                    else showNotification("Call log saved!", "success"); haptic('medium');
+                    else showNotification("Call log saved!", "success");
+                    haptic('medium');
+                    pendingCallLog = null;
+                    localStorage.removeItem('crm_pending_call');
+                    closeCallLogModal(false);
                 }
-            } catch(e) { showNotification("Error logging call", "error"); }
+            } catch(e) {
+                showNotification("Error logging call: " + e.message, "error");
+            }
         }
-        closeCallLogModal();
     }
 
     function executeSwipeWa() { closeActionMenu(); openWaModal(bsActionPhone, bsActionName, bsActionProj); }
@@ -2689,98 +2819,101 @@
     // BULK ACTIONS LOGIC
     // ---------------------------------
     function toggleAllBulk(sourceCb) {
-        const cbs = document.querySelectorAll('.bulk-cb:not(#selectAllCb)');
-        cbs.forEach(cb => { cb.checked = sourceCb.checked; });
+        const visibleIds = getFilteredData().map(c => c.id);
+        if (sourceCb.checked) visibleIds.forEach(id => selectedLeadIds.add(id));
+        else visibleIds.forEach(id => selectedLeadIds.delete(id));
         updateBulkBar();
+        renderData(false);
     }
 
     function updateBulkBar() {
-        const cbs = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked'));
         const bar = document.getElementById('bulkActionBar');
         const count = document.getElementById('bulkCount');
-        
-        if (cbs.length > 0) {
-            count.innerText = `${cbs.length} Selected`;
-            bar.classList.add('active');
-        } else {
-            bar.classList.remove('active');
-            document.getElementById('selectAllCb').checked = false;
+        const selectAll = document.getElementById('selectAllCb');
+        const selectedCount = selectedLeadIds.size;
+
+        if (count) count.innerText = `${selectedCount} Selected`;
+        if (bar) bar.classList.toggle('active', selectedCount > 0);
+
+        if (selectAll) {
+            const visibleIds = getFilteredData().map(c => c.id);
+            selectAll.checked = visibleIds.length > 0 && visibleIds.every(id => selectedLeadIds.has(id));
         }
     }
 
     function clearBulkSelection() {
-        document.querySelectorAll('.bulk-cb').forEach(cb => cb.checked = false);
+        selectedLeadIds.clear();
+        const assign = document.getElementById('bulkAssign');
+        const status = document.getElementById('bulkStatus');
+        if (assign) assign.value = '';
+        if (status) status.value = '';
         updateBulkBar();
+        renderData(false);
     }
 
     async function executeBulkAssign(assignVal) {
         if(!assignVal) return;
-        const ids = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
+        const ids = getSelectedLeadIds();
         if(ids.length === 0) return;
-        
-        if(!confirm(`Assign ${ids.length} leads to ${assignVal}?`)) { document.getElementById('bulkAssign').value = ''; return; }
-        
-        showNotification("Updating...", "warning");
-        let batch = db.batch();
-        ids.forEach(id => {
-            batch.update(db.collection("leads").doc(id), { assignBy: assignVal, updatedAt: Date.now() });
-        });
-        
-        try {
-            await batch.commit();
-            showNotification(`Assigned ${ids.length} leads!`, "success");
-            
-            // TRIGGER VANSHIKHA BULK NOTIFICATION
-            if (assignVal === 'Vanshikha') {
-                notifyVanshikhaBulkViaWhatsApp(ids.length);
-            }
 
-            clearBulkSelection();
+        if(!confirm(`Assign ${ids.length} leads to ${assignVal}?`)) {
             document.getElementById('bulkAssign').value = '';
-        } catch(e) { showNotification("Error updating", "error"); }
+            return;
+        }
+
+        showNotification("Updating...", "warning");
+        try {
+            const now = Date.now();
+            await commitInChunks(ids, (batch, id) => {
+                batch.update(db.collection("leads").doc(id), { assignBy: assignVal, updatedAt: now });
+            });
+            showNotification(`Assigned ${ids.length} leads!`, "success");
+            if (assignVal === 'Vanshikha') notifyVanshikhaBulkViaWhatsApp(ids.length);
+            clearBulkSelection();
+        } catch(e) {
+            showNotification("Error updating assignments: " + e.message, "error");
+        }
     }
 
     async function executeBulkStatus(statusVal) {
         if(!statusVal) return;
-        const ids = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
+        const ids = getSelectedLeadIds();
         if(ids.length === 0) return;
-        
-        if(!confirm(`Move ${ids.length} leads to ${statusVal}?`)) { document.getElementById('bulkStatus').value = ''; return; }
-        
+
+        if(!confirm(`Move ${ids.length} leads to ${statusVal}?`)) {
+            document.getElementById('bulkStatus').value = '';
+            return;
+        }
+
         showNotification("Updating...", "warning");
-        let batch = db.batch();
-        ids.forEach(id => {
-            batch.update(db.collection("leads").doc(id), { status: statusVal, updatedAt: Date.now() });
-        });
-        
         try {
-            await batch.commit();
+            const now = Date.now();
+            await commitInChunks(ids, (batch, id) => {
+                batch.update(db.collection("leads").doc(id), { status: statusVal, updatedAt: now });
+            });
             showNotification(`Moved ${ids.length} leads!`, "success");
             if(statusVal === 'Closed') fireConfetti(true);
             clearBulkSelection();
-            document.getElementById('bulkStatus').value = '';
-        } catch(e) { showNotification("Error updating", "error"); }
+        } catch(e) {
+            showNotification("Error updating status: " + e.message, "error");
+        }
     }
 
     async function executeBulkDelete() {
-        const ids = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
+        const ids = getSelectedLeadIds();
         if(ids.length === 0) return;
-        
+
         if(!confirm(`⚠️ WARNING: Permanently delete ${ids.length} leads? This cannot be undone.`)) return;
-        
+
         showNotification("Deleting...", "warning");
-        let batch = db.batch();
-        ids.forEach(id => {
-            batch.delete(db.collection("leads").doc(id));
-        });
-        
         try {
-            await batch.commit();
+            await commitInChunks(ids, (batch, id) => batch.delete(db.collection("leads").doc(id)));
             showNotification(`Deleted ${ids.length} leads!`, "success");
             clearBulkSelection();
-        } catch(e) { showNotification("Error deleting", "error"); }
+        } catch(e) {
+            showNotification("Error deleting: " + e.message, "error");
+        }
     }
-
 
     function renderTableOptimized(animate = false) {
         if (renderTableRequestId) { cancelAnimationFrame(renderTableRequestId); renderTableRequestId = null; }
@@ -2801,9 +2934,6 @@
         const today = getToday(); const exportData = getFilteredData();
         const CHUNK_SIZE = 100; let currentIndex = 0; let serial = 1;
         
-        // Preserve bulk selection if any
-        const previouslySelected = Array.from(document.querySelectorAll('.bulk-cb:not(#selectAllCb):checked')).map(cb => cb.value);
-
         function renderChunk(timestamp) {
             const fragment = document.createDocumentFragment();
             const end = Math.min(currentIndex + CHUNK_SIZE, exportData.length);
@@ -2847,17 +2977,17 @@
                     const safeNameAttr = safeName.replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                     const safeProjAttr = sanitizeText(c.projectCategory||'').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                     
-                    const isChecked = previouslySelected.includes(c.id) ? 'checked' : '';
+                    const isChecked = selectedLeadIds.has(c.id) ? 'checked' : '';
 
                     const tr = document.createElement('tr');
                     tr.className = `${highlight}`;
                     tr.title = "Single-click to Edit, Tap ⋮ for Actions";
-                    tr.dataset.id = c.id; tr.dataset.phone = c.phone; tr.dataset.name = safeNameAttr; tr.dataset.proj = safeProjAttr;
+                    tr.dataset.id = c.id; tr.dataset.phone = normalizePhone(c.phone); tr.dataset.name = String(c.name || ''); tr.dataset.proj = String(c.projectCategory || '');
                     tr.onclick = () => editLead(c.id);
 
                     // Fixed Alignment Wrappers
                     tr.innerHTML = `
-                        <td onclick="event.stopPropagation()"><div style="display:flex; align-items:center; justify-content:center;"><input type="checkbox" class="bulk-cb" value="${c.id}" onchange="updateBulkBar()" ${isChecked}></div></td>
+                        <td onclick="event.stopPropagation()"><div style="display:flex; align-items:center; justify-content:center;"><input type="checkbox" class="bulk-cb" value="${escapeHtml(c.id)}" onchange="handleBulkCheckbox(this)" ${isChecked}></div></td>
                         <td style="opacity:0.4; font-weight:800;">${serial++}</td>
                         <td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td>
                         <td style="font-weight:800; white-space:nowrap; color:var(--text-color); vertical-align:middle;">
@@ -2903,7 +3033,7 @@
                     
                     searchIndexTable.push({
                         el: tr,
-                        text: `${safeNameAttr} ${c.phone} ${safeProjAttr}`.toLowerCase()
+                        text: `${String(c.name || '')} ${String(c.phone || '')} ${String(c.projectCategory || '')} ${String(c.specificUnit || '')} ${String(c.location || '')} ${String(c.budget || '')}`.toLowerCase()
                     });
                 } catch(err) {
                     console.warn("Auto-healing: Skipped corrupted lead in table view", err);
@@ -2974,7 +3104,7 @@
 
                     const div = document.createElement('div');
                     div.className = "k-card"; div.style.cssText = `touch-action: none;`; div.setAttribute("draggable", "true");
-                    div.dataset.id = c.id; div.dataset.phone = c.phone; div.dataset.name = safeName; div.dataset.proj = safeProj;
+                    div.dataset.id = c.id; div.dataset.phone = normalizePhone(c.phone); div.dataset.name = String(c.name || ''); div.dataset.proj = String(c.projectCategory || '');
                     div.onclick = () => editLead(c.id);
 
                     div.innerHTML = `
@@ -2995,7 +3125,7 @@
                     
                     searchIndexKanban.push({
                         el: div,
-                        text: `${safeName} ${c.phone} ${safeProj}`.toLowerCase()
+                        text: `${String(c.name || '')} ${String(c.phone || '')} ${String(c.projectCategory || '')} ${String(c.specificUnit || '')} ${String(c.location || '')} ${String(c.budget || '')}`.toLowerCase()
                     });
                 } catch(err) {
                     console.warn("Auto-healing: Skipped corrupted lead in board view", err);
@@ -3109,25 +3239,46 @@
         const file = e.target.files[0];
         const leadId = document.getElementById('editId').value;
         if(!file || !leadId) return;
-        
-        if(!storage) { showNotification("Storage not initialized. Check connection.", "error"); return; }
+
+        if(!storage || !db) { showNotification("Document storage/database is not available.", "error"); return; }
+
+        const allowedTypes = new Set([
+            'image/jpeg','image/png','image/webp','image/gif',
+            'application/pdf','application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ]);
+        const allowedExt = /\.(jpe?g|png|webp|gif|pdf|docx?)$/i;
+        const maxBytes = 10 * 1024 * 1024;
+
+        if((file.type && !allowedTypes.has(file.type)) || !allowedExt.test(file.name)) {
+            showNotification("Unsupported document type.", "error");
+            e.target.value = '';
+            return;
+        }
+        if(file.size > maxBytes) {
+            showNotification("File size must be 10 MB or less.", "error");
+            e.target.value = '';
+            return;
+        }
 
         const btn = document.getElementById('uploadDocBtn');
-        btn.innerHTML = '<ion-icon name="sync" class="rotating"></ion-icon> Uploading Securely...';
+        btn.innerHTML = '<ion-icon name="sync"></ion-icon> Uploading Securely...';
         btn.disabled = true;
 
         try {
-            const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-            const storageRef = storage.ref(`leads/${leadId}/${Date.now()}_${cleanName}`);
+            const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const storagePath = `leads/${leadId}/${Date.now()}_${cleanName}`;
+            const storageRef = storage.ref(storagePath);
             await storageRef.put(file);
             const url = await storageRef.getDownloadURL();
-            
+
             const lead = clients.find(c => c.id === leadId);
-            let docs = lead.documents || [];
-            docs.push({ name: file.name, url: url });
-            
+            if(!lead) throw new Error("Lead not found");
+
+            const docs = Array.isArray(lead.documents) ? [...lead.documents] : [];
+            docs.push({ name: file.name, url, storagePath });
             await db.collection("leads").doc(leadId).update({ documents: docs, updatedAt: Date.now() });
-            
+
             showNotification("Document uploaded successfully!", "success");
             renderDocs(leadId, docs);
         } catch(err) {
@@ -3139,44 +3290,71 @@
         }
     }
 
+
     function renderDocs(leadId, docsArray = null) {
         const list = document.getElementById('docList');
         if(!list) return;
-        
-        let docs = docsArray;
-        if(!docs) {
-            const lead = clients.find(c => c.id === leadId);
-            docs = lead ? (lead.documents || []) : [];
-        }
+
+        const lead = clients.find(c => c.id === leadId);
+        const docs = Array.isArray(docsArray) ? docsArray : (lead && Array.isArray(lead.documents) ? lead.documents : []);
 
         if(docs.length === 0) {
             list.innerHTML = "<span style='opacity:0.6;'>No documents attached yet.</span>";
             return;
         }
 
-        list.innerHTML = docs.map((d, index) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border-color);">
-                <a href="${d.url}" target="_blank" style="color:var(--text-color); text-decoration:none; display:flex; align-items:center; gap:6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:80%;"><ion-icon name="document-text" style="color:var(--golden);"></ion-icon> ${sanitizeText(d.name)}</a>
-                <ion-icon name="trash" style="color:var(--notify-red); cursor:pointer; font-size:16px;" onclick="deleteDocument('${leadId}', ${index})" title="Delete"></ion-icon>
-            </div>
-        `).join('');
+        list.innerHTML = '';
+        docs.forEach((d, index) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border-color);';
+
+            const link = document.createElement('a');
+            const validUrl = /^https:\/\//i.test(String(d.url || ''));
+            link.href = validUrl ? d.url : '#';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.style.cssText = 'color:var(--text-color); text-decoration:none; display:flex; align-items:center; gap:6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:80%;';
+            link.innerHTML = '<ion-icon name="document-text" style="color:var(--golden);"></ion-icon>';
+            link.appendChild(document.createTextNode(' ' + String(d.name || 'Document')));
+            if (!validUrl) link.addEventListener('click', e => e.preventDefault());
+
+            const del = document.createElement('ion-icon');
+            del.name = 'trash';
+            del.style.cssText = 'color:var(--notify-red); cursor:pointer; font-size:16px;';
+            del.title = 'Delete';
+            del.addEventListener('click', () => deleteDocument(leadId, index));
+
+            row.append(link, del);
+            list.appendChild(row);
+        });
     }
+
 
     async function deleteDocument(leadId, index) {
         if(!confirm("Remove this document?")) return;
         haptic('medium');
         try {
             const lead = clients.find(c => c.id === leadId);
-            let docs = lead.documents || [];
-            
-            // Note: In a true prod env you'd also delete from Storage bucket. 
-            // For safety and speed here, we simply remove the reference.
+            if(!lead) throw new Error('Lead not found');
+
+            const docs = Array.isArray(lead.documents) ? [...lead.documents] : [];
+            const target = docs[index];
+            if(!target) return;
             docs.splice(index, 1);
+
+            if(storage && target.storagePath) {
+                try { await storage.ref(target.storagePath).delete(); }
+                catch(storageErr) { console.warn('Storage delete skipped:', storageErr); }
+            }
+
             await db.collection("leads").doc(leadId).update({ documents: docs, updatedAt: Date.now() });
-            showNotification("Document reference removed", "success");
+            showNotification("Document removed successfully", "success");
             renderDocs(leadId, docs);
-        } catch(e) { showNotification("Failed to delete", "error"); }
+        } catch(e) {
+            showNotification("Failed to delete document: " + e.message, "error");
+        }
     }
+
 
 
     let draggedCardId = null;
@@ -3306,20 +3484,37 @@
         const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = async function(event) {
-            const text = event.target.result; const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
+            const text = String(event.target.result || '').replace(/^\uFEFF/, '');
+
+            const parseCSV = (csvText) => {
+                const rows = [];
+                let row = [], cur = '', inQuotes = false;
+                for (let i = 0; i < csvText.length; i++) {
+                    const ch = csvText[i];
+                    if (ch === '"') {
+                        if (inQuotes && csvText[i + 1] === '"') { cur += '"'; i++; }
+                        else inQuotes = !inQuotes;
+                    } else if (ch === ',' && !inQuotes) {
+                        row.push(cur); cur = '';
+                    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+                        if (ch === '\r' && csvText[i + 1] === '\n') i++;
+                        row.push(cur); cur = '';
+                        if (row.some(v => String(v).trim() !== '')) rows.push(row);
+                        row = [];
+                    } else {
+                        cur += ch;
+                    }
+                }
+                row.push(cur);
+                if (row.some(v => String(v).trim() !== '')) rows.push(row);
+                return rows;
+            };
+
+            const rows = parseCSV(text);
             if(rows.length < 2) { showNotification('CSV file empty hai ya invalid hai.', 'error'); e.target.value = ''; return; }
 
-            const parseCSVRow = (row) => {
-                const cols = []; let cur = '', inQuotes = false;
-                for(let i = 0; i < row.length; i++) {
-                    let char = row[i];
-                    if(char === '"') {
-                        if (inQuotes && row[i+1] === '"') { cur += '"'; i++; } else inQuotes = !inQuotes;
-                    }
-                    else if(char === ',' && !inQuotes) { cols.push(cur.trim()); cur = ''; } else cur += char;
-                }
-                cols.push(cur.trim()); return cols;
-            };
+            const parseCSVRow = (row) => row.map(v => String(v ?? '').trim());
+
 
             const headers = parseCSVRow(rows[0]).map(h => h.toLowerCase());
             const getIdx = (keywords) => headers.findIndex(h => keywords.some(kw => h.includes(kw)));
@@ -3332,10 +3527,28 @@
             let importCount = 0; let existingPhones = new Set(clients.map(c => c.phone));
             
             const normalizeDate = (dateStr) => {
-                if (!dateStr) return getToday(); let clean = dateStr.split(' ')[0]; let parts = clean.split(/[\/\-\.]/);
-                if (parts.length < 3) return getToday(); let p1 = parts[0], p2 = parts[1], p3 = parts[2];
-                if (p1.length === 4) return `${p1}-${p2.padStart(2,'0')}-${p3.padStart(2,'0')}`; 
-                if (p3.length === 2) p3 = '20' + p3; return `${p3}-${p2.padStart(2,'0')}-${p1.padStart(2,'0')}`;
+                if (!dateStr) return getToday();
+                const clean = String(dateStr).trim().split(/[ T]/)[0];
+                if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+
+                const parts = clean.split(/[\/\-\.]/);
+                if (parts.length < 3) return getToday();
+
+                let a = parseInt(parts[0], 10), b = parseInt(parts[1], 10), c = parseInt(parts[2], 10);
+                if (![a,b,c].every(Number.isFinite)) return getToday();
+
+                let year, month, day;
+                if (a >= 1000) { year = a; month = b; day = c; }
+                else {
+                    year = c < 100 ? 2000 + c : c;
+                    if (a > 12) { day = a; month = b; }
+                    else if (b > 12) { month = a; day = b; }
+                    else { day = a; month = b; }
+                }
+
+                const dt = new Date(year, month - 1, day);
+                if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return getToday();
+                return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             };
 
             if(!db) { showNotification("Database not connected for import", "error"); return; }
@@ -3344,10 +3557,9 @@
             for(let i = 1; i < rows.length; i++) {
                 try {
                     const cols = parseCSVRow(rows[i]); const cleanVal = (idx) => (idx !== -1 && cols[idx]) ? cols[idx].replace(/^"|"$/g, '').trim() : '';
-                    const name = cleanVal(colMap.name); let phone = cleanVal(colMap.phone).replace(/[^0-9]/g, ''); 
-                    if(!name || phone.length < 7) continue; 
-                    if (phone.length === 12 && phone.startsWith('91')) phone = phone.substring(2);
-                    if (phone.length === 11 && phone.startsWith('0')) phone = phone.substring(1);
+                    const name = cleanVal(colMap.name);
+                    let phone = normalizePhone(cleanVal(colMap.phone));
+                    if(!name || !isValidIndianPhone(phone)) continue;
                     if(existingPhones.has(phone)) continue; existingPhones.add(phone);
 
                     const leadDate = normalizeDate(cleanVal(colMap.leadDate));
@@ -3393,11 +3605,7 @@
 
             try {
                 const phoneMap = new Map(); let duplicateIds = [];
-                const sortedClients = [...clients].sort((a, b) => {
-                    const dateA = new Date(a.followup || a.leadDate || '1970-01-01').getTime();
-                    const dateB = new Date(b.followup || b.leadDate || '1970-01-01').getTime();
-                    return dateB - dateA; 
-                });
+                const sortedClients = [...clients].sort((a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0));
 
                 sortedClients.forEach(client => {
                     const phone = (client.phone || '').trim(); const isDummy = /^0{5,10}$|^9{5,10}$|^1{5,10}$/.test(phone);
@@ -3493,7 +3701,7 @@
         try {
             const manifestData = {
                 name: "True Invest CRM Pro", short_name: "TrueInvest", display: "standalone", background_color: "#F8FAFC", theme_color: "#0A192F", start_url: ".",
-                icons: [{"src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%230A192F'/><text x='50' y='65' font-family='Arial' font-size='40' font-weight='bold' fill='%23C5A059' text-anchor='middle'>TI</text></svg>", "sizes": "512x512", "type": "image/png"}]
+                icons: [{"src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%230A192F'/><text x='50' y='65' font-family='Arial' font-size='40' font-weight='bold' fill='%23C5A059' text-anchor='middle'>TI</text></svg>", "sizes": "512x512", "type": "image/svg+xml"}]
             };
             const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'}); const manifestUrl = URL.createObjectURL(manifestBlob);
             const manifestLink = document.createElement('link'); manifestLink.rel = 'manifest'; manifestLink.href = manifestUrl; document.head.appendChild(manifestLink);
