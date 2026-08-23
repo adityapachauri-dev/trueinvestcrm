@@ -355,6 +355,12 @@
             .nav-item .fab-circle{width:56px;height:56px;border-radius:50%;background:var(--btn-gradient);color:var(--golden);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 10px 25px rgba(10,25,47,0.3), inset 0 2px 2px rgba(255,255,255,0.15);border:1px solid rgba(197,160,89,0.5);transition:all .4s var(--ease-bounce);margin:0;padding:0}.nav-item .fab-circle:active{transform:scale(.9);box-shadow:0 4px 10px rgba(10,25,47,0.3), inset 0 2px 4px rgba(0,0,0,0.3)}
         }
         .search-hidden-row{display:none!important}
+        
+        /* 🔥 Bulk Data Render Acceleration */
+        .glass-panel, .swipeable-sheet, .table-container, .kanban-container { -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
+        #clientTable tr { content-visibility: auto; contain-intrinsic-size: 60px; will-change: background-color; }
+        .k-card { content-visibility: auto; contain-intrinsic-size: 140px; }
+        @media (max-width: 992px) { .glass-panel { backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; } }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -598,7 +604,9 @@
     let deferredPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;let b=$id('installAppBtn');if(b)b.style.display='flex';});
     function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(c=>{if(c.outcome==='accepted'){showNotification("App Installed Successfully!","success");$id('installAppBtn').style.display='none';}deferredPrompt=null;});}}
     document.addEventListener('keydown',e=>{if(e.altKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!$id('crmView').classList.contains('hidden'))openAddLeadModal();}if(e.altKey&&e.key.toLowerCase()==='f'){e.preventDefault();$id('search').focus();}if(e.altKey&&e.key.toLowerCase()==='v'){e.preventDefault();toggleView();}if(e.altKey&&e.key.toLowerCase()==='c'){e.preventDefault();openModal('emiModal');}});
-    function initAutoSave(){let f=document.querySelectorAll('#clientForm input[type="text"], #clientForm input[type="tel"], #clientForm textarea');f.forEach(e=>{e.addEventListener('input',()=>{if(!$id('editId').value){let d={name:$id('name').value,phone:$id('phone').value,budget:$id('budget').value,specificUnit:$id('specificUnit').value,remark:$id('newRemark').value};localStorage.setItem('crm_lead_draft',JSON.stringify(d));}});});}
+    
+    let autoSaveTimer;function initAutoSave(){let f=document.querySelectorAll('#clientForm input[type="text"], #clientForm input[type="tel"], #clientForm textarea');f.forEach(e=>{e.addEventListener('input',()=>{if(!$id('editId').value){clearTimeout(autoSaveTimer);autoSaveTimer=setTimeout(()=>{let d={name:$id('name').value,phone:$id('phone').value,budget:$id('budget').value,specificUnit:$id('specificUnit').value,remark:$id('newRemark').value};localStorage.setItem('crm_lead_draft',JSON.stringify(d));},400);}});});}
+    
     function checkAndRestoreDraft(){let s=localStorage.getItem('crm_lead_draft');if(s){try{let d=JSON.parse(s);if(d.name||d.phone||d.remark){if($id('name'))$id('name').value=d.name||'';if($id('phone'))$id('phone').value=d.phone||'';if($id('budget'))$id('budget').value=d.budget||'';if($id('specificUnit'))$id('specificUnit').value=d.specificUnit||'';if($id('newRemark'))$id('newRemark').value=d.remark||'';showNotification("Unsaved draft restored successfully!","success");}}catch(e){}}}
     window.addEventListener('offline',()=>{ $id('networkBanner').classList.add('offline');haptic('heavy');});window.addEventListener('online',()=>{ $id('networkBanner').classList.remove('offline');haptic('light');});
     
@@ -852,23 +860,27 @@
                 }
                 setTimeout(restorePendingCallLog,0);
                 
-                let dp=[],ad=false;
+                // 🔥 Fast Soft-Load Optimization via Set() 
+                let dpSet=new Set(customProjects),srcSet=new Set(customSources),statSet=new Set(customStatuses),assignSet=new Set(customAssignees),ad=false;
                 clients.forEach(c=>{
-                    if(c.projectCategory)c.projectCategory.split(' + ').forEach(p=>{let cp=p.trim();if(cp&&!dp.includes(cp))dp.push(cp);});
-                    if(c.leadSource&&!customSources.includes(c.leadSource)){customSources.push(c.leadSource);ad=true;}
-                    if(c.status&&!customStatuses.includes(c.status)){customStatuses.push(c.status);ad=true;}
-                    if(c.assignBy&&!customAssignees.includes(c.assignBy)){customAssignees.push(c.assignBy);ad=true;}
+                    if(c.projectCategory)c.projectCategory.split(' + ').forEach(p=>{let cp=p.trim();if(cp&&!dpSet.has(cp)){dpSet.add(cp);ad=true;}});
+                    if(c.leadSource&&!srcSet.has(c.leadSource)){srcSet.add(c.leadSource);ad=true;}
+                    if(c.status&&!statSet.has(c.status)){statSet.add(c.status);ad=true;}
+                    if(c.assignBy&&!assignSet.has(c.assignBy)){assignSet.add(c.assignBy);ad=true;}
                 });
-                let ap=false;
-                dp.forEach(p=>{if(!customProjects.includes(p)){customProjects.push(p);ap=true;}});
-                if(ap||ad){
+                
+                if(ad){
+                    customProjects=Array.from(dpSet);customSources=Array.from(srcSet);customStatuses=Array.from(statSet);customAssignees=Array.from(assignSet);
                     localStorage.setItem('crm_projects_'+auth.currentUser.uid,JSON.stringify(customProjects));
                     db.collection("users").doc(auth.currentUser.uid).set({projects:customProjects,sources:customSources,statuses:customStatuses,assignees:customAssignees},{merge:true});
                     renderDropdownsAndTabs();
                 }
                 
-                if(hasSelectedRole){updateDashboard();renderData(isFirstRender);isFirstRender=false;}
-                else{updateDashboard();renderData(false);}
+                clearTimeout(window.snapshotRenderTimer);
+                window.snapshotRenderTimer = setTimeout(() => {
+                    if(hasSelectedRole){updateDashboard();renderData(isFirstRender);isFirstRender=false;}
+                    else{updateDashboard();renderData(false);}
+                }, 150);
                 
                 if (newlyAssignedToVanshikha > 0) {
                     showVanshikhaNewLeadAlert(newlyAssignedToVanshikha, newlyAssignedNames);
@@ -1069,7 +1081,7 @@
     function openHistoryModal(id){haptic('light');let c=clients.find(x=>x.id===id);if(!c)return;currentHistoryLeadId=id;$id('historyModalName').innerText=`👤 ${c.name} | 📞 ${c.phone}`;$id('quickRemarkInput').value="";let ct=$id('fullHistoryContainer'),w=$id('fullHistoryWrapper');if(!ct)return;ct.innerHTML='';let ha=c.history?[...c.history]:[];if(ha.length===0&&c.remark)ha.push({date:c.leadDate||getToday(),time:'',note:c.remark});if(ha.length===0)w.style.display='none';else{w.style.display='block';let f=document.createDocumentFragment();ha.forEach((h,i)=>{let d=document.createElement('div');d.className='history-item';d.innerHTML=`<div style="font-size:11px;color:var(--accent-brand);font-weight:800;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span>📅 ${h.date} &nbsp; 🕒 ${h.time||'N/A'}</span><span style="display:flex;align-items:center;gap:8px;font-size:16px;"><span class="edit-history-btn" onclick="triggerEditHistoryStandalone('${id}', ${i})">✏️</span><span class="delete-history-btn" onclick="triggerDeleteHistoryStandalone('${id}', ${i})">🗑️</span></span></div><div style="font-size:13px;color:var(--text-color);line-height:1.5;font-weight:600;">${sanitizeText(h.note)}</div>`;f.appendChild(d);});ct.appendChild(f);}openModal('historyModal');}
     async function addQuickRemark(e){if(!currentHistoryLeadId)return;let i=$id('quickRemarkInput'),nr=i.value.trim();if(!nr){showNotification("Required!","warning");return;}let c=clients.find(x=>x.id===currentHistoryLeadId);if(!c)return;let b=e.target,ot=b.innerText;b.innerText="Saving...";b.disabled=true;let ha=c.history?[...c.history]:[];ha.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:nr});let ed=extractSmartDate(nr),pl={history:ha,remark:nr,updatedAt:Date.now(),requiresRemark:false};if(ed)pl.followup=ed;try{if(db)await db.collection("leads").doc(currentHistoryLeadId).update(pl);if(ed)showNotification(`Date: ${formatDisplayDate(ed)}`,"success");else showNotification("Saved!","success");haptic('medium');openHistoryModal(currentHistoryLeadId);}catch(x){showNotification("Error","error");}finally{b.innerText=ot;b.disabled=false;}}
     function applyDOMFilters(s){searchIndexTable.forEach(i=>{if(!s||i.text.includes(s))i.el.classList.remove('search-hidden-row');else i.el.classList.add('search-hidden-row');});searchIndexKanban.forEach(i=>{if(!s||i.text.includes(s))i.el.classList.remove('search-hidden-row');else i.el.classList.add('search-hidden-row');});}
-    let searchTimeout;$id('search').addEventListener('input',e=>{let s=e.target.value.toLowerCase().trim();clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>requestAnimationFrame(()=>applyDOMFilters(s)),50);});
+    let searchTimeout;$id('search').addEventListener('input',e=>{let s=e.target.value.toLowerCase().trim();clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>requestAnimationFrame(()=>applyDOMFilters(s)),300);});
     function renderData(a=false){try{if(currentViewMode==='table')renderTableOptimized(a);else if(currentViewMode==='kanban')renderKanban(a);else if(currentViewMode==='calendar')renderCalendar();}catch(e){}}
     function toggleAllBulk(c){let v=getFilteredData().map(x=>x.id);if(c.checked)v.forEach(i=>selectedLeadIds.add(i));else v.forEach(i=>selectedLeadIds.delete(i));updateBulkBar();renderData(false);}
     function updateBulkBar(){let b=$id('bulkActionBar'),c=$id('bulkCount'),sa=$id('selectAllCb'),sc=selectedLeadIds.size;if(c)c.innerText=`${sc} Selected`;if(b)b.classList.toggle('active',sc>0);if(sa){let v=getFilteredData().map(x=>x.id);sa.checked=v.length>0&&v.every(i=>selectedLeadIds.has(i));}}
@@ -1109,11 +1121,14 @@
         }catch(e){showNotification("Error","error");}
     }
     
+    // 🔥 Chunk Rendering Optimization (From 500 to 75)
     function renderTableOptimized(a=false){
         if(renderTableRequestId){cancelAnimationFrame(renderTableRequestId);renderTableRequestId=null;}
         let tb=$id('clientTable'),tc=$id('tableView');if(!tb||!tc)return;
         let sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop,sx=window.scrollX||window.pageXOffset||document.documentElement.scrollLeft,tst=tc.scrollTop,tsl=tc.scrollLeft,ch=tc.scrollHeight;
-        if(ch>0)tc.style.minHeight=ch+'px';tb.innerHTML='';searchIndexTable=[];let t=getToday(),ed=getFilteredData(),cs=500,ci=0,sr=1;
+        if(ch>0)tc.style.minHeight=ch+'px';tb.innerHTML='';searchIndexTable=[];
+        
+        let t=getToday(),ed=getFilteredData(),cs=75,ci=0,sr=1; // Chunk Size lowered to 75 for Soft Loading
         
         function rc(ts){
             let f=document.createDocumentFragment(),en=Math.min(ci+cs,ed.length);
@@ -1126,7 +1141,6 @@
                     
                     let ud=c.specificUnit?`<span style="font-size:10px;opacity:0.7;font-weight:800;">${sanitizeText(c.specificUnit)}</span>`:'';
                     
-                    // The Blank Remark Magic happens right here:
                     let rawRemark=(c.history&&c.history.length>0)?c.history[0].note:(c.remark||'-');
                     let displayRemark = reqRem ? '<span style="opacity:0.3;font-weight:800;">- Blank -</span>' : sanitizeText(rawRemark);
                     
@@ -1150,10 +1164,13 @@
         if(ed.length>0)renderTableRequestId=requestAnimationFrame(rc);else tc.style.minHeight='';
     }
     
+    // 🔥 Chunk Rendering Optimization (From 500 to 40)
     function renderKanban(a=false){
         if(renderKanbanRequestId){cancelAnimationFrame(renderKanbanRequestId);renderKanbanRequestId=null;}
         let ed=getFilteredData(),sy=window.scrollY||window.pageYOffset||document.documentElement.scrollTop,sx=window.scrollX||window.pageXOffset||document.documentElement.scrollLeft,kc=$id('kanbanView');if(!kc)return;
-        let ksl=kc.scrollLeft,zs={};searchIndexKanban=[];customStatuses.forEach(s=>{let z=document.querySelector(`.kanban-dropzone[data-status="${s}"]`);if(z){zs[s]=z.scrollTop;let ch=z.scrollHeight;if(ch>0)z.style.minHeight=ch+'px';z.innerHTML='';}});let cs=500,ci=0;
+        let ksl=kc.scrollLeft,zs={};searchIndexKanban=[];customStatuses.forEach(s=>{let z=document.querySelector(`.kanban-dropzone[data-status="${s}"]`);if(z){zs[s]=z.scrollTop;let ch=z.scrollHeight;if(ch>0)z.style.minHeight=ch+'px';z.innerHTML='';}});
+        
+        let cs=40,ci=0; // Chunk Size lowered to 40 for Kanban Soft Loading
         
         function rk(){
             let en=Math.min(ci+cs,ed.length),fc={};customStatuses.forEach(s=>fc[s]=document.createDocumentFragment());
