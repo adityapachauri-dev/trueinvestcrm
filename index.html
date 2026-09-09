@@ -186,7 +186,6 @@
         .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         .flex-row{display:flex;gap:10px;width:100%} .flex-row input,.flex-row select{margin-bottom:0}
         
-        /* NEW: Property Type Grid Styles */
         .property-type-grid {
             display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none;
         }
@@ -373,6 +372,37 @@
         
         .glass-panel, .swipeable-sheet, .table-container, .kanban-container { -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
         @media (max-width: 992px) { .glass-panel { backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; } }
+        
+        /* SMART MOBILE TABLE VIEW UPGRADE */
+        @media (max-width: 992px) {
+            #tableView table, #tableView tbody, #tableView tr { display: block; width: 100%; }
+            #tableView thead { display: none; } /* Hide desktop headers */
+            #tableView tr { 
+                margin-bottom: 16px; background: var(--card-bg); border-radius: 16px; 
+                padding: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+                border: 1px solid var(--border-color); position: relative; 
+            }
+            #tableView td { 
+                display: flex; justify-content: space-between; align-items: center; 
+                border-bottom: 1px dashed var(--border-color); padding: 8px 0; text-align: right; 
+            }
+            #tableView td:last-child { border-bottom: none; justify-content: center; }
+            
+            /* Injecting Mobile Labels */
+            #tableView td::before { font-weight: 800; color: var(--golden-dark); text-align: left; text-transform: uppercase; font-size: 10px; margin-right: 10px; }
+            #tableView td:nth-child(1) { display: none; } /* Hide bulk checkbox on mobile table to save space */
+            #tableView td:nth-child(2)::before { content: "S.No"; }
+            #tableView td:nth-child(3)::before { content: "Lead Date"; }
+            #tableView td:nth-child(4)::before { content: "Client Name"; }
+            #tableView td:nth-child(5)::before { content: "Phone"; }
+            #tableView td:nth-child(6)::before { content: "Assignee"; }
+            #tableView td:nth-child(7)::before { content: "Status"; }
+            #tableView td:nth-child(8)::before { content: "Source"; }
+            #tableView td:nth-child(9)::before { content: "Project Details"; }
+            #tableView td:nth-child(10)::before { content: "Budget"; }
+            #tableView td:nth-child(11)::before { content: "Next Follow-up"; }
+            #tableView td:nth-child(12)::before { content: "Latest Remark"; }
+        }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -430,6 +460,7 @@
                 <button class="notification-btn" id="viewToggleBtn" onclick="toggleView()" title="Switch View (Alt+V)"><ion-icon name="grid"></ion-icon></button>
                 <button class="btn-secondary" style="height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="openModal('emiModal')" title="Calculator (Alt+C)"><ion-icon name="calculator"></ion-icon></button>
                 <button class="btn-secondary" style="height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="openAssigneeStats()" title="Assignee Stats"><ion-icon name="people"></ion-icon></button>
+                <button class="btn-secondary" style="height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="document.body.classList.toggle('dark-mode'); localStorage.setItem('crm_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); haptic('light');" title="Toggle Dark Mode"><ion-icon name="moon"></ion-icon></button>
                 <button class="btn-secondary" style="background-color:rgba(220,38,38,0.05);color:#DC2626;border-color:transparent;height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="logout()" title="Logout"><ion-icon name="power"></ion-icon></button>
             </div>
         </div>
@@ -505,7 +536,13 @@
                 <div class="form-grid"><div><label>Specific Unit (Inventory)</label><input type="text" id="specificUnit" placeholder="e.g. Flat 101, 830 sq ft"></div><div><label>Locality</label><input type="text" id="location" placeholder="Locality"></div></div>
                 <div><label>Budget</label><input type="text" id="budget" placeholder="e.g. 1.25 Cr" onblur="formatBudgetInput(this)" style="margin-bottom:16px;"></div>
                 <br><div class="history-container-box" id="historyTimelineContainer"><div class="timeline-track" id="historyTimeline"></div></div>
-                <label>Add Follow-up Remark <span style="font-size:10px;color:var(--golden);float:right;">AI Date Fill Enabled</span></label>
+                <label style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Add Follow-up Remark</span>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button type="button" onclick="startDictation('newRemark')" style="width:auto; height:24px; padding:0 8px; margin:0; font-size:12px; border-radius:6px; background:var(--notify-red); color:white; border:none; box-shadow:none;">🎙️ Voice</button>
+                        <span style="font-size:10px;color:var(--golden);">AI Date Fill Enabled</span>
+                    </div>
+                </label>
                 <div class="remark-wrapper"><textarea id="newRemark" placeholder="Type update... ('kal call' autosets date)" rows="2" style="resize:vertical;"></textarea></div>
                 <button type="submit" id="saveBtn" class="btn-shine">Save Record</button>
                 <button type="button" class="btn-secondary" style="width:100%;margin-top:10px;border-radius:12px;" onclick="resetForm(true)">Clear Form</button>
@@ -621,6 +658,44 @@
 
 <script>
     const $id = i => document.getElementById(i);
+    
+    // Dark mode persistence
+    if(localStorage.getItem('crm_theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+
+    // Voice Dictation function
+    function startDictation(targetId) {
+        haptic('medium');
+        if (window.hasOwnProperty('webkitSpeechRecognition') || window.hasOwnProperty('SpeechRecognition')) {
+            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            var recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = "en-IN"; // Recognizes Indian English and common Hindi words
+            recognition.start();
+            
+            let targetField = document.getElementById(targetId);
+            let originalPlaceholder = targetField.placeholder;
+            targetField.placeholder = "Listening... Speak now!";
+            
+            recognition.onresult = function(e) {
+                targetField.value += (targetField.value ? " " : "") + e.results[0][0].transcript;
+                targetField.placeholder = originalPlaceholder;
+                
+                // Trigger AI Date Fill automatically after speaking
+                let event = new Event('input', { bubbles: true });
+                targetField.dispatchEvent(event);
+            };
+            recognition.onerror = function(e) {
+                showNotification("Voice recognition failed.", "error");
+                targetField.placeholder = originalPlaceholder;
+            };
+        } else {
+            showNotification("Speech API not supported in this browser.", "error");
+        }
+    }
+
     window.addEventListener('error',e=>{let s=$id('splashScreen');if(s&&s.style.opacity!=='0'){s.style.opacity='0';setTimeout(()=>s.remove(),200);showNotification("Self-healed an initialization error.","warning");}});
     window.addEventListener('unhandledrejection',e=>{});
     setTimeout(()=>{let s=$id('splashScreen');if(s&&s.style.display!=='none'){s.style.transition='opacity 0.5s ease';s.style.opacity='0';setTimeout(()=>s.remove(),500);}},4000);
