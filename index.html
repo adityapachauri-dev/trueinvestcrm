@@ -39,17 +39,7 @@
             --ease-bounce:cubic-bezier(0.175,0.885,0.32,1.275); 
             --ease-smooth:cubic-bezier(0.4,0,0.2,1);
         }
-        body.dark-mode {
-            --bg-color:#020617; --card-bg:#0F172A; --input-bg:#1E293B; --text-color:#F8FAFC; 
-            --border-color:#334155; --cold-bg:#1E293B; --cold-text:#94A3B8; 
-            --highlight-today:rgba(197,160,89,0.15);
-            
-            --glass-bg: rgba(15, 23, 42, 0.75);
-            --glass-border: rgba(197, 160, 89, 0.15);
-            --nav-bg: rgba(15, 23, 42, 0.85);
-            --shadow-sm: 0 6px 20px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.6);
-        }
+        
         body::before {content:"";position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:-1;opacity:0.03;background-image:radial-gradient(var(--golden) 1.2px,transparent 1.2px);background-size:28px 28px}
         body {font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",sans-serif;background:linear-gradient(135deg,var(--bg-color) 0%,var(--border-color) 100%);color:var(--text-color);margin:0;padding:0;overflow-x:hidden;width:100vw;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;-webkit-tap-highlight-color:transparent;min-height:100dvh;transition:background .3s ease,color .3s ease}
         *{box-sizing:border-box;outline:none}
@@ -147,7 +137,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.8);
             text-shadow: none; transition:all .4s var(--ease-bounce);
         }
-        body.dark-mode .btn-secondary {box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);}
         .btn-secondary::after, .btn-secondary::before {display:none}
         .btn-secondary:hover {
             border-color: var(--golden); background: linear-gradient(145deg, var(--card-bg), var(--card-bg));
@@ -182,7 +171,6 @@
             box-shadow:0 0 0 4px rgba(197,160,89,0.15), inset 0 2px 4px rgba(0,0,0,0.02);
         }
         select option[value="ADD_NEW"]{font-weight:900;color:var(--golden-dark);background:#FFFBEB}
-        body.dark-mode select option[value="ADD_NEW"]{background:#332912;color:#E3CFA8}
         .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         .flex-row{display:flex;gap:10px;width:100%} .flex-row input,.flex-row select{margin-bottom:0}
         
@@ -211,7 +199,6 @@
         .segmented-control input[type="radio"]:checked+label{transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.5)}
         .segmented-control input[type="radio"]:checked+.seg-hot{background:var(--hot-bg);color:var(--hot-text);border:1px solid rgba(185,28,28,0.2)}
         .segmented-control input[type="radio"]:checked+.seg-warm{background:#FFFBEB;color:#B45309;border:1px solid rgba(180,83,9,0.2)}
-        body.dark-mode .segmented-control input[type="radio"]:checked+.seg-warm{background:#332912;color:#E3CFA8;border-color:rgba(227,207,168,0.2)}
         .segmented-control input[type="radio"]:checked+.seg-cold{background:var(--cold-bg);color:var(--cold-text);border:1px solid rgba(51,65,85,0.2)}
         
         .badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;letter-spacing:.3px}
@@ -231,7 +218,7 @@
         .project-tabs{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px;width:100%;max-width:max-content;align-items:center}
         .tab-wrapper{position:relative;display:inline-flex;align-items:center;justify-content:center}
         
-        .tab-btn{background:linear-gradient(145deg, var(--input-bg), var(--card-bg));color:var(--text-color);border:1px solid var(--border-color);height:34px;font-size:13px;font-weight:700;padding:0 14px;margin:0;border-radius:8px;transition:all .4s var(--ease-bounce);box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);display:inline-flex;align-items:center;justify-content:center}
+        .tab-btn{background:linear-gradient(145deg, var(--input-bg), var(--card-bg));color:var(--text-color);border:1px solid var(--border-color);height:34px;font-size:13px;font-weight:700;padding:0 14px;margin:0;border-radius:8px;transition:all .4s var(--bounce-ease);box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);display:inline-flex;align-items:center;justify-content:center}
         .tab-btn:hover{border-color:var(--golden);background:var(--card-bg);color:var(--text-color);transform:translateY(-2px);box-shadow:0 6px 15px rgba(197,160,89,0.15), inset 0 1px 1px rgba(255,255,255,0.9)}
         .tab-btn.active{background:var(--btn-gradient);color:var(--golden);border:1px solid rgba(197,160,89,0.5);font-weight:800;box-shadow:0 6px 15px rgba(10,25,47,0.2), inset 0 1px 1px rgba(255,255,255,0.15);text-shadow:0 1px 2px rgba(0,0,0,0.2)}
         .tab-delete-btn{position:absolute;top:-6px;right:-6px;background:var(--notify-red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0;z-index:10;opacity:0;transform:scale(.5);transition:all .3s var(--ease-bounce);pointer-events:none;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(220,38,38,0.4)}
@@ -252,7 +239,6 @@
         .row-highlight{background-color:var(--highlight-today)!important;border-left:3px solid var(--golden)}
         .skeleton-loader{position:absolute;top:50px;left:0;width:100%;height:calc(100% - 50px);background:transparent;overflow:hidden;z-index:10;border-radius:0 0 20px 20px;display:flex;align-items:center;justify-content:center;color:var(--text-color);font-weight:700;letter-spacing:1px}
         .skeleton-loader::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0) 100%);animation:shimmer 1.5s infinite linear;z-index:-1}
-        body.dark-mode .skeleton-loader::after{background:linear-gradient(90deg,rgba(15,23,42,0) 0%,rgba(255,255,255,0.05) 50%,rgba(15,23,42,0) 100%)}
         @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
         
         .kanban-container{display:flex;gap:16px;overflow-x:auto;padding:20px;background:transparent;min-height:500px;-webkit-overflow-scrolling:touch;border-radius:20px;border:none;overscroll-behavior-x:contain}
@@ -460,7 +446,6 @@
                 <button class="notification-btn" id="viewToggleBtn" onclick="toggleView()" title="Switch View (Alt+V)"><ion-icon name="grid"></ion-icon></button>
                 <button class="btn-secondary" style="height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="openModal('emiModal')" title="Calculator (Alt+C)"><ion-icon name="calculator"></ion-icon></button>
                 <button class="btn-secondary" style="height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="openAssigneeStats()" title="Assignee Stats"><ion-icon name="people"></ion-icon></button>
-                <button class="btn-secondary" style="height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="document.body.classList.toggle('dark-mode'); localStorage.setItem('crm_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); haptic('light');" title="Toggle Dark Mode"><ion-icon name="moon"></ion-icon></button>
                 <button class="btn-secondary" style="background-color:rgba(220,38,38,0.05);color:#DC2626;border-color:transparent;height:44px;width:44px;padding:0;border-radius:50%;font-size:20px;margin:0;display:flex;align-items:center;justify-content:center;" onclick="logout()" title="Logout"><ion-icon name="power"></ion-icon></button>
             </div>
         </div>
@@ -539,7 +524,6 @@
                 <label style="display:flex; justify-content:space-between; align-items:center;">
                     <span>Add Follow-up Remark</span>
                     <div style="display:flex; gap:10px; align-items:center;">
-                        <button type="button" onclick="startDictation('newRemark')" style="width:auto; height:24px; padding:0 8px; margin:0; font-size:12px; border-radius:6px; background:var(--notify-red); color:white; border:none; box-shadow:none;">🎙️ Voice</button>
                         <span style="font-size:10px;color:var(--golden);">AI Date Fill Enabled</span>
                     </div>
                 </label>
@@ -658,43 +642,6 @@
 
 <script>
     const $id = i => document.getElementById(i);
-    
-    // Dark mode persistence
-    if(localStorage.getItem('crm_theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-
-    // Voice Dictation function
-    function startDictation(targetId) {
-        haptic('medium');
-        if (window.hasOwnProperty('webkitSpeechRecognition') || window.hasOwnProperty('SpeechRecognition')) {
-            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            var recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = "en-IN"; // Recognizes Indian English and common Hindi words
-            recognition.start();
-            
-            let targetField = document.getElementById(targetId);
-            let originalPlaceholder = targetField.placeholder;
-            targetField.placeholder = "Listening... Speak now!";
-            
-            recognition.onresult = function(e) {
-                targetField.value += (targetField.value ? " " : "") + e.results[0][0].transcript;
-                targetField.placeholder = originalPlaceholder;
-                
-                // Trigger AI Date Fill automatically after speaking
-                let event = new Event('input', { bubbles: true });
-                targetField.dispatchEvent(event);
-            };
-            recognition.onerror = function(e) {
-                showNotification("Voice recognition failed.", "error");
-                targetField.placeholder = originalPlaceholder;
-            };
-        } else {
-            showNotification("Speech API not supported in this browser.", "error");
-        }
-    }
 
     window.addEventListener('error',e=>{let s=$id('splashScreen');if(s&&s.style.opacity!=='0'){s.style.opacity='0';setTimeout(()=>s.remove(),200);showNotification("Self-healed an initialization error.","warning");}});
     window.addEventListener('unhandledrejection',e=>{});
