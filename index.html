@@ -218,7 +218,7 @@
         .project-tabs{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px;width:100%;max-width:max-content;align-items:center}
         .tab-wrapper{position:relative;display:inline-flex;align-items:center;justify-content:center}
         
-        .tab-btn{background:linear-gradient(145deg, var(--input-bg), var(--card-bg));color:var(--text-color);border:1px solid var(--border-color);height:34px;font-size:13px;font-weight:700;padding:0 14px;margin:0;border-radius:8px;transition:all .4s var(--bounce-ease);box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);display:inline-flex;align-items:center;justify-content:center}
+        .tab-btn{background:linear-gradient(145deg, var(--input-bg), var(--card-bg));color:var(--text-color);border:1px solid var(--border-color);height:34px;font-size:13px;font-weight:700;padding:0 14px;margin:0;border-radius:8px;transition:all .4s var(--ease-bounce);box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);display:inline-flex;align-items:center;justify-content:center}
         .tab-btn:hover{border-color:var(--golden);background:var(--card-bg);color:var(--text-color);transform:translateY(-2px);box-shadow:0 6px 15px rgba(197,160,89,0.15), inset 0 1px 1px rgba(255,255,255,0.9)}
         .tab-btn.active{background:var(--btn-gradient);color:var(--golden);border:1px solid rgba(197,160,89,0.5);font-weight:800;box-shadow:0 6px 15px rgba(10,25,47,0.2), inset 0 1px 1px rgba(255,255,255,0.15);text-shadow:0 1px 2px rgba(0,0,0,0.2)}
         .tab-delete-btn{position:absolute;top:-6px;right:-6px;background:var(--notify-red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0;z-index:10;opacity:0;transform:scale(.5);transition:all .3s var(--ease-bounce);pointer-events:none;font-weight:bold;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(220,38,38,0.4)}
@@ -244,7 +244,7 @@
         .kanban-container{display:flex;gap:16px;overflow-x:auto;padding:20px;background:transparent;min-height:500px;-webkit-overflow-scrolling:touch;border-radius:20px;border:none;overscroll-behavior-x:contain}
         .kanban-col{flex:1;min-width:300px;padding:14px;display:flex;flex-direction:column;background:var(--input-bg);border-radius:16px;border:1px solid var(--border-color)}
         .kanban-col h3{font-size:13px;text-transform:uppercase;color:var(--text-color);margin:0 0 14px 0;padding-bottom:10px;border-bottom:2px solid var(--border-color);text-align:center;font-weight:800;letter-spacing:1px}
-        .k-card{background:var(--card-bg);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border-color);cursor:grab;transition:all .3s var(--ease-bounce);position:relative;touch-action:pan-y;box-shadow:0 2px 10px rgba(0,0,0,0.02)}
+        .k-card{background:var(--card-bg);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border-color);cursor:grab;transition:all .3s var(--ease-bounce);position:relative;touch-action:none;box-shadow:0 2px 10px rgba(0,0,0,0.02)}
         .k-card:hover{border-color:var(--golden);transform:translateY(-4px);box-shadow:0 12px 25px rgba(10,25,47,0.08)}.k-card:active{cursor:grabbing;transform:scale(.96)}
         .k-card-title{font-weight:800;font-size:14px;color:var(--text-color);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
         .k-card-detail{font-size:12px;color:var(--text-color);opacity:.85;margin-bottom:6px;display:flex;align-items:center;gap:6px;font-weight:600}
@@ -278,7 +278,7 @@
         
         .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,25,47,0.85);display:flex;align-items:center;justify-content:center;z-index:10000;opacity:0;pointer-events:none;transition:opacity .2s var(--ease-smooth)}
         .modal-overlay.active{opacity:1;pointer-events:auto}
-        .modal-content{padding:24px;border-radius:24px;width:92%;max-width:440px;transform:scale(.95) translateY(20px);transition:transform .25s var(--ease-bounce),opacity .2s var(--ease-smooth);max-height:90vh;overflow-y:auto;opacity:0;background:var(--card-bg);border:1px solid var(--border-highlight);box-shadow:0 25px 60px rgba(0,0,0,0.4)}
+        .modal-content{padding:24px;border-radius:24px;width:92%;max-width:440px;transform:scale(.95) translateY(20px);transition:transform .25s var(--ease-bounce),opacity .2s var(--ease-smooth);max-height:90dvh;overflow-y:auto;opacity:0;background:var(--card-bg);border:1px solid var(--border-highlight);box-shadow:0 25px 60px rgba(0,0,0,0.4)}
         .modal-overlay.active .modal-content{transform:scale(1) translateY(0);opacity:1}
         .modal-close{float:right;background:linear-gradient(145deg, var(--input-bg), var(--card-bg));border:1px solid var(--border-color);font-size:22px;color:var(--text-color);cursor:pointer;height:38px;width:38px;border-radius:50%;padding:0;margin:0;display:flex;align-items:center;justify-content:center;transition:all .4s var(--ease-bounce);box-shadow:0 2px 5px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.8)}
         .modal-close:hover{background:var(--notify-red);color:#fff;border-color:var(--notify-red);transform:rotate(90deg) scale(1.1);box-shadow:0 4px 10px rgba(220,38,38,0.3)}
@@ -323,7 +323,20 @@
         .chip-btn:hover,.chip-btn:active{background:var(--btn-gradient);color:var(--golden);border-color:rgba(197,160,89,0.5);transform:translateY(-2px);box-shadow:0 6px 15px rgba(10,25,47,0.2), inset 0 1px 1px rgba(255,255,255,0.15)}
         
         @media (max-width: 992px){
-            .glass-panel{box-shadow:none!important;border:1px solid var(--border-color)!important}
+            /* FIXED MOBILE RENDERING LAG by Disabling Backdrop Blur & TranslateZ on Mobile Panels */
+            .glass-panel, .action-modal-content {
+                backdrop-filter: none !important; 
+                -webkit-backdrop-filter: none !important;
+                background-color: var(--card-bg) !important;
+                box-shadow: none !important; 
+                border: 1px solid var(--border-color) !important;
+                transform: none !important;
+            }
+            .top-bar {
+                background-color: var(--nav-bg) !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
             .workspace-layout{padding:12px;gap:16px;overflow-x:hidden;width:100vw;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:calc(85px + max(10px,env(safe-area-inset-bottom)));min-height:100dvh}
             .top-bar{flex-direction:column;align-items:stretch;gap:10px;padding:14px;border-radius:16px}
             .top-bar>div{flex-wrap:wrap;justify-content:center!important;gap:6px}
@@ -356,27 +369,36 @@
         }
         .search-hidden-row{display:none!important}
         
-        .glass-panel, .swipeable-sheet, .table-container, .kanban-container { -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
-        @media (max-width: 992px) { .glass-panel { backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; } }
+        /* HARDWARE ACCELERATION SPECIFICALLY FOR SWIPE SHEETS TO PREVENT RAM LEAK */
+        .swipeable-sheet { -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
         
-        /* SMART MOBILE TABLE VIEW UPGRADE */
+        /* SMART MOBILE TABLE VIEW UPGRADE - FIXED LAYOUT BUGS */
         @media (max-width: 992px) {
             #tableView table, #tableView tbody, #tableView tr { display: block; width: 100%; }
-            #tableView thead { display: none; } /* Hide desktop headers */
+            #tableView thead { display: none; }
             #tableView tr { 
                 margin-bottom: 16px; background: var(--card-bg); border-radius: 16px; 
-                padding: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+                padding: 16px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
                 border: 1px solid var(--border-color); position: relative; 
             }
             #tableView td { 
-                display: flex; justify-content: space-between; align-items: center; 
-                border-bottom: 1px dashed var(--border-color); padding: 8px 0; text-align: right; 
+                display: flex; justify-content: space-between; align-items: flex-start; 
+                border-bottom: 1px dashed var(--border-color); padding: 12px 0; text-align: right; 
+                word-break: break-word; overflow-wrap: break-word; gap: 8px; min-height: 44px;
             }
-            #tableView td:last-child { border-bottom: none; justify-content: center; }
+            #tableView td:last-child { border-bottom: none; justify-content: center; padding-bottom: 0; }
             
-            /* Injecting Mobile Labels */
-            #tableView td::before { font-weight: 800; color: var(--golden-dark); text-align: left; text-transform: uppercase; font-size: 10px; margin-right: 10px; }
-            #tableView td:nth-child(1) { display: none; } /* Hide bulk checkbox on mobile table to save space */
+            /* Injecting Mobile Labels Fixed Alignment */
+            #tableView td::before { 
+                font-weight: 800; color: var(--golden-dark); text-align: left; 
+                text-transform: uppercase; font-size: 11px; margin-right: auto;
+                flex-shrink: 0; max-width: 40%; line-height: 1.4;
+            }
+            
+            /* Align nested divs properly on Mobile */
+            #tableView td > div { align-items: flex-end !important; text-align: right; }
+            
+            #tableView td:nth-child(1) { display: none; } 
             #tableView td:nth-child(2)::before { content: "S.No"; }
             #tableView td:nth-child(3)::before { content: "Lead Date"; }
             #tableView td:nth-child(4)::before { content: "Client Name"; }
@@ -486,7 +508,7 @@
 <div id="addLeadModal" class="modal-overlay" onclick="handleModalClick(event,'addLeadModal')">
     <div class="modal-content glass-panel swipeable-sheet" style="max-width:600px;padding:0;" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div><button class="modal-close" onclick="closeModal('addLeadModal')" style="margin:16px 16px 0 0;position:absolute;right:0;top:0;z-index:10;">×</button>
-        <div style="padding:24px;max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+        <div style="padding:24px;max-height:calc(90dvh - 20px);overflow-y:auto;-webkit-overflow-scrolling:touch;">
             <h2 id="leadModalTitle" style="margin-top:0;color:var(--text-color);font-size:20px;font-weight:900;display:flex;align-items:center;gap:6px;"><ion-icon name="person-add"></ion-icon> Add New Lead</h2>
             <form id="clientForm" style="padding:0;box-shadow:none;border:none;background:transparent;animation:none;">
                 <input type="hidden" id="editId" value=""><input type="hidden" id="followup">
@@ -787,7 +809,39 @@
         }
         closeModal('waModal');
     }
-    let mobileNavRestoreTimer=null;document.addEventListener('focusin',e=>{let n=document.querySelector('.mobile-bottom-nav');if(n&&window.innerWidth<=992&&['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){clearTimeout(mobileNavRestoreTimer);n.style.display='none';}});document.addEventListener('focusout',()=>{let n=document.querySelector('.mobile-bottom-nav');if(n&&window.innerWidth<=992){clearTimeout(mobileNavRestoreTimer);mobileNavRestoreTimer=setTimeout(()=>{if(!document.querySelector('input:focus, textarea:focus, select:focus'))n.style.display='flex';},100);}});
+    
+    // FIXED: Mobile Bottom Nav Keyboard Glitch (Uses VisualViewport for flawless resizing)
+    if (window.visualViewport) {
+        const bottomNav = document.querySelector('.mobile-bottom-nav');
+        const initialHeight = window.visualViewport.height;
+        window.visualViewport.addEventListener('resize', () => {
+            if (bottomNav && window.innerWidth <= 992) {
+                if (window.visualViewport.height < window.innerHeight - 50) {
+                    bottomNav.style.display = 'none';
+                } else {
+                    bottomNav.style.display = 'flex';
+                }
+            }
+        });
+    } else {
+        let mobileNavRestoreTimer=null;
+        document.addEventListener('focusin',e=>{
+            let n=document.querySelector('.mobile-bottom-nav');
+            if(n&&window.innerWidth<=992&&['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){
+                clearTimeout(mobileNavRestoreTimer);n.style.display='none';
+            }
+        });
+        document.addEventListener('focusout',()=>{
+            let n=document.querySelector('.mobile-bottom-nav');
+            if(n&&window.innerWidth<=992){
+                clearTimeout(mobileNavRestoreTimer);
+                mobileNavRestoreTimer=setTimeout(()=>{
+                    if(!document.querySelector('input:focus, textarea:focus, select:focus'))n.style.display='flex';
+                },100);
+            }
+        });
+    }
+
     function animateValue(o,s,e,d){if(!o)return;let st=null;const step=ts=>{if(!st)st=ts;let p=Math.min((ts-st)/d,1),eo=1-Math.pow(1-p,4);o.innerHTML=Math.floor(eo*(e-s)+s);if(p<1)window.requestAnimationFrame(step);else o.innerHTML=e;};window.requestAnimationFrame(step);}
     function calculateEMI(){haptic('medium');let a=parseFloat($id('emiAmount').value),r=parseFloat($id('emiRate').value),y=parseFloat($id('emiYears').value);if(!Number.isFinite(a)||!Number.isFinite(r)||!Number.isFinite(y)||a<=0||r<0||y<=0){showNotification("Invalid inputs","warning");return;}let m=(r/12)/100,n=y*12,e=m===0?a/n:a*m*Math.pow(1+m,n)/(Math.pow(1+m,n)-1),tp=e*n,ti=tp-a,rd=$id('emiResult');if(rd){rd.style.display='block';rd.innerHTML=`<div style="text-align:center;"><h3 style="color:var(--golden-dark);margin:0 0 8px 0;font-size:12px;text-transform:uppercase;">Monthly EMI</h3><div style="font-size:26px;font-weight:900;margin-bottom:12px;">₹ ${Math.round(e).toLocaleString('en-IN')}</div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;border-top:1px dashed var(--border-color);padding-top:8px;"><span>Principal Amount</span><span style="font-weight:800;">₹ ${Math.round(a).toLocaleString('en-IN')}</span></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;"><span>Total Interest</span><span style="font-weight:800;">₹ ${Math.round(ti).toLocaleString('en-IN')}</span></div><div style="display:flex;justify-content:space-between;font-size:14px;font-weight:900;color:var(--accent-brand);border-top:1px solid var(--border-color);padding-top:8px;"><span>Total Payable</span><span>₹ ${Math.round(tp).toLocaleString('en-IN')}</span></div></div>`;}}
     
