@@ -244,7 +244,7 @@
         .kanban-container{display:flex;gap:16px;overflow-x:auto;padding:20px;background:transparent;min-height:500px;-webkit-overflow-scrolling:touch;border-radius:20px;border:none;overscroll-behavior-x:contain}
         .kanban-col{flex:1;min-width:300px;padding:14px;display:flex;flex-direction:column;background:var(--input-bg);border-radius:16px;border:1px solid var(--border-color)}
         .kanban-col h3{font-size:13px;text-transform:uppercase;color:var(--text-color);margin:0 0 14px 0;padding-bottom:10px;border-bottom:2px solid var(--border-color);text-align:center;font-weight:800;letter-spacing:1px}
-        .k-card{background:var(--card-bg);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border-color);cursor:grab;transition:all .3s var(--ease-bounce);position:relative;touch-action:none;box-shadow:0 2px 10px rgba(0,0,0,0.02)}
+        .k-card{background:var(--card-bg);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border-color);cursor:grab;transition:all .3s var(--ease-bounce);position:relative;touch-action:pan-y !important;box-shadow:0 2px 10px rgba(0,0,0,0.02)} /* PAN-Y ALLOWS MOBILE SCROLLING */
         .k-card:hover{border-color:var(--golden);transform:translateY(-4px);box-shadow:0 12px 25px rgba(10,25,47,0.08)}.k-card:active{cursor:grabbing;transform:scale(.96)}
         .k-card-title{font-weight:800;font-size:14px;color:var(--text-color);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
         .k-card-detail{font-size:12px;color:var(--text-color);opacity:.85;margin-bottom:6px;display:flex;align-items:center;gap:6px;font-weight:600}
@@ -322,58 +322,70 @@
         .chip-btn{padding:8px 12px;border-radius:20px;background:linear-gradient(145deg, var(--input-bg), var(--card-bg));border:1px solid var(--border-color);font-size:11px;font-weight:800;color:var(--text-color);cursor:pointer;white-space:nowrap;transition:all .4s var(--ease-bounce);height:auto;margin:0;box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);display:inline-flex;align-items:center;justify-content:center}
         .chip-btn:hover,.chip-btn:active{background:var(--btn-gradient);color:var(--golden);border-color:rgba(197,160,89,0.5);transform:translateY(-2px);box-shadow:0 6px 15px rgba(10,25,47,0.2), inset 0 1px 1px rgba(255,255,255,0.15)}
         
+        /* 📱 100% FIXED MOBILE VIEW CSS */
         @media (max-width: 992px){
-            /* FIXED MOBILE RENDERING LAG by Disabling Backdrop Blur & TranslateZ on Mobile Panels */
+            /* RAM & Performance Fix */
             .glass-panel, .action-modal-content {
                 backdrop-filter: none !important; 
                 -webkit-backdrop-filter: none !important;
                 background-color: var(--card-bg) !important;
                 box-shadow: none !important; 
                 border: 1px solid var(--border-color) !important;
-                transform: none !important;
             }
-            .top-bar {
-                background-color: var(--nav-bg) !important;
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
-            }
-            .workspace-layout{padding:12px;gap:16px;overflow-x:hidden;width:100vw;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:calc(85px + max(10px,env(safe-area-inset-bottom)));min-height:100dvh}
+            .top-bar { background-color: var(--nav-bg) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+            
+            /* PADDING FIX FOR BOTTOM NAV */
+            .workspace-layout{padding:12px;gap:16px;overflow-x:hidden;width:100vw;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:calc(120px + max(10px,env(safe-area-inset-bottom)));min-height:100dvh}
             .top-bar{flex-direction:column;align-items:stretch;gap:10px;padding:14px;border-radius:16px}
             .top-bar>div{flex-wrap:wrap;justify-content:center!important;gap:6px}
             .main-title{text-align:center;justify-content:center;width:100%;font-size:1.3rem}
             .expandable-stat-pill{max-width:130px;padding-right:10px;height:40px}.expandable-stat-pill .stat-icon{min-width:40px;font-size:18px}.expandable-stat-pill .stat-content{opacity:1;transform:translateX(0);font-size:11px}.expandable-stat-pill span{font-size:13px}
             .top-bar .btn-secondary,.notification-btn{height:40px;width:40px;font-size:18px;flex-shrink:0}
             #viewToggleBtn{display:none}
+            
             .form-grid{grid-template-columns:1fr;gap:0}.form-grid>div{width:100%}
             .controls-row{display:grid;grid-template-columns:1fr 1fr;padding:16px;gap:10px}
             .search-box{grid-column:span 2;width:100%;margin:0!important;height:46px}
             .controls-row button{margin:0!important;width:100%;height:44px;font-size:13px}
             .controls-row button:last-child{grid-column:span 2}
+            
             .project-tabs{flex-wrap:nowrap;overflow-x:auto;max-width:100%;justify-content:flex-start;padding:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:16px;}.project-tabs::-webkit-scrollbar{display:none}
             .tab-wrapper,.tab-btn{flex-shrink:0}.tab-add-btn{flex-shrink:0;margin-left:6px}
             .mobile-hint{display:block;margin-top:0}
+            
             .table-container{padding:0;width:100%;overflow-x:auto;border-radius:16px;-webkit-overflow-scrolling:touch;}
-            table{min-width:800px}
+            table{min-width:100%;}
+            
             .kanban-container{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x mandatory;padding:12px;gap:16px;max-width:100vw;scrollbar-width:none;border-radius:16px;-webkit-overflow-scrolling:touch;}.kanban-container::-webkit-scrollbar{display:none}
             .kanban-col{min-width:85vw;scroll-snap-align:center}
+            
             #toastContainer{top:max(12px,env(safe-area-inset-top));right:12px;left:12px;align-items:center;z-index:10008}
             .toast{width:100%;min-width:unset;justify-content:center;transform:translateY(-120%);font-size:13px;border-radius:16px}
             .toast.show{transform:translateY(0)}
             .fab-add{display:none!important}
+            
             #bulkActionBar{width:90vw;border-radius:20px;flex-direction:column;bottom:calc(85px + max(10px,env(safe-area-inset-bottom)))}
             #bulkActionBar select,#bulkActionBar button{width:100%}
+            
             .mobile-bottom-nav{display:flex;position:fixed;bottom:0;left:0;width:100%;background:var(--nav-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);padding-bottom:max(10px,env(safe-area-inset-bottom));z-index:9998;justify-content:space-around;align-items:center;height:calc(65px + max(10px,env(safe-area-inset-bottom)));box-shadow:0 -5px 25px rgba(0,0,0,0.08);transition:background-color .3s ease}
             .nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#64748B;font-size:10px;font-weight:700;gap:4px;transition:color .3s;cursor:pointer;padding:5px;min-width:60px}.nav-item.active{color:var(--golden-dark)}.nav-item ion-icon{font-size:22px;display:flex;align-items:center;justify-content:center;transition:transform .3s var(--ease-bounce)}.nav-item.active ion-icon{transform:translateY(-2px)}
             .nav-item.fab-wrapper{position:relative;top:-15px}
             .nav-item .fab-circle{width:56px;height:56px;border-radius:50%;background:var(--btn-gradient);color:var(--golden);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 10px 25px rgba(10,25,47,0.3), inset 0 2px 2px rgba(255,255,255,0.15);border:1px solid rgba(197,160,89,0.5);transition:all .4s var(--ease-bounce);margin:0;padding:0}.nav-item .fab-circle:active{transform:scale(.9);box-shadow:0 4px 10px rgba(10,25,47,0.3), inset 0 2px 4px rgba(0,0,0,0.3)}
-        }
-        .search-hidden-row{display:none!important}
-        
-        /* HARDWARE ACCELERATION SPECIFICALLY FOR SWIPE SHEETS TO PREVENT RAM LEAK */
-        .swipeable-sheet { -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
-        
-        /* SMART MOBILE TABLE VIEW UPGRADE - FIXED LAYOUT BUGS */
-        @media (max-width: 992px) {
+            
+            /* KEYBOARD & MODAL BUG FIX: Force bottom-sheet style */
+            .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+            .modal-content {
+                max-height: 85dvh !important;
+                border-radius: 24px 24px 0 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important;
+                transform: translateY(100%);
+            }
+            .modal-overlay.active .modal-content { transform: translateY(0); }
+            
+            /* TABLE TEXT OVERLAP FIX: Stack them cleanly */
             #tableView table, #tableView tbody, #tableView tr { display: block; width: 100%; }
             #tableView thead { display: none; }
             #tableView tr { 
@@ -382,21 +394,17 @@
                 border: 1px solid var(--border-color); position: relative; 
             }
             #tableView td { 
-                display: flex; justify-content: space-between; align-items: flex-start; 
-                border-bottom: 1px dashed var(--border-color); padding: 12px 0; text-align: right; 
-                word-break: break-word; overflow-wrap: break-word; gap: 8px; min-height: 44px;
+                display: flex; flex-direction: column; justify-content: center; align-items: flex-start !important; 
+                border-bottom: 1px dashed var(--border-color); padding: 12px 0; text-align: left !important; 
+                word-break: break-word; overflow-wrap: break-word; gap: 4px; min-height: auto;
             }
-            #tableView td:last-child { border-bottom: none; justify-content: center; padding-bottom: 0; }
-            
-            /* Injecting Mobile Labels Fixed Alignment */
+            #tableView td:last-child { border-bottom: none; align-items: center !important; }
+            #tableView td > div { align-items: flex-start !important; text-align: left !important; }
             #tableView td::before { 
                 font-weight: 800; color: var(--golden-dark); text-align: left; 
                 text-transform: uppercase; font-size: 11px; margin-right: auto;
-                flex-shrink: 0; max-width: 40%; line-height: 1.4;
+                flex-shrink: 0; line-height: 1.4;
             }
-            
-            /* Align nested divs properly on Mobile */
-            #tableView td > div { align-items: flex-end !important; text-align: right; }
             
             #tableView td:nth-child(1) { display: none; } 
             #tableView td:nth-child(2)::before { content: "S.No"; }
@@ -411,6 +419,9 @@
             #tableView td:nth-child(11)::before { content: "Next Follow-up"; }
             #tableView td:nth-child(12)::before { content: "Latest Remark"; }
         }
+        
+        .search-hidden-row{display:none!important}
+        .swipeable-sheet { -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -506,9 +517,9 @@
 </div>
 
 <div id="addLeadModal" class="modal-overlay" onclick="handleModalClick(event,'addLeadModal')">
-    <div class="modal-content glass-panel swipeable-sheet" style="max-width:600px;padding:0;" onclick="event.stopPropagation()">
+    <div class="modal-content glass-panel swipeable-sheet" style="padding:0;" onclick="event.stopPropagation()">
         <div class="sheet-handle"></div><button class="modal-close" onclick="closeModal('addLeadModal')" style="margin:16px 16px 0 0;position:absolute;right:0;top:0;z-index:10;">×</button>
-        <div style="padding:24px;max-height:calc(90dvh - 20px);overflow-y:auto;-webkit-overflow-scrolling:touch;">
+        <div style="padding:24px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;">
             <h2 id="leadModalTitle" style="margin-top:0;color:var(--text-color);font-size:20px;font-weight:900;display:flex;align-items:center;gap:6px;"><ion-icon name="person-add"></ion-icon> Add New Lead</h2>
             <form id="clientForm" style="padding:0;box-shadow:none;border:none;background:transparent;animation:none;">
                 <input type="hidden" id="editId" value=""><input type="hidden" id="followup">
@@ -526,7 +537,6 @@
                     <input type="radio" id="tempCold" name="leadTemp" value="Cold"><label for="tempCold" class="seg-cold">❄️ Cold</label>
                 </div>
                 
-                <!-- NEW PROPERTY TYPE SELECTOR -->
                 <label>Property Category (Type)</label>
                 <div class="property-type-grid" id="propTypeContainer">
                     <div class="prop-type-card active" data-type="Builder Floor" onclick="selectPropType('Builder Floor', this)">🏗️ Builder Floor</div>
@@ -810,10 +820,9 @@
         closeModal('waModal');
     }
     
-    // FIXED: Mobile Bottom Nav Keyboard Glitch (Uses VisualViewport for flawless resizing)
+    // VISUAL VIEWPORT API: Stops bottom menu and modals from glitching on mobile keyboard open
     if (window.visualViewport) {
         const bottomNav = document.querySelector('.mobile-bottom-nav');
-        const initialHeight = window.visualViewport.height;
         window.visualViewport.addEventListener('resize', () => {
             if (bottomNav && window.innerWidth <= 992) {
                 if (window.visualViewport.height < window.innerHeight - 50) {
@@ -878,7 +887,33 @@
     function toggleView(){if(currentViewMode==='table')setViewMode('kanban');else if(currentViewMode==='kanban')setViewMode('calendar');else setViewMode('table');}
     function showNotification(m,t='success'){if(t==='error')haptic('heavy');let c=$id('toastContainer');if(!c)return;let e=document.createElement('div');e.className=`toast glass-panel ${t}`;let i='<ion-icon name="checkmark-circle"></ion-icon>';if(t==='error')i='<ion-icon name="close-circle"></ion-icon>';if(t==='warning')i='<ion-icon name="warning"></ion-icon>';e.innerHTML=`<span class="toast-icon">${i}</span>`;let s=document.createElement('span');s.textContent=String(m??'');e.appendChild(s);c.appendChild(e);requestAnimationFrame(()=>{setTimeout(()=>e.classList.add('show'),10);setTimeout(()=>{e.classList.remove('show');setTimeout(()=>e.remove(),500);},3000);});}
     async function copyToClipboard(t,y){if(!t||t==='-')return;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(String(t));}else{let a=document.createElement('textarea');a.value=String(t);a.setAttribute('readonly','');a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}haptic('light');showNotification(`${y} Copied!`,'success');}catch(e){showNotification('Copy failed.','error');}}
-    document.querySelectorAll('.swipeable-sheet').forEach(s=>{let sy=0,cy=0,d=false,t=false;s.addEventListener('touchstart',e=>{if(!e.target.classList.contains('sheet-handle')&&e.target.tagName!=='H2'&&e.target.tagName!=='H3')return;sy=e.touches[0].clientY;d=true;s.style.transition='none';},{passive:true});s.addEventListener('touchmove',e=>{if(!d)return;cy=e.touches[0].clientY;let df=cy-sy;if(df>0&&!t){window.requestAnimationFrame(()=>{s.style.transform=`translateY(${df}px)`;t=false;});t=true;}},{passive:true});s.addEventListener('touchend',e=>{if(!d)return;d=false;s.style.transition='transform 0.25s var(--ease-bounce)';s.style.transform='';let df=cy-sy;if(df>100&&cy>0){s.parentElement.classList.remove('active');haptic('light');}sy=0;cy=0;});});
+    
+    document.querySelectorAll('.swipeable-sheet').forEach(s=>{
+        let sy=0,cy=0,d=false,t=false;
+        s.addEventListener('touchstart',e=>{
+            // Strict check so it ONLY triggers swipe logic if touching the small handle at the top
+            if(!e.target.classList.contains('sheet-handle') && e.target.tagName!=='H2' && e.target.tagName!=='H3')return;
+            sy=e.touches[0].clientY;
+            d=true;
+            s.style.transition='none';
+        },{passive:true});
+        s.addEventListener('touchmove',e=>{
+            if(!d)return;
+            cy=e.touches[0].clientY;
+            let df=cy-sy;
+            if(df>0&&!t){window.requestAnimationFrame(()=>{s.style.transform=`translateY(${df}px)`;t=false;});t=true;}
+        },{passive:true});
+        s.addEventListener('touchend',e=>{
+            if(!d)return;
+            d=false;
+            s.style.transition='transform 0.25s var(--ease-bounce)';
+            s.style.transform='';
+            let df=cy-sy;
+            if(df>100&&cy>0){s.parentElement.classList.remove('active');haptic('light');}
+            sy=0;cy=0;
+        });
+    });
+
     const safeAtob=s=>{try{return atob(s.trim());}catch(e){return "";}};
     const firebaseConfig={apiKey:safeAtob("QUl6YVN5QXNiOWN3WXAzTEpXTTdtb3RXU0s2VUF5MmN0N3QtNnpZ"),authDomain:safeAtob("dHJ1ZWNybS02Y2Y4ZS5maXJlYmFzZWFwcC5jb20="),projectId:safeAtob("dHJ1ZWNybS02Y2Y4ZQ=="),storageBucket:safeAtob("dHJ1ZWNybS02Y2Y4ZS5maXJlYmFzZXN0b3JhZ2UuYXBw"),messagingSenderId:safeAtob("NzkxMzgxNDA3NTM3"),appId:safeAtob("MTo3OTEzODE0MDc1Mzc6d2ViOjQ1ZTk5NDZhOTM5ZjhkMjNiNTYyMTA=")};
     let auth,db;try{if(typeof firebase!=='undefined'){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();try{db.enableMultiTabIndexedDbPersistence().catch(e=>{});}catch(e){}}}catch(e){}
@@ -1303,7 +1338,6 @@
                     let hl=(c.followup===t&&c.status!=='Closed')?'row-highlight':'';
                     if(reqRem) hl += ' needs-remark-row';
                     
-                    // NEW: Display Property Type Badge
                     let ptBadge = c.propertyType ? `<span style="display:inline-block; margin-bottom:4px; font-size:9px; background:rgba(197,160,89,0.1); color:var(--golden-dark); padding:2px 6px; border-radius:4px; font-weight:900; letter-spacing:0.5px; border:1px solid rgba(197,160,89,0.3); text-transform:uppercase;">${c.propertyType}</span><br>` : '';
                     let ud=c.specificUnit?`<span style="font-size:10px;opacity:0.7;font-weight:800;">${sanitizeText(c.specificUnit)}</span>`:'';
                     
@@ -1320,7 +1354,7 @@
                     
                     let tk=(c.followup===t&&c.status!=='Closed')?`<span class="action-dots" style="color:var(--whatsapp-green);margin-right:4px;" onclick="event.stopPropagation();markFollowupDone('${c.id}')">✔️</span>`:'',du=Math.floor((Date.now()-(c.updatedAt||0))/86400000),stb='';if(du>=7&&c.status!=='Closed'&&c.status!=='Not Interested')stb=`<span class="pulse-dot"></span>`;let ml=c.location||c.projectCategory?`<a href="https://maps.google.com/?q=${encodeURIComponent(c.location||c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;font-size:14px;">📍</a>`:'',ic=selectedLeadIds.has(c.id)?'checked':'',tr=document.createElement('tr');tr.className=`${hl}`;tr.dataset.id=c.id;tr.dataset.phone=normalizePhone(c.phone);tr.dataset.name=String(c.name||'');tr.dataset.proj=String(c.projectCategory||'');tr.onclick=()=>editLead(c.id);
                     
-                    tr.innerHTML=`<td onclick="event.stopPropagation()"><div style="display:flex;align-items:center;justify-content:center;"><input type="checkbox" class="bulk-cb" value="${escapeHtml(c.id)}" onchange="handleBulkCheckbox(this)" ${ic}></div></td><td style="opacity:0.4;font-weight:800;">${sr++}</td><td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td><td style="font-weight:800;white-space:nowrap;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><span style="display:flex;align-items:center;gap:4px;">${sn} ${newBdg} ${stb}</span><span style="display:flex;align-items:center;justify-content:center;gap:4px;">${tbBadge} ${sb}</span></div></td><td class="copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')" style="font-weight:700">${c.phone}</td><td style="font-size:12px;font-weight:700;">${sa}</td><td style="vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"><span class="badge ${b}">${c.status}</span>${vb}</div></td><td style="font-size:11px;font-weight:800;opacity:0.7;">${c.leadSource||'-'}</td><td style="font-size:12px;font-weight:800;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">${ptBadge}<span style="display:flex;align-items:center;gap:4px;">${sanitizeText(c.projectCategory)||'-'}${ml}</span>${ud}</div></td><td style="color:var(--golden-dark);font-weight:900">${sanitizeText(c.budget)||'-'}</td><td class="date-cell" style="font-weight:900;color:var(--text-color);cursor:pointer;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')"><div style="display:inline-flex;align-items:center;justify-content:center;gap:4px;">${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div></td><td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><span class="history-link" onclick="event.stopPropagation();openHistoryModal('${c.id}')">${displayRemark}</span></td><td style="vertical-align:middle;"><div style="display:flex;justify-content:center;align-items:center;">${tk}<span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div></td>`;
+                    tr.innerHTML=`<td onclick="event.stopPropagation()"><div style="display:flex;align-items:center;justify-content:center;"><input type="checkbox" class="bulk-cb" value="${escapeHtml(c.id)}" onchange="handleBulkCheckbox(this)" ${ic}></div></td><td style="opacity:0.4;font-weight:800;">${sr++}</td><td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td><td style="font-weight:800;white-space:nowrap;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span style="display:flex;align-items:center;gap:4px;">${sn} ${newBdg} ${stb}</span><span style="display:flex;align-items:center;justify-content:center;gap:4px;">${tbBadge} ${sb}</span></div></td><td class="copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')" style="font-weight:700">${c.phone}</td><td style="font-size:12px;font-weight:700;">${sa}</td><td style="vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span class="badge ${b}">${c.status}</span>${vb}</div></td><td style="font-size:11px;font-weight:800;opacity:0.7;">${c.leadSource||'-'}</td><td style="font-size:12px;font-weight:800;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;">${ptBadge}<span style="display:flex;align-items:center;gap:4px;">${sanitizeText(c.projectCategory)||'-'}${ml}</span>${ud}</div></td><td style="color:var(--golden-dark);font-weight:900">${sanitizeText(c.budget)||'-'}</td><td class="date-cell" style="font-weight:900;color:var(--text-color);cursor:pointer;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')"><div style="display:inline-flex;align-items:center;justify-content:center;gap:4px;">${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div></td><td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><span class="history-link" onclick="event.stopPropagation();openHistoryModal('${c.id}')">${displayRemark}</span></td><td style="vertical-align:middle;"><div style="display:flex;justify-content:center;align-items:center;">${tk}<span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div></td>`;
                     
                     f.appendChild(tr);
                     searchIndexTable.push({el:tr,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} project ${String(c.projectCategory||'')} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} type ${String(c.propertyType||'')} assignee ${String(c.assignBy||'')} remark ${String(rawRemark||'')}`.toLowerCase()});
@@ -1356,7 +1390,7 @@
                     let ptBadge = c.propertyType ? `<span style="font-size:9px; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-color); padding:2px 6px; border-radius:4px; font-weight:900; margin-right:4px;">${c.propertyType}</span>` : '';
 
                     d.className=`k-card ${reqRem ? 'needs-remark-card' : ''}`;
-                    d.style.cssText=`touch-action:none;`;d.setAttribute("draggable","true");d.dataset.id=c.id;d.dataset.phone=normalizePhone(c.phone);d.dataset.name=String(c.name||'');d.dataset.proj=String(c.projectCategory||'');d.onclick=()=>editLead(c.id);
+                    d.style.cssText=`touch-action:pan-y !important;`;d.setAttribute("draggable","true");d.dataset.id=c.id;d.dataset.phone=normalizePhone(c.phone);d.dataset.name=String(c.name||'');d.dataset.proj=String(c.projectCategory||'');d.onclick=()=>editLead(c.id);
                     d.innerHTML=`<div class="k-card-title"><span style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${sn} ${newBdg} ${stb} ${ti} ${vi}</span><span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div><div class="k-card-detail copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')">📞 ${c.phone}</div><div class="k-card-detail" style="color:var(--text-color);font-weight:800;display:flex;justify-content:space-between;align-items:center;"><span style="display:flex;align-items:center;gap:4px;">📍 ${ptBadge}${su||sp||'-'} ${ml}</span></div><div class="k-card-detail" style="cursor:pointer;display:flex;align-items:center;gap:4px;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')">💰 <span style="font-weight:800;color:var(--golden-dark);">${sanitizeText(c.budget)||'N/A'}</span> &nbsp;|&nbsp; 📅 ${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div>`;
                     
                     fc[c.status].appendChild(d);let rRem=(c.history&&c.history.length>0)?c.history[0].note:(c.remark||'');searchIndexKanban.push({el:d,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} project ${String(c.projectCategory||'')} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} type ${String(c.propertyType||'')} assignee ${String(c.assignBy||'')} remark ${String(rRem||'')}`.toLowerCase()});
