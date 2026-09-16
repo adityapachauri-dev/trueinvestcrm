@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@3.0.0-rc.0/default.css">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <!-- Tesseract.js AI OCR Library -->
+    <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
             --bg-color:#F8FAFC; --card-bg:#FFFFFF; --input-bg:#F1F5F9; --text-color:#1E293B; --border-color:#E2E8F0; 
@@ -175,9 +177,8 @@
         .flex-row{display:flex;gap:10px;width:100%} .flex-row input,.flex-row select{margin-bottom:0}
         
         .property-type-grid {
-            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none;
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
         }
-        .property-type-grid::-webkit-scrollbar { display: none; }
         .prop-type-card {
             flex-shrink: 0; padding: 10px 14px; border-radius: 12px;
             background: linear-gradient(145deg, var(--input-bg), var(--card-bg));
@@ -263,9 +264,19 @@
         .cal-day.today{background:var(--btn-gradient);color:var(--golden);border:none;box-shadow:0 4px 15px rgba(10,25,47,0.2), inset 0 1px 1px rgba(255,255,255,0.15)}
         .cal-lead-count{position:absolute;top:-6px;right:-6px;background:var(--notify-red);color:#fff;font-size:11px;padding:3px 7px;border-radius:12px;font-weight:900;box-shadow:0 2px 5px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center}
         
-        #bulkActionBar{position:fixed;bottom:max(30px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(150px);z-index:10005;display:flex;gap:12px;padding:14px 24px;border-radius:50px;background:var(--nav-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 15px 40px rgba(0,0,0,0.25);transition:transform .4s var(--ease-bounce),opacity .3s var(--ease-smooth);opacity:0;pointer-events:none;border:1px solid rgba(197,160,89,0.5);align-items:center;flex-wrap:wrap;justify-content:center}
-        #bulkActionBar.active{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
-        .bulk-cb{width:18px;height:18px;cursor:pointer;accent-color:var(--golden);margin:0}
+        /* BULK ACTION BAR - OPTIMIZED FOR EFFICIENCY */
+        #bulkActionBar {
+            position:fixed; bottom:max(30px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(150px);
+            z-index:10005; display:flex; gap:10px; padding:12px 20px; border-radius:50px; 
+            background:var(--nav-bg); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+            box-shadow:0 15px 40px rgba(0,0,0,0.25); transition:transform .4s var(--ease-bounce),opacity .3s var(--ease-smooth);
+            opacity:0; pointer-events:none; border:1px solid rgba(197,160,89,0.5); align-items:center; flex-wrap:wrap; justify-content:center
+        }
+        #bulkActionBar.active { transform:translateX(-50%) translateY(0); opacity:1; pointer-events:auto; }
+        .bulk-select { height:40px; margin:0; width:auto; font-size:13px!important; padding:0 30px 0 12px; border-radius:10px; border:1px solid var(--border-color); font-weight:700; background-color:var(--input-bg); }
+        .bulk-btn-del { height:40px; margin:0; color:var(--notify-red); border-color:rgba(220,38,38,0.3); font-size:13px; padding:0 12px; }
+        .bulk-btn-close { height:40px; margin:0; border-radius:50%; width:40px; padding:0; display:flex; justify-content:center; align-items:center; }
+        .bulk-cb { width:18px; height:18px; cursor:pointer; accent-color:var(--golden); margin:0; }
         
         .history-container-box{max-height:250px;overflow-y:auto;overflow-x:hidden;padding:4px;margin-bottom:16px;display:none}
         .timeline-track{border-left:2px solid rgba(197,160,89,0.4);margin-left:8px;padding-left:16px;padding-top:4px;padding-bottom:4px}
@@ -324,7 +335,6 @@
         
         /* 📱 100% FIXED MOBILE VIEW CSS */
         @media (max-width: 992px){
-            /* RAM & Performance Fix */
             .glass-panel, .action-modal-content {
                 backdrop-filter: none !important; 
                 -webkit-backdrop-filter: none !important;
@@ -334,7 +344,6 @@
             }
             .top-bar { background-color: var(--nav-bg) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
             
-            /* PADDING FIX FOR BOTTOM NAV */
             .workspace-layout{padding:12px;gap:16px;overflow-x:hidden;width:100vw;padding-top:max(12px,env(safe-area-inset-top));padding-bottom:calc(120px + max(10px,env(safe-area-inset-bottom)));min-height:100dvh}
             .top-bar{flex-direction:column;align-items:stretch;gap:10px;padding:14px;border-radius:16px}
             .top-bar>div{flex-wrap:wrap;justify-content:center!important;gap:6px}
@@ -364,15 +373,20 @@
             .toast.show{transform:translateY(0)}
             .fab-add{display:none!important}
             
-            #bulkActionBar{width:90vw;border-radius:20px;flex-direction:column;bottom:calc(85px + max(10px,env(safe-area-inset-bottom)))}
-            #bulkActionBar select,#bulkActionBar button{width:100%}
+            /* EFFICIENT MOBILE GRID FOR BULK ACTIONS */
+            #bulkActionBar {
+                display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 95vw; border-radius: 20px; 
+                bottom: calc(85px + max(10px,env(safe-area-inset-bottom))); padding: 12px; flex-direction: unset;
+            }
+            #bulkCount { grid-column: span 2; text-align: center; margin-bottom: 4px; }
+            .bulk-select, .bulk-btn-del { width: 100%; height: 44px; margin: 0; }
+            .bulk-btn-close { grid-column: span 2; width: 100%; border-radius: 12px; height: 44px; margin: 0; }
             
             .mobile-bottom-nav{display:flex;position:fixed;bottom:0;left:0;width:100%;background:var(--nav-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);padding-bottom:max(10px,env(safe-area-inset-bottom));z-index:9998;justify-content:space-around;align-items:center;height:calc(65px + max(10px,env(safe-area-inset-bottom)));box-shadow:0 -5px 25px rgba(0,0,0,0.08);transition:background-color .3s ease}
             .nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#64748B;font-size:10px;font-weight:700;gap:4px;transition:color .3s;cursor:pointer;padding:5px;min-width:60px}.nav-item.active{color:var(--golden-dark)}.nav-item ion-icon{font-size:22px;display:flex;align-items:center;justify-content:center;transition:transform .3s var(--ease-bounce)}.nav-item.active ion-icon{transform:translateY(-2px)}
             .nav-item.fab-wrapper{position:relative;top:-15px}
             .nav-item .fab-circle{width:56px;height:56px;border-radius:50%;background:var(--btn-gradient);color:var(--golden);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 10px 25px rgba(10,25,47,0.3), inset 0 2px 2px rgba(255,255,255,0.15);border:1px solid rgba(197,160,89,0.5);transition:all .4s var(--ease-bounce);margin:0;padding:0}.nav-item .fab-circle:active{transform:scale(.9);box-shadow:0 4px 10px rgba(10,25,47,0.3), inset 0 2px 4px rgba(0,0,0,0.3)}
             
-            /* KEYBOARD & MODAL BUG FIX: Force bottom-sheet style */
             .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
             .modal-content {
                 max-height: 85dvh !important;
@@ -385,7 +399,6 @@
             }
             .modal-overlay.active .modal-content { transform: translateY(0); }
             
-            /* TABLE TEXT OVERLAP FIX: Stack them cleanly */
             #tableView table, #tableView tbody, #tableView tr { display: block; width: 100%; }
             #tableView thead { display: none; }
             #tableView tr { 
@@ -414,7 +427,7 @@
             #tableView td:nth-child(6)::before { content: "Assignee"; }
             #tableView td:nth-child(7)::before { content: "Status"; }
             #tableView td:nth-child(8)::before { content: "Source"; }
-            #tableView td:nth-child(9)::before { content: "Project Details"; }
+            #tableView td:nth-child(9)::before { content: "Property Details"; }
             #tableView td:nth-child(10)::before { content: "Budget"; }
             #tableView td:nth-child(11)::before { content: "Next Follow-up"; }
             #tableView td:nth-child(12)::before { content: "Latest Remark"; }
@@ -434,12 +447,17 @@
 </div>
 <div id="toastContainer"></div>
 
+<!-- OPTIMIZED BULK ACTION BAR WITH NAME CHANGE OPTION -->
 <div id="bulkActionBar">
-    <span id="bulkCount" style="font-weight:800;font-size:14px;">0 Selected</span>
-    <select id="bulkAssign" style="width:auto;height:44px;margin:0;" onchange="executeBulkAssign(this.value)"><option value="">Assign To...</option></select>
-    <select id="bulkStatus" style="width:auto;height:44px;margin:0;" onchange="executeBulkStatus(this.value)"><option value="">Status...</option></select>
-    <button class="btn-secondary" style="height:44px;margin:0;color:var(--notify-red);border-color:rgba(220,38,38,0.3);" onclick="executeBulkDelete()">🗑️ Delete</button>
-    <button class="btn-secondary" style="height:44px;margin:0;border-radius:50%;width:44px;padding:0;display:flex;justify-content:center;align-items:center;" onclick="clearBulkSelection()">×</button>
+    <span id="bulkCount" style="font-weight:800;font-size:14px;color:var(--text-color);">0 Selected</span>
+    <select id="bulkAssign" class="bulk-select" onchange="executeBulkAssign(this.value)"><option value="">Assign To...</option></select>
+    <select id="bulkStatus" class="bulk-select" onchange="executeBulkStatus(this.value)"><option value="">Status...</option></select>
+    <select id="bulkNameChange" class="bulk-select" onchange="executeBulkRename(this.value)">
+        <option value="">Rename...</option>
+        <option value="CUSTOM">✏️ Edit Name</option>
+    </select>
+    <button class="btn-secondary bulk-btn-del" onclick="executeBulkDelete()">🗑️ Delete</button>
+    <button class="btn-secondary bulk-btn-close" onclick="clearBulkSelection()">✕ Close</button>
 </div>
 
 <div class="fab-add" onclick="openAddLeadModal()" title="Add New Lead (Shortcut: ALT+N)"><ion-icon name="add"></ion-icon></div>
@@ -496,7 +514,7 @@
             <div class="table-container glass-panel" id="tableView">
                 <div id="skeletonLoader" class="skeleton-loader">Loading Data securely...</div>
                 <table title="Single-click any row to Edit">
-                    <thead><tr><th style="width:30px;"><input type="checkbox" id="selectAllCb" class="bulk-cb" onclick="toggleAllBulk(this)"></th><th style="width:40px;">S.No</th><th onclick="handleSort('leadDate')">Date ⇕</th><th onclick="handleSort('name')">Name ⇕</th><th>Phone</th><th onclick="handleSort('assignBy')">Assignee ⇕</th><th onclick="handleSort('status')">Status ⇕</th><th onclick="handleSort('leadSource')">Source ⇕</th><th>Project & Unit</th><th onclick="handleSort('budget')">Budget ⇕</th><th onclick="handleSort('followup')">Follow-up ⇕</th><th style="max-width:140px;">Latest Remark</th><th style="width:60px;text-align:center;">Actions</th></tr></thead>
+                    <thead><tr><th style="width:30px;"><input type="checkbox" id="selectAllCb" class="bulk-cb" onclick="toggleAllBulk(this)"></th><th style="width:40px;">S.No</th><th onclick="handleSort('leadDate')">Date ⇕</th><th onclick="handleSort('name')">Name ⇕</th><th>Phone</th><th onclick="handleSort('assignBy')">Assignee ⇕</th><th onclick="handleSort('status')">Status ⇕</th><th onclick="handleSort('leadSource')">Source ⇕</th><th>Property Details</th><th onclick="handleSort('budget')">Budget ⇕</th><th onclick="handleSort('followup')">Follow-up ⇕</th><th style="max-width:140px;">Latest Remark</th><th style="width:60px;text-align:center;">Actions</th></tr></thead>
                     <tbody id="clientTable"></tbody>
                 </table>
             </div>
@@ -521,6 +539,15 @@
         <div class="sheet-handle"></div><button class="modal-close" onclick="closeModal('addLeadModal')" style="margin:16px 16px 0 0;position:absolute;right:0;top:0;z-index:10;">×</button>
         <div style="padding:24px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;">
             <h2 id="leadModalTitle" style="margin-top:0;color:var(--text-color);font-size:20px;font-weight:900;display:flex;align-items:center;gap:6px;"><ion-icon name="person-add"></ion-icon> Add New Lead</h2>
+            
+            <!-- AI BULK OCR SCREENSHOT SCANNER -->
+            <div style="display:flex; gap:10px; margin-bottom: 16px; margin-top: 10px;">
+                <input type="file" id="ocrInput" accept="image/*" multiple style="display:none;" onchange="processBulkScreenshots(event)">
+                <button type="button" class="btn-secondary" id="scanBtn" onclick="document.getElementById('ocrInput').click()" style="width:100%; margin:0; background: linear-gradient(145deg, #F0FDF4, #DCFCE7); color: #15803D; border-color: rgba(21,128,61,0.2); font-weight: 800; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    📸 Bulk Screenshot Scanner (AI)
+                </button>
+            </div>
+
             <form id="clientForm" style="padding:0;box-shadow:none;border:none;background:transparent;animation:none;">
                 <input type="hidden" id="editId" value=""><input type="hidden" id="followup">
                 
@@ -537,20 +564,15 @@
                     <input type="radio" id="tempCold" name="leadTemp" value="Cold"><label for="tempCold" class="seg-cold">❄️ Cold</label>
                 </div>
                 
-                <label>Property Category (Type)</label>
+                <label>Property Types (Multi-Select)</label>
                 <div class="property-type-grid" id="propTypeContainer">
-                    <div class="prop-type-card active" data-type="Builder Floor" onclick="selectPropType('Builder Floor', this)">🏗️ Builder Floor</div>
-                    <div class="prop-type-card" data-type="Villa" onclick="selectPropType('Villa', this)">🏠 Villa / House</div>
-                    <div class="prop-type-card" data-type="Apartment" onclick="selectPropType('Apartment', this)">🏢 Apartment</div>
-                    <div class="prop-type-card" data-type="Plot" onclick="selectPropType('Plot', this)">🏞️ Plot / Land</div>
-                    <div class="prop-type-card" data-type="Commercial" onclick="selectPropType('Commercial', this)">🏪 Commercial</div>
-                    <div class="prop-type-card" data-type="Other" onclick="selectPropType('Other', this)">✨ Other</div>
+                    <!-- JS Automatically renders this -->
                 </div>
-                <input type="hidden" id="propertyType" value="Builder Floor">
+                <input type="hidden" id="propertyType" value="">
 
                 <div class="form-grid"><div><label>Lead Source</label><select id="leadSource" onchange="handleDropdownChange(event,'sources',customSources,'crm_sources_')"></select></div><div><label>Status</label><select id="status" onchange="handleDropdownChange(event,'statuses',customStatuses,'crm_statuses_')"></select></div></div>
-                <div style="margin-bottom:16px;"><label>Project / Site (Max 2)</label><div class="flex-row"><select id="projectCategory" style="flex:1;"></select><select id="projectCategory2" style="flex:1;"></select></div></div>
-                <div class="form-grid"><div><label>Specific Unit (Inventory)</label><input type="text" id="specificUnit" placeholder="e.g. Flat 101, 830 sq ft"></div><div><label>Locality</label><input type="text" id="location" placeholder="Locality"></div></div>
+                
+                <div class="form-grid"><div><label>Specific Unit (Inventory)</label><input type="text" id="specificUnit" placeholder="e.g. Flat 101, 830 sq ft"></div><div><label>Locality / Area</label><input type="text" id="location" placeholder="e.g. Noida Sec 73"></div></div>
                 <div><label>Budget</label><input type="text" id="budget" placeholder="e.g. 1.25 Cr" onblur="formatBudgetInput(this)" style="margin-bottom:16px;"></div>
                 <br><div class="history-container-box" id="historyTimelineContainer"><div class="timeline-track" id="historyTimeline"></div></div>
                 <label style="display:flex; justify-content:space-between; align-items:center;">
@@ -683,17 +705,51 @@
     function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(c=>{if(c.outcome==='accepted'){showNotification("App Installed Successfully!","success");$id('installAppBtn').style.display='none';}deferredPrompt=null;});}}
     document.addEventListener('keydown',e=>{if(e.altKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!$id('crmView').classList.contains('hidden'))openAddLeadModal();}if(e.altKey&&e.key.toLowerCase()==='f'){e.preventDefault();$id('search').focus();}if(e.altKey&&e.key.toLowerCase()==='v'){e.preventDefault();toggleView();}if(e.altKey&&e.key.toLowerCase()==='c'){e.preventDefault();openModal('emiModal');}});
     
-    // NEW: PROPERTY TYPE SELECTOR LOGIC
-    function selectPropType(type, el) {
+    // ==========================================
+    // MULTI-SELECT PROPERTY TYPES DYNAMIC LOGIC
+    // ==========================================
+    function renderPropTypes() {
+        let tc = $id('propTypeContainer');
+        if(!tc) return;
+        let currentVals = $id('propertyType').value.split(',').map(s=>s.trim()).filter(Boolean);
+        tc.innerHTML = '';
+        customPropTypes.forEach(pt => {
+            let isActive = currentVals.includes(pt) ? 'active' : '';
+            tc.innerHTML += `<div class="prop-type-card ${isActive}" data-type="${escapeHtml(pt)}" onclick="togglePropType('${escapeHtml(pt)}', this)">${escapeHtml(pt)}</div>`;
+        });
+        tc.innerHTML += `<div class="prop-type-card" style="background:var(--btn-gradient);color:var(--golden);border:1px solid rgba(197,160,89,0.5);" onclick="addNewPropType()">➕ Add New</div>`;
+    }
+
+    function togglePropType(type, el) {
         haptic('light');
-        document.getElementById('propertyType').value = type;
-        let cards = document.querySelectorAll('.prop-type-card');
-        cards.forEach(c => c.classList.remove('active'));
-        if(el) {
-            el.classList.add('active');
-        } else {
-            let target = document.querySelector(`.prop-type-card[data-type="${type}"]`);
-            if(target) target.classList.add('active');
+        el.classList.toggle('active');
+        let activeCards = document.querySelectorAll('#propTypeContainer .prop-type-card.active');
+        let vals = [];
+        activeCards.forEach(c => {
+            if(c.dataset.type) vals.push(c.dataset.type);
+        });
+        $id('propertyType').value = vals.join(', ');
+    }
+
+    function addNewPropType() {
+        let n = prompt("Enter new Property Type (e.g. Farmhouse):");
+        if(n && n.trim() !== '') {
+            n = n.trim();
+            if(!customPropTypes.includes(n)) {
+                customPropTypes.push(n);
+                localStorage.setItem('crm_propTypes_'+(auth && auth.currentUser ? auth.currentUser.uid : ''), JSON.stringify(customPropTypes));
+                if(auth && auth.currentUser) db.collection("users").doc(auth.currentUser.uid).set({propTypes: customPropTypes}, {merge:true});
+                
+                let currentVals = $id('propertyType').value.split(',').map(s=>s.trim()).filter(Boolean);
+                currentVals.push(n);
+                $id('propertyType').value = currentVals.join(', ');
+                
+                renderDropdownsAndTabs(); // Re-render to show new tabs
+                renderPropTypes();
+                showNotification(`Added ${n}`, "success");
+            } else {
+                showNotification("Property Type already exists!", "warning");
+            }
         }
     }
 
@@ -732,8 +788,8 @@
     function handleModalClick(e,id){if(e.target.id===id)closeModal(id);}
     function openQuickFollowupModal(id,f){haptic('light');$id('quickFupId').value=id;let d="";if(f){let p=f.split('-');if(p.length===3)d=`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;}else{d=getToday();}$id('quickFupDate').value=d;$id('quickFupRemark').value='';openModal('quickFollowupModal');}
     function setQuickDateChip(d){haptic('light');let dt=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));dt.setDate(dt.getDate()+d);$id('quickFupDate').value=formatDateCore(dt);}
-    async function saveQuickFollowup(e){let id=$id('quickFupId').value,nd=$id('quickFupDate').value,nr=$id('quickFupRemark').value.trim();if(!nd){showNotification("Select date.","warning");return;}let b=e.target,o=b.innerText;b.innerText="Saving...";b.disabled=true;try{if(typeof db==='undefined')throw new Error("DB error");let c=clients.find(x=>x.id===id);if(c){let h=c.history?[...c.history]:[],f=nr?`🗓️ Follow-up changed. Note: ${nr}`:`🗓️ Follow-up changed to ${formatDisplayDate(nd)}.`;h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:f});await db.collection("leads").doc(id).update({followup:nd,history:h,remark:f,updatedAt:Date.now(),requiresRemark:false});showNotification("Follow-up updated!","success");haptic('medium');closeModal('quickFollowupModal');}}catch(x){showNotification("Error: "+x.message,"error");}finally{b.innerText=o;b.disabled=false;}}
-    async function clearQuickFollowup(e){let id=$id('quickFupId').value,b=e.target,o=b.innerText;b.innerText="Deleting...";b.disabled=true;try{let c=clients.find(x=>x.id===id);if(c){let h=c.history?[...c.history]:[],f=`🗑️ Follow-up date removed.`;h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:f});await db.collection("leads").doc(id).update({followup:"",history:h,remark:f,updatedAt:Date.now(),requiresRemark:false});showNotification("Deleted!","success");haptic('medium');closeModal('quickFollowupModal');}}catch(x){showNotification("Error: "+x.message,"error");}finally{b.innerText=o;b.disabled=false;}}
+    async function saveQuickFollowup(e){let id=$id('quickFupId').value,nd=$id('quickFupDate').value,nr=$id('quickFupRemark').value.trim();if(!nd){showNotification("Select date.","warning");return;}let b=e.target,o=b.innerText;b.innerText="Saving...";b.disabled=true;try{if(typeof db==='undefined')throw new Error("DB error");let c=clients.find(x=>x.id===id);if(c){let h=c.history?[...c.history]:[],f=nr?`🗓️ Follow-up changed. Note: ${nr}`:`🗓️ Follow-up changed to ${formatDisplayDate(nd)}.`;h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:f});let updateObj = {followup:nd, history:h, updatedAt:Date.now(), requiresRemark:false};if(nr) updateObj.remark = nr;await db.collection("leads").doc(id).update(updateObj);showNotification("Follow-up updated!","success");haptic('medium');closeModal('quickFollowupModal');}}catch(x){showNotification("Error: "+x.message,"error");}finally{b.innerText=o;b.disabled=false;}}
+    async function clearQuickFollowup(e){let id=$id('quickFupId').value,b=e.target,o=b.innerText;b.innerText="Deleting...";b.disabled=true;try{let c=clients.find(x=>x.id===id);if(c){let h=c.history?[...c.history]:[],f=`🗑️ Follow-up date removed.`;h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:f});let updateObj = {followup:"", history:h, updatedAt:Date.now(), requiresRemark:false};await db.collection("leads").doc(id).update(updateObj);showNotification("Deleted!","success");haptic('medium');closeModal('quickFollowupModal');}}catch(x){showNotification("Error: "+x.message,"error");}finally{b.innerText=o;b.disabled=false;}}
     function formatBudgetInput(el){let r=String(el.value||'').trim();if(!r)return;let p=r.match(/^(\d+(?:\.\d+)?)\s*(cr|crore|lakh|lac|l|k)$/i);if(p){let n=parseFloat(p[1]),u=p[2].toLowerCase();if(u.startsWith('c'))el.value=`${n} Cr`;else if(u.startsWith('l'))el.value=`${n} Lakh`;else if(u==='k')el.value=n>=100?`${(n/100).toFixed(2)} Lakh`:`${n} K`;return;}let n=parseFloat(r.replace(/[^0-9.]/g,''));if(!Number.isFinite(n))return;if(n>=10000000)el.value=(n/10000000).toFixed(2)+' Cr';else if(n>=100000)el.value=(n/100000).toFixed(2)+' Lakh';}
     function extractSmartDate(t){if(!t)return null;let ts=t.toLowerCase(),d=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));if(/\b(kal|tomorrow|tom|tmrw)\b/.test(ts)){d.setDate(d.getDate()+1);return formatDateCore(d);}if(/\b(parso|day after tomorrow)\b/.test(ts)){d.setDate(d.getDate()+2);return formatDateCore(d);}if(/\b(aaj|today)\b/.test(ts))return formatDateCore(d);let dm=ts.match(/(\d+)\s*(din|days?)\s*(baad|later|k baad)|(?:in|after)\s*(\d+)\s*(din|days?)/);if(dm){let n=parseInt(dm[1]||dm[4]);if(!isNaN(n)){d.setDate(d.getDate()+n);return formatDateCore(d);}}if(/\b(agle hafte|next week)\b/.test(ts)){d.setDate(d.getDate()+7);return formatDateCore(d);}let ds={'sunday':0,'sun':0,'monday':1,'mon':1,'tuesday':2,'tue':2,'wednesday':3,'wed':3,'thursday':4,'thu':4,'friday':5,'fri':5,'saturday':6,'sat':6};for(let k in ds){if(new RegExp('\\b'+k+'\\b').test(ts)){let df=ds[k]-d.getDay();if(df<=0)df+=7;d.setDate(d.getDate()+df);return formatDateCore(d);}}let ms={'jan':0,'feb':1,'mar':2,'apr':3,'may':4,'jun':5,'jul':6,'aug':7,'sep':8,'oct':9,'nov':10,'dec':11},m=ts.match(/\b(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/);if(m){d.setMonth(ms[m[2]]);d.setDate(parseInt(m[1]));if(d<new Date())d.setFullYear(d.getFullYear()+1);return formatDateCore(d);}return null;}
     function formatDateCore(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -745,6 +801,167 @@
     let isFirstRender=true,currentViewMode='table',renderTableRequestId=null,renderKanbanRequestId=null,currentAssigneeFilter='All';
     let previousLeadsMap = new Map();
     window.currentEditHistory=[];let currentHistoryLeadId=null;
+
+    // ==========================================
+    // MULTIPLE BULK AI OCR SCREENSHOT PROCESSING
+    // ==========================================
+    async function processBulkScreenshots(e) {
+        let files = e.target.files;
+        if (!files || files.length === 0) return;
+        
+        if(!auth || !auth.currentUser) {
+            showNotification("Please login securely first.", "error");
+            return;
+        }
+
+        let btn = document.getElementById('scanBtn');
+        let originalText = btn.innerHTML;
+        btn.disabled = true;
+        showNotification(`⏳ AI Vision processing ${files.length} screenshots...`, "warning");
+        haptic('medium');
+        
+        try {
+            if(typeof Tesseract === 'undefined') {
+                throw new Error("AI Vision script failed to load. Please check your network connection.");
+            }
+            
+            let successCount = 0;
+            let skipCount = 0;
+            let dDate = formatDisplayDate(getToday());
+            let dTime = getTime();
+
+            // Setup Firebase Batch writing
+            let b = db.batch();
+            let batchOpCount = 0;
+
+            for(let i = 0; i < files.length; i++) {
+                btn.innerHTML = `⏳ AI Scanning ${i + 1} of ${files.length}...`;
+                let file = files[i];
+                
+                try {
+                    let result = await Tesseract.recognize(file, 'eng');
+                    let text = result.data.text;
+                    
+                    let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    let extractedData = [];
+                    
+                    for (let line of lines) {
+                        let pMatch = line.match(/(?:(?:\+|0{0,2})91[\s\-\.]*)?([6-9](?:[\s\-\.]*\d){9})/);
+                        if (!pMatch) pMatch = line.match(/([6-9]\d{9})/);
+                        
+                        if (pMatch) {
+                            let phone = pMatch[1].replace(/\D/g, '');
+                            if (phone.length === 10) {
+                                let possibleName = line.replace(pMatch[0], '').replace(/[^a-zA-Z\s]/g, '').trim();
+                                let name = "Unknown";
+                                if (possibleName.length >= 3 && possibleName.length <= 25 && !/number|phone|email|date|time/i.test(possibleName)) {
+                                    name = possibleName;
+                                }
+                                extractedData.push({ phone, name });
+                            }
+                        }
+                    }
+                    
+                    let globalMatches = [...text.matchAll(/(?:(?:\+|0{0,2})91[\s\-\.]*)?([6-9](?:[\s\-\.]*\d){9})/g)];
+                    globalMatches.forEach(m => {
+                        let phone = m[1].replace(/\D/g, '');
+                        if(phone.length === 10 && !extractedData.some(e => e.phone === phone)) {
+                            extractedData.push({ phone, name: "Unknown" });
+                        }
+                    });
+                    
+                    let uniqueData = [];
+                    let seenPhones = new Set();
+                    extractedData.forEach(item => {
+                        if (!seenPhones.has(item.phone)) {
+                            seenPhones.add(item.phone);
+                            uniqueData.push(item);
+                        }
+                    });
+
+                    if (uniqueData.length > 0) {
+                        for (let data of uniqueData) {
+                            let phone = data.phone;
+                            let name = data.name;
+
+                            let existing = clients.find(c => normalizePhone(c.phone) === phone);
+                            if(existing) {
+                                skipCount++;
+                                continue;
+                            }
+
+                            let dr = db.collection("leads").doc();
+                            let pt = $id('propertyType') ? $id('propertyType').value : 'Builder Floor';
+                            let rmk = '🤖 Auto-extracted via AI Bulk Scanner';
+                            let ha = [{date: dDate, time: dTime, note: rmk}];
+                            
+                            b.set(dr, {
+                                ownerId: auth.currentUser.uid,
+                                leadDate: getToday(),
+                                name: name,
+                                phone: phone,
+                                leadSource: customSources[0] || 'Facebook Ads',
+                                projectCategory: '', 
+                                propertyType: pt,
+                                specificUnit: '',
+                                location: '',
+                                status: customStatuses[0] || 'New',
+                                assignBy: '', 
+                                budget: '',
+                                visitDone: false,
+                                followup: "",
+                                leadTemperature: 'Warm',
+                                remark: rmk, 
+                                history: ha,
+                                updatedAt: Date.now(),
+                                requiresRemark: true
+                            });
+                            
+                            successCount++;
+                            batchOpCount++;
+
+                            if (batchOpCount === 400) {
+                                await b.commit();
+                                b = db.batch();
+                                batchOpCount = 0;
+                            }
+                        }
+                    } else {
+                        skipCount++; 
+                    }
+                } catch(err) {
+                    console.warn(`Skipped image ${i+1} due to error:`, err);
+                    skipCount++;
+                }
+            }
+            
+            if(batchOpCount > 0) {
+                await b.commit();
+            }
+
+            if(successCount > 0) {
+                showNotification(`🎉 AI added ${successCount} new leads automatically!`, "success");
+                fireConfetti(true);
+                playAlertChime();
+            }
+            if(skipCount > 0) {
+                showNotification(`⚠️ Skipped ${skipCount} (Duplicates or no valid numbers found)`, "warning");
+            }
+            if(successCount === 0 && skipCount > 0) {
+                showNotification("No valid new leads extracted from these screenshots.", "error");
+            }
+            haptic('heavy');
+            
+        } catch (err) {
+            console.error(err);
+            showNotification("AI Scanner Failed: " + err.message, "error");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            e.target.value = ''; // Reset input to allow scanning again
+            closeModal('addLeadModal'); // Auto-close modal after bulk run
+        }
+    }
 
     function playAlertChime() {
         try {
@@ -797,7 +1014,7 @@
 
     function setAssigneeFilter(n){haptic('light');currentAssigneeFilter=n;closeModal('assigneeModal');document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));$id('search').value='';if(n==='Unassigned')showNotification(`Filtering by Unassigned`,'success');else if(n!=='All')showNotification(`Filtering Assignee: ${n}`,'success');else showNotification(`Showing All Leads`,'success');renderData(true);}
     function handleUnassignedClick(){haptic('medium');if(prompt("Enter PIN:")==="45625879")setAssigneeFilter('Unassigned');else showNotification("Incorrect PIN!","error");}
-    function openAssigneeStats(){haptic('light');let ct=$id('assigneeStatsContainer');if(!ct)return;let st={},uc=0,bd=clients;if(currentProjectFilter!=='All')bd=bd.filter(c=>c.projectCategory&&c.projectCategory.includes(currentProjectFilter));if(currentQuickFilter==='Hot')bd=bd.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot');else if(currentQuickFilter==='Today'){let t=getToday();bd=bd.filter(c=>c.followup===t&&c.status!=='Closed');}else if(currentQuickFilter==='Date'&&currentFilterDate){bd=bd.filter(c=>c.followup===currentFilterDate&&c.status!=='Closed');}bd.forEach(c=>{if(c.assignBy&&c.assignBy.trim()!==''){let n=c.assignBy.trim();st[n]=(st[n]||0)+1;}else uc++;});let h=``,sa=Object.keys(st).sort((a,b)=>st[b]-st[a]);sa.forEach(n=>{h+=`<div onclick="setAssigneeFilter('${n}')" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg, var(--input-bg), var(--card-bg));padding:12px 16px;border-radius:12px;border:1px solid var(--border-color);cursor:pointer;margin-bottom:8px;box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);"><span style="font-weight:800;color:var(--text-color);">👤 ${n}</span><span style="font-weight:900;background:var(--btn-gradient);color:var(--golden);padding:4px 10px;border-radius:20px;font-size:12px;box-shadow:inset 0 1px 1px rgba(255,255,255,0.2)">${st[n]} Leads</span></div>`;});if(uc>0)h+=`<div onclick="handleUnassignedClick()" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg, #FEF2F2, #FEE2E2);padding:12px 16px;border-radius:12px;border:1px solid rgba(220,38,38,0.2);cursor:pointer;"><span style="font-weight:800;color:#B91C1C;">❓ Unassigned</span><span style="font-weight:900;background:#DC2626;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;box-shadow:inset 0 1px 1px rgba(255,255,255,0.2)">${uc} Leads</span></div>`;ct.innerHTML=h;openModal('assigneeModal');}
+    function openAssigneeStats(){haptic('light');let ct=$id('assigneeStatsContainer');if(!ct)return;let st={},uc=0,bd=clients;if(currentPropertyFilter!=='All')bd=bd.filter(c=>c.propertyType&&c.propertyType.includes(currentPropertyFilter));if(currentQuickFilter==='Hot')bd=bd.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot');else if(currentQuickFilter==='Today'){let t=getToday();bd=bd.filter(c=>c.followup===t&&c.status!=='Closed');}else if(currentQuickFilter==='Date'&&currentFilterDate){bd=bd.filter(c=>c.followup===currentFilterDate&&c.status!=='Closed');}bd.forEach(c=>{if(c.assignBy&&c.assignBy.trim()!==''){let n=c.assignBy.trim();st[n]=(st[n]||0)+1;}else uc++;});let h=``,sa=Object.keys(st).sort((a,b)=>st[b]-st[a]);sa.forEach(n=>{h+=`<div onclick="setAssigneeFilter('${n}')" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg, var(--input-bg), var(--card-bg));padding:12px 16px;border-radius:12px;border:1px solid var(--border-color);cursor:pointer;margin-bottom:8px;box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);"><span style="font-weight:800;color:var(--text-color);">👤 ${n}</span><span style="font-weight:900;background:var(--btn-gradient);color:var(--golden);padding:4px 10px;border-radius:20px;font-size:12px;box-shadow:inset 0 1px 1px rgba(255,255,255,0.2)">${st[n]} Leads</span></div>`;});if(uc>0)h+=`<div onclick="handleUnassignedClick()" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg, #FEF2F2, #FEE2E2);padding:12px 16px;border-radius:12px;border:1px solid rgba(220,38,38,0.2);cursor:pointer;"><span style="font-weight:800;color:#B91C1C;">❓ Unassigned</span><span style="font-weight:900;background:#DC2626;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;box-shadow:inset 0 1px 1px rgba(255,255,255,0.2)">${uc} Leads</span></div>`;ct.innerHTML=h;openModal('assigneeModal');}
     function openWaModal(p,n,pj,leadId=null){$id('waTargetName').innerText="Sending to: "+n;$id('waTargetPhone').value=p;$id('waTargetId').value=leadId||"";$id('waTemplateSelector').value="";$id('waEditArea').style.display="none";openModal('waModal');}
     function loadWaTemplate(){let t=$id('waTemplateSelector').value,ea=$id('waEditArea'),mb=$id('waMessageText'),n=$id('waTargetName').innerText.replace("Sending to: ","").trim();if(t){ea.style.display='block';if(t==="1")mb.value=`Hi ${n},\nHere is the project brochure and details you requested.`;else if(t==="2")mb.value=`Hi ${n},\nHere is the exact location pin for your site visit.`;else if(t==="3")mb.value=`Hi ${n},\nJust checking in!`;else if(t==="4")mb.value=`Hi ${n},\nWe have a special offer going on.`;else if(t==="5")mb.value=`Hi ${n},\n`;}else ea.style.display='none';}
     function executeWaSend(){
@@ -814,13 +1031,12 @@
                 let tName=tmpIdx>0 ? $id('waTemplateSelector').options[tmpIdx].text : 'Custom Msg';
                 let r=`📱 Sent WhatsApp: ${tName}`;
                 h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:r});
-                db.collection("leads").doc(id).update({history:h, remark:r, updatedAt:Date.now(), requiresRemark:false});
+                db.collection("leads").doc(id).update({history:h, updatedAt:Date.now(), requiresRemark:false});
             }
         }
         closeModal('waModal');
     }
     
-    // VISUAL VIEWPORT API: Stops bottom menu and modals from glitching on mobile keyboard open
     if (window.visualViewport) {
         const bottomNav = document.querySelector('.mobile-bottom-nav');
         window.visualViewport.addEventListener('resize', () => {
@@ -891,7 +1107,6 @@
     document.querySelectorAll('.swipeable-sheet').forEach(s=>{
         let sy=0,cy=0,d=false,t=false;
         s.addEventListener('touchstart',e=>{
-            // Strict check so it ONLY triggers swipe logic if touching the small handle at the top
             if(!e.target.classList.contains('sheet-handle') && e.target.tagName!=='H2' && e.target.tagName!=='H3')return;
             sy=e.touches[0].clientY;
             d=true;
@@ -917,7 +1132,9 @@
     const safeAtob=s=>{try{return atob(s.trim());}catch(e){return "";}};
     const firebaseConfig={apiKey:safeAtob("QUl6YVN5QXNiOWN3WXAzTEpXTTdtb3RXU0s2VUF5MmN0N3QtNnpZ"),authDomain:safeAtob("dHJ1ZWNybS02Y2Y4ZS5maXJlYmFzZWFwcC5jb20="),projectId:safeAtob("dHJ1ZWNybS02Y2Y4ZQ=="),storageBucket:safeAtob("dHJ1ZWNybS02Y2Y4ZS5maXJlYmFzZXN0b3JhZ2UuYXBw"),messagingSenderId:safeAtob("NzkxMzgxNDA3NTM3"),appId:safeAtob("MTo3OTEzODE0MDc1Mzc6d2ViOjQ1ZTk5NDZhOTM5ZjhkMjNiNTYyMTA=")};
     let auth,db;try{if(typeof firebase!=='undefined'){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();try{db.enableMultiTabIndexedDbPersistence().catch(e=>{});}catch(e){}}}catch(e){}
-    let clients=[],customProjects=[],customSources=['Facebook Ads'],customStatuses=['New'],customAssignees=['Vanshikha'],currentProjectFilter='All',currentQuickFilter='All',currentFilterDate=null,initialLoad=true,unsubscribeSnapshot=null,sortColumn='updatedAt',sortAscending=false;
+    
+    let clients=[],customPropTypes=['Builder Floor', 'Villa', 'Apartment', 'Plot', 'Commercial'],customSources=['Facebook Ads'],customStatuses=['New'],customAssignees=['Vanshikha'],currentPropertyFilter='All',currentQuickFilter='All',currentFilterDate=null,initialLoad=true,unsubscribeSnapshot=null,sortColumn='updatedAt',sortAscending=false;
+    
     const getToday=()=>{let d=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};const getTime=()=>new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true});
     const formatDisplayDate=s=>{if(!s)return '-';let p=s.split('-');if(p.length!==3)return s;let m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return `${p[2]}-${m[parseInt(p[1])-1]}-${p[0]}`;};
     function parseDisplayDateToInput(s){if(!s)return '';let p=s.split('-');if(p.length!==3)return s;let m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return `${p[2]}-${String(m.indexOf(p[1])+1).padStart(2,'0')}-${p[0].padStart(2,'0')}`;}
@@ -935,7 +1152,7 @@
                 
                 db.collection("users").doc(u.uid).get().then(d=>{
                     let dt=d.data()||{};
-                    customProjects=dt.projects||JSON.parse(localStorage.getItem('crm_projects_'+u.uid))||['Builder Floor','Lock n key Homes'];
+                    customPropTypes=dt.propTypes||JSON.parse(localStorage.getItem('crm_propTypes_'+u.uid))||customPropTypes;
                     let us=['Direct/Organic','Google Ads','99acres','MagicBricks','Referral','Website Form','Other'],
                         ust=['Follow-up','Hot','Broker','Closed','Not Interested'],
                         ls=dt.sources||JSON.parse(localStorage.getItem('crm_sources_'+u.uid))||['Facebook Ads'],
@@ -947,11 +1164,13 @@
                     
                     if(!customSources.includes('Facebook Ads'))customSources.unshift('Facebook Ads');
                     if(!customStatuses.includes('New'))customStatuses.unshift('New');
-                    db.collection("users").doc(u.uid).set({projects:customProjects,sources:customSources,statuses:customStatuses,assignees:customAssignees},{merge:true});
+                    db.collection("users").doc(u.uid).set({propTypes:customPropTypes,sources:customSources,statuses:customStatuses,assignees:customAssignees},{merge:true});
                     renderDropdownsAndTabs();
+                    renderPropTypes();
                 }).catch(e=>{
-                    customProjects=JSON.parse(localStorage.getItem('crm_projects_'+u.uid))||['Builder Floor','Lock n key Homes'];
+                    customPropTypes=JSON.parse(localStorage.getItem('crm_propTypes_'+u.uid))||customPropTypes;
                     renderDropdownsAndTabs();
+                    renderPropTypes();
                 });
                 loadData();
                 initDragAndDrop();
@@ -1012,19 +1231,26 @@
                 }
                 setTimeout(restorePendingCallLog,0);
                 
-                let dpSet=new Set(customProjects),srcSet=new Set(customSources),statSet=new Set(customStatuses),assignSet=new Set(customAssignees),ad=false;
+                let dpSet=new Set(customPropTypes),srcSet=new Set(customSources),statSet=new Set(customStatuses),assignSet=new Set(customAssignees),ad=false;
                 clients.forEach(c=>{
-                    if(c.projectCategory)c.projectCategory.split(' + ').forEach(p=>{let cp=p.trim();if(cp&&!dpSet.has(cp)){dpSet.add(cp);ad=true;}});
+                    let pt = c.propertyType || c.projectCategory;
+                    if(pt) {
+                        pt.split(',').forEach(p=>{
+                            let cp=p.trim();
+                            if(cp && !dpSet.has(cp)) { dpSet.add(cp); ad=true; }
+                        });
+                    }
                     if(c.leadSource&&!srcSet.has(c.leadSource)){srcSet.add(c.leadSource);ad=true;}
                     if(c.status&&!statSet.has(c.status)){statSet.add(c.status);ad=true;}
                     if(c.assignBy&&!assignSet.has(c.assignBy)){assignSet.add(c.assignBy);ad=true;}
                 });
                 
                 if(ad){
-                    customProjects=Array.from(dpSet);customSources=Array.from(srcSet);customStatuses=Array.from(statSet);customAssignees=Array.from(assignSet);
-                    localStorage.setItem('crm_projects_'+auth.currentUser.uid,JSON.stringify(customProjects));
-                    db.collection("users").doc(auth.currentUser.uid).set({projects:customProjects,sources:customSources,statuses:customStatuses,assignees:customAssignees},{merge:true});
+                    customPropTypes=Array.from(dpSet);customSources=Array.from(srcSet);customStatuses=Array.from(statSet);customAssignees=Array.from(assignSet);
+                    localStorage.setItem('crm_propTypes_'+auth.currentUser.uid,JSON.stringify(customPropTypes));
+                    db.collection("users").doc(auth.currentUser.uid).set({propTypes:customPropTypes,sources:customSources,statuses:customStatuses,assignees:customAssignees},{merge:true});
                     renderDropdownsAndTabs();
+                    renderPropTypes();
                 }
                 
                 clearTimeout(window.snapshotRenderTimer);
@@ -1042,10 +1268,35 @@
     }
     
     function handleDropdownChange(e,t,a,sk){if(e.target.value==="ADD_NEW"){let n=prompt(`Enter custom ${t}:`);if(n&&n.trim()!==""){n=n.trim();if(!a.includes(n)){a.push(n);localStorage.setItem(sk+(auth.currentUser?auth.currentUser.uid:''),JSON.stringify(a));if(auth&&auth.currentUser){let u={};u[t]=a;db.collection("users").doc(auth.currentUser.uid).set(u,{merge:true});}renderDropdownsAndTabs();setTimeout(()=>{$id(e.target.id).value=n;},50);showNotification(`Added: ${n}`,'success');}else{e.target.value=a[0]||"";showNotification("Exists!","warning");}}else{e.target.value=a[0]||"";}}}
-    function renderDropdownsAndTabs(){let s1=$id('projectCategory'),s2=$id('projectCategory2'),cv1=s1?s1.value:'',cv2=s2?s2.value:'',tc=$id('projectTabs');if(s1)s1.innerHTML='<option value="">Select Project 1</option>';if(s2)s2.innerHTML='<option value="">-- Optional 2nd --</option>';if(tc){tc.innerHTML=`<button class="tab-btn ${currentProjectFilter==='All'?'active':''}" onclick="setProjectFilter('All', this)">All</button>`;customProjects.forEach(p=>{let sp=escapeHtml(escapeJsArg(p));if(s1)s1.insertAdjacentHTML('beforeend',`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`);if(s2)s2.insertAdjacentHTML('beforeend',`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`);tc.insertAdjacentHTML('beforeend',`<div class="tab-wrapper"><button class="tab-btn ${currentProjectFilter===p?'active':''}" onclick="setProjectFilter('${sp}', this)">${escapeHtml(p)}</button><button class="tab-delete-btn" onclick="deleteProject(event, '${sp}')">×</button></div>`);});tc.innerHTML+=`<button class="tab-add-btn" onclick="addNewProject()"><ion-icon name="add"></ion-icon></button>`;if(s1)s1.value=cv1;if(s2)s2.value=cv2;}let ss=$id('leadSource'),cs=ss?ss.value:'';if(ss){ss.innerHTML=customSources.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;ss.value=customSources.includes(cs)?cs:(customSources[0]||"");}let st=$id('status'),cst=st?st.value:'';if(st){st.innerHTML=customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;st.value=customStatuses.includes(cst)?cst:(customStatuses[0]||"");}let sa=$id('assignBy'),ca=sa?sa.value:'';[$id('assignBy'),$id('bulkAssign')].forEach((s,i)=>{if(s){let h=(i===1)?'<option value="">Assign To...</option>':'<option value="">-- Unassigned --</option>';h+=customAssignees.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');if(i===0)h+=`<option value="ADD_NEW">➕ Custom...</option>`;s.innerHTML=h;if(i===0)s.value=customAssignees.includes(ca)?ca:"";}});let bs=$id('bulkStatus');if(bs)bs.innerHTML='<option value="">Status...</option>'+customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');let kc=$id('kanbanView');if(kc){kc.innerHTML='';customStatuses.forEach(s=>{if(s==='Not Interested')return;let c='var(--accent-brand)',i='';if(s==='Follow-up')c='#B45309';if(s==='Hot'){c='var(--notify-red)';i='🔥';}if(s==='Broker')c='var(--golden)';if(s==='Closed'){c='#15803D';i='✔️';}kc.innerHTML+=`<div class="kanban-col"><h3 style="border-bottom-color:${c};">${s} <span style="font-size:16px">${i}</span></h3><div class="kanban-dropzone" data-status="${s}"></div></div>`;});bindKanbanDropzones();}}
-    function addNewProject(){let p=prompt("Enter new project:");if(p&&p.trim()!==''){p=p.trim();if(!customProjects.includes(p)){customProjects.push(p);localStorage.setItem('crm_projects_'+(auth&&auth.currentUser?auth.currentUser.uid:''),JSON.stringify(customProjects));if(auth&&auth.currentUser)db.collection("users").doc(auth.currentUser.uid).set({projects:customProjects},{merge:true});renderDropdownsAndTabs();$id('projectCategory').value=p;showNotification(`Added ${p}`,'success');}else showNotification("Exists!",'warning');}}
-    function deleteProject(e,n){e.stopPropagation();if(confirm(`Delete "${n}" tab?`)){customProjects=customProjects.filter(p=>p!==n);localStorage.setItem('crm_projects_'+(auth&&auth.currentUser?auth.currentUser.uid:''),JSON.stringify(customProjects));if(auth&&auth.currentUser)db.collection("users").doc(auth.currentUser.uid).set({projects:customProjects},{merge:true});if(currentProjectFilter===n)currentProjectFilter='All';renderDropdownsAndTabs();renderData(true);showNotification(`Removed ${n}`,'warning');}}
-    function setProjectFilter(v,b){haptic('light');currentProjectFilter=v;document.querySelectorAll('#projectTabs .tab-btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');$id('search').value='';currentQuickFilter='All';currentFilterDate=null;document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));renderData(false);}
+    
+    function renderDropdownsAndTabs(){
+        let tc=$id('projectTabs');
+        if(tc){
+            tc.innerHTML=`<button class="tab-btn ${currentPropertyFilter==='All'?'active':''}" onclick="setPropertyFilter('All', this)">All Types</button>`;
+            customPropTypes.forEach(p=>{
+                let sp=escapeHtml(escapeJsArg(p));
+                tc.insertAdjacentHTML('beforeend',`<div class="tab-wrapper"><button class="tab-btn ${currentPropertyFilter===p?'active':''}" onclick="setPropertyFilter('${sp}', this)">${escapeHtml(p)}</button><button class="tab-delete-btn" onclick="deletePropType(event, '${sp}')">×</button></div>`);
+            });
+        }
+        let ss=$id('leadSource'),cs=ss?ss.value:'';if(ss){ss.innerHTML=customSources.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;ss.value=customSources.includes(cs)?cs:(customSources[0]||"");}let st=$id('status'),cst=st?st.value:'';if(st){st.innerHTML=customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;st.value=customStatuses.includes(cst)?cst:(customStatuses[0]||"");}let sa=$id('assignBy'),ca=sa?sa.value:'';[$id('assignBy'),$id('bulkAssign')].forEach((s,i)=>{if(s){let h=(i===1)?'<option value="">Assign To...</option>':'<option value="">-- Unassigned --</option>';h+=customAssignees.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');if(i===0)h+=`<option value="ADD_NEW">➕ Custom...</option>`;s.innerHTML=h;if(i===0)s.value=customAssignees.includes(ca)?ca:"";}});let bs=$id('bulkStatus');if(bs)bs.innerHTML='<option value="">Status...</option>'+customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');let kc=$id('kanbanView');if(kc){kc.innerHTML='';customStatuses.forEach(s=>{if(s==='Not Interested')return;let c='var(--accent-brand)',i='';if(s==='Follow-up')c='#B45309';if(s==='Hot'){c='var(--notify-red)';i='🔥';}if(s==='Broker')c='var(--golden)';if(s==='Closed'){c='#15803D';i='✔️';}kc.innerHTML+=`<div class="kanban-col"><h3 style="border-bottom-color:${c};">${s} <span style="font-size:16px">${i}</span></h3><div class="kanban-dropzone" data-status="${s}"></div></div>`;});bindKanbanDropzones();}
+    }
+    
+    function deletePropType(e,n){
+        e.stopPropagation();
+        if(confirm(`Delete "${n}" tab?`)){
+            customPropTypes=customPropTypes.filter(p=>p!==n);
+            localStorage.setItem('crm_propTypes_'+(auth&&auth.currentUser?auth.currentUser.uid:''),JSON.stringify(customPropTypes));
+            if(auth&&auth.currentUser)db.collection("users").doc(auth.currentUser.uid).set({propTypes:customPropTypes},{merge:true});
+            if(currentPropertyFilter===n)currentPropertyFilter='All';
+            renderDropdownsAndTabs();
+            renderPropTypes();
+            renderData(true);
+            showNotification(`Removed ${n}`,'warning');
+        }
+    }
+
+    function setPropertyFilter(v,b){haptic('light');currentPropertyFilter=v;document.querySelectorAll('#projectTabs .tab-btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');$id('search').value='';currentQuickFilter='All';currentFilterDate=null;document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));renderData(false);}
+    
     function applyQuickFilter(t){haptic('light');if(currentQuickFilter===t&&t!=='All')t='All';currentQuickFilter=t;currentFilterDate=null;document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));if(t==='Hot'){$id('filterHot')?.classList.add('active');}$id('search').value='';renderData(false);}
     function handleSort(c){haptic('light');if(sortColumn===c)sortAscending=!sortAscending;else{sortColumn=c;sortAscending=true;}renderData(false);}
     
@@ -1087,7 +1338,7 @@
                     b.style.cursor = 'pointer';
                     b.onclick = () => {
                         let d = dripAlerts[0];
-                        openWaModal(d.phone, d.name, d.projectCategory, d.id);
+                        openWaModal(d.phone, d.name, d.propertyType, d.id);
                         $id('waTemplateSelector').value = "1";
                         loadWaTemplate(); 
                     };
@@ -1105,9 +1356,9 @@
     function renderHistoryTimeline(){let c=$id('historyTimelineContainer'),t=$id('historyTimeline');if(!t||!c)return;if(window.currentEditHistory&&window.currentEditHistory.length>0){c.style.display='block';t.innerHTML=window.currentEditHistory.map((h,i)=>`<div class="history-item"><div style="font-size:11px;color:var(--accent-brand);font-weight:800;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span>📅 ${h.date} &nbsp; 🕒 ${h.time||'N/A'}</span><span style="display:flex;align-items:center;gap:8px;font-size:16px;"><span class="edit-history-btn" onclick="triggerEditHistory(${i})">✏️</span><span class="delete-history-btn" onclick="triggerDeleteHistory(${i})">🗑️</span></span></div><div style="font-size:13px;color:var(--text-color);line-height:1.5;font-weight:600;">${sanitizeText(h.note)}</div></div>`).join('');}else{c.style.display='none';t.innerHTML='';}}
     function triggerEditHistory(i){haptic('light');let h=window.currentEditHistory[i];$id('editRemarkContext').value='form';$id('editRemarkTargetId').value=$id('editId').value||'';$id('editRemarkIndex').value=i;$id('editRemarkDate').value=parseDisplayDateToInput(h.date);$id('editRemarkNote').value=h.note;openModal('editRemarkModal');}
     function triggerEditHistoryStandalone(id,i){haptic('light');let c=clients.find(x=>x.id===id);if(!c)return;let h=c.history[i];$id('editRemarkContext').value='standalone';$id('editRemarkTargetId').value=id;$id('editRemarkIndex').value=i;$id('editRemarkDate').value=parseDisplayDateToInput(h.date);$id('editRemarkNote').value=h.note;openModal('editRemarkModal');}
-    async function saveEditedRemark(){let c=$id('editRemarkContext').value,t=$id('editRemarkTargetId').value,i=parseInt($id('editRemarkIndex').value),nd=$id('editRemarkDate').value,nn=$id('editRemarkNote').value.trim();if(!nn||!nd){showNotification("Required","error");return;}let p=nd.split('-'),m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],fd=`${p[2]}-${m[parseInt(p[1])-1]}-${p[0]}`;if(c==='form'){window.currentEditHistory[i].note=nn;window.currentEditHistory[i].date=fd;renderHistoryTimeline();if(t){try{let u={history:window.currentEditHistory,updatedAt:Date.now(),requiresRemark:false};if(i===0)u.remark=nn;if(db)await db.collection("leads").doc(t).update(u);showNotification("Saved!","success");}catch(e){showNotification("DB error","error");}}else showNotification("Updated locally.","success");}else if(c==='standalone'){let cl=clients.find(x=>x.id===t);if(cl){let nh=[...cl.history];nh[i].note=nn;nh[i].date=fd;try{let u={history:nh,updatedAt:Date.now(),requiresRemark:false};if(i===0)u.remark=nn;if(db)await db.collection("leads").doc(t).update(u);showNotification("Saved!","success");openHistoryModal(t);}catch(e){showNotification("DB error","error");}}}closeModal('editRemarkModal');}
-    async function triggerDeleteHistory(i){haptic('medium');if(confirm("Delete?")){window.currentEditHistory.splice(i,1);renderHistoryTimeline();let e=$id('editId').value;if(e){try{let u={history:window.currentEditHistory,updatedAt:Date.now()};u.remark=window.currentEditHistory.length>0?window.currentEditHistory[0].note:'';if(db)await db.collection("leads").doc(e).update(u);showNotification("Deleted!","success");}catch(x){showNotification("Error","error");}}else showNotification("Deleted locally.","warning");}}
-    async function triggerDeleteHistoryStandalone(id,i){haptic('medium');if(confirm("Delete?")){let c=clients.find(x=>x.id===id);if(!c)return;let nh=[...c.history];nh.splice(i,1);try{let u={history:nh,updatedAt:Date.now()};u.remark=nh.length>0?nh[0].note:'';if(db)await db.collection("leads").doc(id).update(u);showNotification("Deleted!","success");openHistoryModal(id);}catch(x){showNotification("Error","error");}}}
+    async function saveEditedRemark(){let c=$id('editRemarkContext').value,t=$id('editRemarkTargetId').value,i=parseInt($id('editRemarkIndex').value),nd=$id('editRemarkDate').value,nn=$id('editRemarkNote').value.trim();if(!nn||!nd){showNotification("Required","error");return;}let p=nd.split('-'),m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],fd=`${p[2]}-${m[parseInt(p[1])-1]}-${p[0]}`;if(c==='form'){window.currentEditHistory[i].note=nn;window.currentEditHistory[i].date=fd;renderHistoryTimeline();if(t){try{let u={history:window.currentEditHistory,updatedAt:Date.now(),requiresRemark:false};if(i===0 && nn)u.remark=nn;if(db)await db.collection("leads").doc(t).update(u);showNotification("Saved!","success");}catch(e){showNotification("DB error","error");}}else showNotification("Updated locally.","success");}else if(c==='standalone'){let cl=clients.find(x=>x.id===t);if(cl){let nh=[...cl.history];nh[i].note=nn;nh[i].date=fd;try{let u={history:nh,updatedAt:Date.now(),requiresRemark:false};if(i===0 && nn)u.remark=nn;if(db)await db.collection("leads").doc(t).update(u);showNotification("Saved!","success");openHistoryModal(t);}catch(e){showNotification("DB error","error");}}}closeModal('editRemarkModal');}
+    async function triggerDeleteHistory(i){haptic('medium');if(confirm("Delete?")){window.currentEditHistory.splice(i,1);renderHistoryTimeline();let e=$id('editId').value;if(e){try{let u={history:window.currentEditHistory,updatedAt:Date.now()};if(db)await db.collection("leads").doc(e).update(u);showNotification("Deleted!","success");}catch(x){showNotification("Error","error");}}else showNotification("Deleted locally.","warning");}}
+    async function triggerDeleteHistoryStandalone(id,i){haptic('medium');if(confirm("Delete?")){let c=clients.find(x=>x.id===id);if(!c)return;let nh=[...c.history];nh.splice(i,1);try{let u={history:nh,updatedAt:Date.now()};if(db)await db.collection("leads").doc(id).update(u);showNotification("Deleted!","success");openHistoryModal(id);}catch(x){showNotification("Error","error");}}}
     
     async function toggleVisitStatus(id, newStatus) {
         haptic('medium');
@@ -1122,7 +1373,6 @@
             await db.collection("leads").doc(id).update({
                 visitDone: newStatus,
                 history: h,
-                remark: note,
                 updatedAt: Date.now(),
                 requiresRemark: false
             });
@@ -1138,18 +1388,20 @@
         let p=$id('phone').value.trim();
         if(!/^[6-9]\d{9}$/.test(p)){showNotification("Invalid phone","error");return;}
         let id=$id('editId').value,sv=$id('status').value,av=$id('assignBy').value,nr=$id('newRemark').value.trim(),b=$id('saveBtn');
-        let p1=$id('projectCategory').value,p2=$id('projectCategory2').value,pa=[];if(p1)pa.push(p1);if(p2&&p2!==p1)pa.push(p2);let fp=pa.join(' + '),ot=b.innerText;
+        let ot=b.innerText;
         b.disabled=true;b.innerText="Saving...";
     
         let ha=window.currentEditHistory?[...window.currentEditHistory]:[];
         let isVisitDone = false; 
         let reqRem = false;
         
+        let existingRemark = '';
         if(id) { 
             let exist = clients.find(x=>x.id===id); 
             if(exist) {
                 isVisitDone = !!exist.visitDone; 
                 reqRem = !!exist.requiresRemark; 
+                existingRemark = exist.remark || '';
                 if(av !== exist.assignBy) { 
                     ha = [];
                     let logMsg = `🔄 Freshly Assigned to ${av || 'Unassigned'}`;
@@ -1166,14 +1418,16 @@
             reqRem = false; 
         }
         
+        let finalRemark = nr ? nr : existingRemark;
+        
         let tr=document.querySelector('input[name="leadTemp"]:checked'),st=tr?tr.value:'Warm',ff=$id('followup').value;
         if(nr){let pd=extractSmartDate(nr);if(pd)ff=pd;}
         if(!auth||!auth.currentUser){showNotification("Auth error","error");b.disabled=false;return;}
         
-        // NEW: SAVE PROPERTY TYPE
+        // SAVE MULTI-SELECT PROPERTY TYPE
         let pType = $id('propertyType').value;
 
-        let dt={ownerId:auth.currentUser.uid,leadDate:$id('leadDate').value||getToday(),followup:ff,assignBy:av,name:$id('name').value.trim(),phone:p,leadSource:$id('leadSource').value,projectCategory:fp,specificUnit:$id('specificUnit').value.trim(),location:$id('location').value,status:sv,budget:$id('budget').value,visitDone:isVisitDone,leadTemperature:st,propertyType:pType,history:ha,remark:ha.length>0?ha[0].note:'',updatedAt:Date.now(),requiresRemark:reqRem};
+        let dt={ownerId:auth.currentUser.uid,leadDate:$id('leadDate').value||getToday(),followup:ff,assignBy:av,name:$id('name').value.trim(),phone:p,leadSource:$id('leadSource').value,projectCategory:'',propertyType:pType,specificUnit:$id('specificUnit').value.trim(),location:$id('location').value,status:sv,budget:$id('budget').value,visitDone:isVisitDone,leadTemperature:st,history:ha,remark:finalRemark,updatedAt:Date.now(),requiresRemark:reqRem};
         let ss=false;
         try{
             if(!db)throw new Error("DB offline");
@@ -1183,7 +1437,7 @@
             }else{
                 await db.collection("leads").add(dt);
                 showNotification(`Saved!`,'success');
-                if(typeof fbq==='function')fbq('track','Lead',{content_name:dt.name,content_category:dt.projectCategory,currency:'INR'});
+                if(typeof fbq==='function')fbq('track','Lead',{content_name:dt.name,currency:'INR'});
             }
             if(sv==='Closed'){
                 let bv=parseFloat(dt.budget.replace(/[^0-9.]/g,''))||0;
@@ -1206,7 +1460,10 @@
     });
     
     function getFilteredData(){
-        let d=currentProjectFilter==='All'?[...clients]:clients.filter(c=>c.projectCategory&&c.projectCategory.includes(currentProjectFilter));
+        let d=currentPropertyFilter==='All'?[...clients]:clients.filter(c=>{
+            let pt = c.propertyType || c.projectCategory || '';
+            return pt.includes(currentPropertyFilter);
+        });
         if(currentAssigneeFilter==='Unassigned')d=d.filter(c=>!c.assignBy||c.assignBy.trim()==='');
         else if(currentAssigneeFilter!=='All')d=d.filter(c=>c.assignBy===currentAssigneeFilter);
         if(currentQuickFilter==='Hot')d=d.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot');
@@ -1222,7 +1479,7 @@
     let bsActionId='',bsActionPhone='',bsActionName='',bsActionProj='',callTargetId=null,callStartTime=0;
     function triggerActionMenu(b){haptic('medium');let p=b.closest('tr')||b.closest('.k-card');if(!p)return;bsActionId=p.dataset.id;bsActionPhone=p.dataset.phone;bsActionName=p.dataset.name;bsActionProj=p.dataset.proj;$id('actionModal').classList.add('active');}
     function closeActionMenu(){$id('actionModal').classList.remove('active');setTimeout(()=>{bsActionId='';bsActionPhone='';bsActionName='';bsActionProj='';},300);}
-    async function markFollowupDone(id){haptic('medium');let c=clients.find(x=>x.id===id);if(!c)return;let nr="✅ Follow-up aaj complete ho gaya.",h=c.history?[...c.history]:[];h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:nr});try{if(db)await db.collection("leads").doc(id).update({history:h,remark:nr,followup:"",updatedAt:Date.now(),requiresRemark:false});showNotification("Done!","success");fireConfetti();}catch(e){showNotification("Error","error");}}
+    async function markFollowupDone(id){haptic('medium');let c=clients.find(x=>x.id===id);if(!c)return;let nr="✅ Follow-up aaj complete ho gaya.",h=c.history?[...c.history]:[];h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:nr});try{if(db)await db.collection("leads").doc(id).update({history:h,followup:"",updatedAt:Date.now(),requiresRemark:false});showNotification("Done!","success");fireConfetti();}catch(e){showNotification("Error","error");}}
     function executeSwipeCall(){let id=bsActionId,p=normalizePhone(bsActionPhone),n=bsActionName||'Lead';closeActionMenu();if(!isValidIndianPhone(p)){showNotification('Invalid phone','error');return;}callTargetId=id;callStartTime=Date.now();pendingCallLog={id,phone:p,name:n,startedAt:callStartTime};localStorage.setItem('crm_pending_call',JSON.stringify(pendingCallLog));$id('callLogName').innerText="Logging call for "+n;window.location.href='tel:'+p;setTimeout(()=>{if(document.visibilityState==='visible'&&callTargetId===id)openCallLogModal();},1200);}
     function restorePendingCallLog(){try{let r=localStorage.getItem('crm_pending_call');if(!r)return;let p=JSON.parse(r);if(!p?.id||!p?.startedAt)return;if(!clients.some(c=>c.id===p.id))return;callTargetId=p.id;callStartTime=Number(p.startedAt)||Date.now();pendingCallLog=p;$id('callLogName').innerText="Logging call for "+(p.name||'Lead');openCallLogModal();}catch(e){localStorage.removeItem('crm_pending_call');}}
     window.addEventListener('pageshow',()=>setTimeout(restorePendingCallLog,150));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(restorePendingCallLog,150);});
@@ -1253,10 +1510,10 @@
     }
     
     function setCallStatus(s){haptic('light');$id('callLogStatus').value=s;$id('btnConnect').classList.remove('active');$id('btnNoAnswer').classList.remove('active');$id('btnBusy').classList.remove('active');if(s==='Connected')$id('btnConnect').classList.add('active');if(s==='No Answer')$id('btnNoAnswer').classList.add('active');if(s==='Busy')$id('btnBusy').classList.add('active');}
-    async function saveCallLog(){let r=$id('callLogRemark').value.trim(),s=$id('callLogStatus').value,ds=Math.round((Date.now()-callStartTime)/1000),m=Math.floor(ds/60),sc=ds%60,dt=(ds>10&&callStartTime>0)?` [⏳ ${m}m ${sc}s]`:'',fr=r?`📞 [Call: ${s}]${dt} - ${r}`:`📞 [Call: ${s}]${dt}`;callStartTime=0;if(callTargetId){try{let c=clients.find(x=>x.id===callTargetId);if(c){let h=c.history?[...c.history]:[];h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:fr});let ed=extractSmartDate(r),pl={history:h,remark:fr,updatedAt:Date.now(),requiresRemark:false};if(ed)pl.followup=ed;if(!db)throw new Error('DB offline');await db.collection("leads").doc(callTargetId).update(pl);if(ed)showNotification(`Smart Date: ${formatDisplayDate(ed)}`,"success");else showNotification("Saved!","success");haptic('medium');pendingCallLog=null;localStorage.removeItem('crm_pending_call');closeCallLogModal(false);}}catch(e){showNotification("Error: "+e.message,"error");}}}
+    async function saveCallLog(){let r=$id('callLogRemark').value.trim(),s=$id('callLogStatus').value,ds=Math.round((Date.now()-callStartTime)/1000),m=Math.floor(ds/60),sc=ds%60,dt=(ds>10&&callStartTime>0)?` [⏳ ${m}m ${sc}s]`:'',fr=r?`📞 [Call: ${s}]${dt} - ${r}`:`📞 [Call: ${s}]${dt}`;callStartTime=0;if(callTargetId){try{let c=clients.find(x=>x.id===callTargetId);if(c){let h=c.history?[...c.history]:[];h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:fr});let ed=extractSmartDate(r),pl={history:h,updatedAt:Date.now(),requiresRemark:false};if(ed)pl.followup=ed;if(r)pl.remark=fr;if(!db)throw new Error('DB offline');await db.collection("leads").doc(callTargetId).update(pl);if(ed)showNotification(`Smart Date: ${formatDisplayDate(ed)}`,"success");else showNotification("Saved!","success");haptic('medium');pendingCallLog=null;localStorage.removeItem('crm_pending_call');closeCallLogModal(false);}}catch(e){showNotification("Error: "+e.message,"error");}}}
     
     function executeSwipeWa(){closeActionMenu();openWaModal(bsActionPhone,bsActionName,bsActionProj,bsActionId);}
-    function executeSwipeShare(){closeActionMenu();if(navigator.share){navigator.share({title:'True Invest Lead',text:`Lead: ${bsActionName}\nPhone: ${bsActionPhone}\nProject: ${bsActionProj}`}).then(()=>{showNotification("Shared","success");haptic('light');}).catch(e=>{});}else copyToClipboard(`Lead: ${bsActionName} | Phone: ${bsActionPhone} | Project: ${bsActionProj}`,'Lead');}
+    function executeSwipeShare(){closeActionMenu();if(navigator.share){navigator.share({title:'True Invest Lead',text:`Lead: ${bsActionName}\nPhone: ${bsActionPhone}\nProperty: ${bsActionProj}`}).then(()=>{showNotification("Shared","success");haptic('light');}).catch(e=>{});}else copyToClipboard(`Lead: ${bsActionName} | Phone: ${bsActionPhone} | Property: ${bsActionProj}`,'Lead');}
     function executeSwipeEdit(){let t=bsActionId;closeActionMenu();setTimeout(()=>editLead(t),50);}
     
     function executeSwipeDel(){
@@ -1288,7 +1545,16 @@
     function renderData(a=false){try{if(currentViewMode==='table')renderTableOptimized(a);else if(currentViewMode==='kanban')renderKanban(a);else if(currentViewMode==='calendar')renderCalendar();}catch(e){}}
     function toggleAllBulk(c){let v=getFilteredData().map(x=>x.id);if(c.checked)v.forEach(i=>selectedLeadIds.add(i));else v.forEach(i=>selectedLeadIds.delete(i));document.querySelectorAll('.bulk-cb').forEach(cb=>{if(cb.id!=='selectAllCb')cb.checked=c.checked;});updateBulkBar();}
     function updateBulkBar(){let b=$id('bulkActionBar'),c=$id('bulkCount'),sa=$id('selectAllCb'),sc=selectedLeadIds.size;if(c)c.innerText=`${sc} Selected`;if(b)b.classList.toggle('active',sc>0);if(sa){let v=getFilteredData().map(x=>x.id);sa.checked=v.length>0&&v.every(i=>selectedLeadIds.has(i));}}
-    function clearBulkSelection(){selectedLeadIds.clear();let a=$id('bulkAssign'),s=$id('bulkStatus');if(a)a.value='';if(s)s.value='';document.querySelectorAll('.bulk-cb').forEach(cb=>cb.checked=false);updateBulkBar();}
+    
+    function clearBulkSelection(){
+        selectedLeadIds.clear();
+        let a=$id('bulkAssign'), s=$id('bulkStatus'), n=$id('bulkNameChange');
+        if(a) a.value='';
+        if(s) s.value='';
+        if(n) n.value='';
+        document.querySelectorAll('.bulk-cb').forEach(cb=>cb.checked=false);
+        updateBulkBar();
+    }
     
     async function executeBulkAssign(v){
         if(!v)return;
@@ -1301,7 +1567,7 @@
             let dTime = getTime();
             await commitInChunks(i,(b,id)=>{
                 let ha = [{date: dDate, time: dTime, note: `🔄 Freshly Assigned to ${v} (Bulk)`}];
-                b.update(db.collection("leads").doc(id),{assignBy:v, updatedAt:n, requiresRemark:true, history:ha, remark:`🔄 Freshly Assigned to ${v}`});
+                b.update(db.collection("leads").doc(id),{assignBy:v, updatedAt:n, requiresRemark:true, history:ha});
             });
             showNotification(`Assigned ${i.length}!`,"success");
             clearBulkSelection();
@@ -1309,6 +1575,40 @@
     }
     
     async function executeBulkStatus(v){if(!v)return;let i=getSelectedLeadIds();if(i.length===0)return;if(!confirm(`Move ${i.length} to ${v}?`)){$id('bulkStatus').value='';return;}showNotification("Updating...","warning");try{let n=Date.now();await commitInChunks(i,(b,id)=>b.update(db.collection("leads").doc(id),{status:v,updatedAt:n}));showNotification(`Moved ${i.length}!`,"success");if(v==='Closed')fireConfetti(true);clearBulkSelection();}catch(e){showNotification("Error","error");}}
+
+    // NEW BULK RENAME FUNCTION
+    async function executeBulkRename(v) {
+        let sel = $id('bulkNameChange');
+        if(!v) return;
+        sel.value = ''; 
+        let ids = getSelectedLeadIds();
+        if(ids.length === 0) return;
+        
+        let newName = prompt(`✏️ Enter new name for ${ids.length} selected lead(s):`);
+        if(newName === null || newName.trim() === '') return;
+        newName = newName.trim();
+        
+        showNotification("Updating names...","warning");
+        try {
+            let n = Date.now();
+            let dDate = formatDisplayDate(getToday());
+            let dTime = getTime();
+            await commitInChunks(ids, (b, id) => {
+                let logMsg = `✏️ Bulk Renamed to: ${newName}`;
+                let ha = [{date: dDate, time: dTime, note: logMsg}];
+                b.update(db.collection("leads").doc(id), {
+                    name: newName,
+                    updatedAt: n,
+                    history: ha,
+                    requiresRemark: false
+                });
+            });
+            showNotification(`Renamed ${ids.length} leads!`,"success");
+            clearBulkSelection();
+        } catch(e) {
+            showNotification("Error renaming leads","error");
+        }
+    }
     
     async function executeBulkDelete(){
         let i=getSelectedLeadIds();if(i.length===0)return;
@@ -1338,10 +1638,11 @@
                     let hl=(c.followup===t&&c.status!=='Closed')?'row-highlight':'';
                     if(reqRem) hl += ' needs-remark-row';
                     
-                    let ptBadge = c.propertyType ? `<span style="display:inline-block; margin-bottom:4px; font-size:9px; background:rgba(197,160,89,0.1); color:var(--golden-dark); padding:2px 6px; border-radius:4px; font-weight:900; letter-spacing:0.5px; border:1px solid rgba(197,160,89,0.3); text-transform:uppercase;">${c.propertyType}</span><br>` : '';
+                    let pTypeClean = sanitizeText(c.propertyType || c.projectCategory || '');
+                    let ptBadge = pTypeClean ? `<span style="display:inline-block; margin-bottom:4px; font-size:9px; background:rgba(197,160,89,0.1); color:var(--golden-dark); padding:2px 6px; border-radius:4px; font-weight:900; letter-spacing:0.5px; border:1px solid rgba(197,160,89,0.3); text-transform:uppercase;">${pTypeClean}</span><br>` : '';
                     let ud=c.specificUnit?`<span style="font-size:10px;opacity:0.7;font-weight:800;">${sanitizeText(c.specificUnit)}</span>`:'';
                     
-                    let rawRemark=(c.history&&c.history.length>0)?c.history[0].note:(c.remark||'-');
+                    let rawRemark=c.remark||'-';
                     let displayRemark = reqRem ? '<span style="opacity:0.3;font-weight:800;">- Blank -</span>' : sanitizeText(rawRemark);
                     
                     let newBdg = '';
@@ -1352,12 +1653,12 @@
                     
                     let vb = c.visitDone ? `<span class="badge status-closed visit-toggle" style="font-size:9px; cursor:pointer; box-shadow:0 2px 10px rgba(21,128,61,0.2); transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', false)">✅ VISITED</span>` : `<span class="badge visit-toggle" style="font-size:9px; cursor:pointer; background:var(--input-bg); border:1px dashed var(--border-color); color:var(--text-color); transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', true)">📍 MARK VISIT</span>`;
                     
-                    let tk=(c.followup===t&&c.status!=='Closed')?`<span class="action-dots" style="color:var(--whatsapp-green);margin-right:4px;" onclick="event.stopPropagation();markFollowupDone('${c.id}')">✔️</span>`:'',du=Math.floor((Date.now()-(c.updatedAt||0))/86400000),stb='';if(du>=7&&c.status!=='Closed'&&c.status!=='Not Interested')stb=`<span class="pulse-dot"></span>`;let ml=c.location||c.projectCategory?`<a href="https://maps.google.com/?q=${encodeURIComponent(c.location||c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;font-size:14px;">📍</a>`:'',ic=selectedLeadIds.has(c.id)?'checked':'',tr=document.createElement('tr');tr.className=`${hl}`;tr.dataset.id=c.id;tr.dataset.phone=normalizePhone(c.phone);tr.dataset.name=String(c.name||'');tr.dataset.proj=String(c.projectCategory||'');tr.onclick=()=>editLead(c.id);
+                    let tk=(c.followup===t&&c.status!=='Closed')?`<span class="action-dots" style="color:var(--whatsapp-green);margin-right:4px;" onclick="event.stopPropagation();markFollowupDone('${c.id}')">✔️</span>`:'',du=Math.floor((Date.now()-(c.updatedAt||0))/86400000),stb='';if(du>=7&&c.status!=='Closed'&&c.status!=='Not Interested')stb=`<span class="pulse-dot"></span>`;let ml=c.location?`<a href="https://maps.google.com/?q=${encodeURIComponent(c.location)}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;font-size:14px;">📍</a>`:'',ic=selectedLeadIds.has(c.id)?'checked':'',tr=document.createElement('tr');tr.className=`${hl}`;tr.dataset.id=c.id;tr.dataset.phone=normalizePhone(c.phone);tr.dataset.name=String(c.name||'');tr.dataset.proj=String(pTypeClean);tr.onclick=()=>editLead(c.id);
                     
-                    tr.innerHTML=`<td onclick="event.stopPropagation()"><div style="display:flex;align-items:center;justify-content:center;"><input type="checkbox" class="bulk-cb" value="${escapeHtml(c.id)}" onchange="handleBulkCheckbox(this)" ${ic}></div></td><td style="opacity:0.4;font-weight:800;">${sr++}</td><td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td><td style="font-weight:800;white-space:nowrap;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span style="display:flex;align-items:center;gap:4px;">${sn} ${newBdg} ${stb}</span><span style="display:flex;align-items:center;justify-content:center;gap:4px;">${tbBadge} ${sb}</span></div></td><td class="copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')" style="font-weight:700">${c.phone}</td><td style="font-size:12px;font-weight:700;">${sa}</td><td style="vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span class="badge ${b}">${c.status}</span>${vb}</div></td><td style="font-size:11px;font-weight:800;opacity:0.7;">${c.leadSource||'-'}</td><td style="font-size:12px;font-weight:800;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;">${ptBadge}<span style="display:flex;align-items:center;gap:4px;">${sanitizeText(c.projectCategory)||'-'}${ml}</span>${ud}</div></td><td style="color:var(--golden-dark);font-weight:900">${sanitizeText(c.budget)||'-'}</td><td class="date-cell" style="font-weight:900;color:var(--text-color);cursor:pointer;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')"><div style="display:inline-flex;align-items:center;justify-content:center;gap:4px;">${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div></td><td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><span class="history-link" onclick="event.stopPropagation();openHistoryModal('${c.id}')">${displayRemark}</span></td><td style="vertical-align:middle;"><div style="display:flex;justify-content:center;align-items:center;">${tk}<span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div></td>`;
+                    tr.innerHTML=`<td onclick="event.stopPropagation()"><div style="display:flex;align-items:center;justify-content:center;"><input type="checkbox" class="bulk-cb" value="${escapeHtml(c.id)}" onchange="handleBulkCheckbox(this)" ${ic}></div></td><td style="opacity:0.4;font-weight:800;">${sr++}</td><td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td><td style="font-weight:800;white-space:nowrap;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span style="display:flex;align-items:center;gap:4px;">${sn} ${newBdg} ${stb}</span><span style="display:flex;align-items:center;justify-content:center;gap:4px;">${tbBadge} ${sb}</span></div></td><td class="copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')" style="font-weight:700">${c.phone}</td><td style="font-size:12px;font-weight:700;">${sa}</td><td style="vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span class="badge ${b}">${c.status}</span>${vb}</div></td><td style="font-size:11px;font-weight:800;opacity:0.7;">${c.leadSource||'-'}</td><td style="font-size:12px;font-weight:800;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;">${ptBadge}<span style="display:flex;align-items:center;gap:4px;">${sanitizeText(c.location)||'-'}${ml}</span>${ud}</div></td><td style="color:var(--golden-dark);font-weight:900">${sanitizeText(c.budget)||'-'}</td><td class="date-cell" style="font-weight:900;color:var(--text-color);cursor:pointer;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')"><div style="display:inline-flex;align-items:center;justify-content:center;gap:4px;">${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div></td><td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><span class="history-link" onclick="event.stopPropagation();openHistoryModal('${c.id}')">${displayRemark}</span></td><td style="vertical-align:middle;"><div style="display:flex;justify-content:center;align-items:center;">${tk}<span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div></td>`;
                     
                     f.appendChild(tr);
-                    searchIndexTable.push({el:tr,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} project ${String(c.projectCategory||'')} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} type ${String(c.propertyType||'')} assignee ${String(c.assignBy||'')} remark ${String(rawRemark||'')}`.toLowerCase()});
+                    searchIndexTable.push({el:tr,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} type ${String(pTypeClean)} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} assignee ${String(c.assignBy||'')} remark ${String(rawRemark||'')}`.toLowerCase()});
                 }catch(x){}
             }
             tb.appendChild(f);ci=en;if(ci<ed.length){renderTableRequestId=requestAnimationFrame(rc);}else{renderTableRequestId=null;tc.style.minHeight='';tc.scrollTop=tst;tc.scrollLeft=tsl;window.scrollTo(sx,sy);updateBulkBar();let s=$id('search').value.toLowerCase().trim();if(s)applyDOMFilters(s);}
@@ -1385,15 +1686,15 @@
                     
                     let tv=c.leadTemperature||'Warm',ti='';if(tv==='Hot')ti='<span style="font-size:14px;">🔥</span>';else if(tv==='Warm')ti='<span style="font-size:14px;">☀️</span>';else if(tv==='Cold')ti='<span style="font-size:14px;">❄️</span>';
                     let vi = c.visitDone ? `<span class="visit-toggle" style="font-size:12px;cursor:pointer;transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', false)" title="Unmark Visit">✅</span>` : `<span class="visit-toggle" style="font-size:12px;cursor:pointer;opacity:0.5;transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', true)" title="Mark Visit">📍</span>`;
-                    let sn=sanitizeText(c.name).replace(/"/g,'&quot;').replace(/'/g,'&apos;'),sp=sanitizeText(c.projectCategory||'').replace(/"/g,'&quot;').replace(/'/g,'&apos;'),su=sanitizeText(c.specificUnit||''),du=Math.floor((Date.now()-(c.updatedAt||0))/86400000),stb='';if(du>=7&&c.status!=='Closed'&&c.status!=='Not Interested')stb=`<span class="pulse-dot"></span>`;let ml=c.location||c.projectCategory?`<a href="https://maps.google.com/?q=${encodeURIComponent(c.location||c.projectCategory)}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;font-size:14px;">📍</a>`:'',d=document.createElement('div');
+                    let sn=sanitizeText(c.name).replace(/"/g,'&quot;').replace(/'/g,'&apos;'),sp=sanitizeText(c.propertyType||c.projectCategory||'').replace(/"/g,'&quot;').replace(/'/g,'&apos;'),su=sanitizeText(c.specificUnit||''),du=Math.floor((Date.now()-(c.updatedAt||0))/86400000),stb='';if(du>=7&&c.status!=='Closed'&&c.status!=='Not Interested')stb=`<span class="pulse-dot"></span>`;let ml=c.location?`<a href="https://maps.google.com/?q=${encodeURIComponent(c.location)}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;font-size:14px;">📍</a>`:'',d=document.createElement('div');
                     
-                    let ptBadge = c.propertyType ? `<span style="font-size:9px; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-color); padding:2px 6px; border-radius:4px; font-weight:900; margin-right:4px;">${c.propertyType}</span>` : '';
+                    let ptBadge = sp ? `<span style="font-size:9px; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-color); padding:2px 6px; border-radius:4px; font-weight:900; margin-right:4px;">${sp}</span>` : '';
 
                     d.className=`k-card ${reqRem ? 'needs-remark-card' : ''}`;
-                    d.style.cssText=`touch-action:pan-y !important;`;d.setAttribute("draggable","true");d.dataset.id=c.id;d.dataset.phone=normalizePhone(c.phone);d.dataset.name=String(c.name||'');d.dataset.proj=String(c.projectCategory||'');d.onclick=()=>editLead(c.id);
-                    d.innerHTML=`<div class="k-card-title"><span style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${sn} ${newBdg} ${stb} ${ti} ${vi}</span><span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div><div class="k-card-detail copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')">📞 ${c.phone}</div><div class="k-card-detail" style="color:var(--text-color);font-weight:800;display:flex;justify-content:space-between;align-items:center;"><span style="display:flex;align-items:center;gap:4px;">📍 ${ptBadge}${su||sp||'-'} ${ml}</span></div><div class="k-card-detail" style="cursor:pointer;display:flex;align-items:center;gap:4px;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')">💰 <span style="font-weight:800;color:var(--golden-dark);">${sanitizeText(c.budget)||'N/A'}</span> &nbsp;|&nbsp; 📅 ${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div>`;
+                    d.style.cssText=`touch-action:pan-y !important;`;d.setAttribute("draggable","true");d.dataset.id=c.id;d.dataset.phone=normalizePhone(c.phone);d.dataset.name=String(c.name||'');d.dataset.proj=String(sp);d.onclick=()=>editLead(c.id);
+                    d.innerHTML=`<div class="k-card-title"><span style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${sn} ${newBdg} ${stb} ${ti} ${vi}</span><span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div><div class="k-card-detail copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')">📞 ${c.phone}</div><div class="k-card-detail" style="color:var(--text-color);font-weight:800;display:flex;justify-content:space-between;align-items:center;"><span style="display:flex;align-items:center;gap:4px;">📍 ${ptBadge}${su||sanitizeText(c.location)||'-'} ${ml}</span></div><div class="k-card-detail" style="cursor:pointer;display:flex;align-items:center;gap:4px;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')">💰 <span style="font-weight:800;color:var(--golden-dark);">${sanitizeText(c.budget)||'N/A'}</span> &nbsp;|&nbsp; 📅 ${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div>`;
                     
-                    fc[c.status].appendChild(d);let rRem=(c.history&&c.history.length>0)?c.history[0].note:(c.remark||'');searchIndexKanban.push({el:d,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} project ${String(c.projectCategory||'')} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} type ${String(c.propertyType||'')} assignee ${String(c.assignBy||'')} remark ${String(rRem||'')}`.toLowerCase()});
+                    fc[c.status].appendChild(d);let rRem=c.remark||'';searchIndexKanban.push({el:d,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} type ${String(sp)} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} assignee ${String(c.assignBy||'')} remark ${String(rRem||'')}`.toLowerCase()});
                 }catch(x){}
             }
             Object.keys(fc).forEach(s=>{if(fc[s].childElementCount>0){let z=document.querySelector(`.kanban-dropzone[data-status="${s}"]`);if(z)z.appendChild(fc[s]);}});ci=en;if(ci<ed.length)renderKanbanRequestId=requestAnimationFrame(rk);else{renderKanbanRequestId=null;customStatuses.forEach(s=>{let z=document.querySelector(`.kanban-dropzone[data-status="${s}"]`);if(z){z.style.minHeight='';z.scrollTop=zs[s]||0;}});kc.scrollLeft=ksl;window.scrollTo(sx,sy);let s=$id('search').value.toLowerCase().trim();if(s)applyDOMFilters(s);}
@@ -1422,14 +1723,14 @@
                             if(s==='Closed') {
                                 fireConfetti(true);
                                 if(c) {
-                                    openWaModal(c.phone, c.name, c.projectCategory, c.id);
+                                    openWaModal(c.phone, c.name, c.propertyType||'', c.id);
                                     $id('waTemplateSelector').value = "5";
                                     $id('waMessageText').value = `Hi ${c.name} 🎉,\nThank you for choosing us! Your booking is successfully confirmed. Feel free to reach out if you need anything.`;
                                     $id('waEditArea').style.display = 'block';
                                 }
                             } else if(s.toLowerCase().includes('visit')) {
                                 if(c) {
-                                    openWaModal(c.phone, c.name, c.projectCategory, c.id);
+                                    openWaModal(c.phone, c.name, c.propertyType||'', c.id);
                                     $id('waTemplateSelector').value = "2";
                                     loadWaTemplate();
                                 }
@@ -1444,42 +1745,42 @@
     function editLead(id){
         haptic('medium');let c=clients.find(x=>x.id===id);if(!c)return;
         $id('editId').value=c.id;['leadDate','followup','name','phone','leadSource','specificUnit','location','status','budget','assignBy'].forEach(f=>{if($id(f))$id(f).value=c[f]||'';});
-        let sp=(c.projectCategory||'').split(' + ').map(s=>s.trim());
-        if($id('projectCategory'))$id('projectCategory').value=sp[0]||'';
-        if($id('projectCategory2'))$id('projectCategory2').value=sp[1]||'';
         
-        // NEW: Load Property Type
-        if(c.propertyType) selectPropType(c.propertyType, null);
-        else selectPropType('Builder Floor', null); // Default for old leads without property type
+        // Load Property Type (supports multi-select mapping)
+        $id('propertyType').value = c.propertyType || c.projectCategory || '';
+        renderPropTypes(); // Refresh grid state
 
         if($id('saveBtn'))$id('saveBtn').innerText="Update Record";$id('leadModalTitle').innerHTML='<ion-icon name="create"></ion-icon> Edit Lead';if(c.leadTemperature){let r=document.querySelector(`input[name="leadTemp"][value="${c.leadTemperature}"]`);if(r)r.checked=true;}else{if($id('tempWarm'))$id('tempWarm').checked=true;}window.currentEditHistory=c.history?[...c.history]:[];if(window.currentEditHistory.length===0&&c.remark)window.currentEditHistory.push({date:c.leadDate||getToday(),time:'',note:c.remark});if($id('newRemark'))$id('newRemark').value='';renderHistoryTimeline();openModal('addLeadModal');
     }
     
     function resetForm(s=true){
         if(s)localStorage.removeItem('crm_lead_draft');let f=$id('clientForm');if(f)f.reset();
-        if($id('editId'))$id('editId').value="";if($id('saveBtn'))$id('saveBtn').innerText="Save Record";if($id('leadDate'))$id('leadDate').value=getToday();if($id('newRemark'))$id('newRemark').value="";if($id('followup'))$id('followup').value="";if($id('search'))$id('search').value="";if($id('projectCategory'))$id('projectCategory').value="";if($id('projectCategory2'))$id('projectCategory2').value="";if($id('assignBy'))$id('assignBy').value="";if($id('leadSource'))$id('leadSource').value=customSources[0]||'Facebook Ads';if($id('status'))$id('status').value=customStatuses[0]||'New';
+        if($id('editId'))$id('editId').value="";if($id('saveBtn'))$id('saveBtn').innerText="Save Record";if($id('leadDate'))$id('leadDate').value=getToday();if($id('newRemark'))$id('newRemark').value="";if($id('followup'))$id('followup').value="";if($id('search'))$id('search').value="";if($id('assignBy'))$id('assignBy').value="";if($id('leadSource'))$id('leadSource').value=customSources[0]||'Facebook Ads';if($id('status'))$id('status').value=customStatuses[0]||'New';
         
-        // NEW: Reset Property Type to Default
-        if($id('propertyType')) selectPropType('Builder Floor', null);
+        // Reset Property Type Selection
+        if($id('propertyType')) $id('propertyType').value = '';
+        renderPropTypes();
 
         window.currentEditHistory=[];renderHistoryTimeline();if($id('tempWarm'))$id('tempWarm').checked=true;if($id('duplicateAlert'))$id('duplicateAlert').style.display='none';currentQuickFilter='All';currentFilterDate=null;document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));renderData(false);
     }
     
     function downloadCSV(){
         if(clients.length===0){showNotification("Data missing",'error');return;}
-        let h=["Date","Name","Phone","Priority","Assign By","Source","Status","Type","Project","Specific Unit","Budget","Visit Done","Follow-up","Full Remark History"],ed=getFilteredData(),r=ed.map(c=>{
+        let h=["Date","Name","Phone","Priority","Assign By","Source","Status","Property Type","Specific Unit","Location","Budget","Visit Done","Follow-up","Full Remark History"],ed=getFilteredData(),r=ed.map(c=>{
             let fh="";if(c.history&&c.history.length>0)fh=[...c.history].reverse().map(x=>`[${x.date}] ${x.note}`).join(" || ");else fh=c.remark||"";
-            return [c.leadDate||'',`"${(c.name||'').replace(/"/g,'""')}"`,c.phone||'',`"${c.leadTemperature||'Warm'}"`,`"${c.assignBy||''}"`,`"${c.leadSource||''}"`,c.status||'New',`"${c.propertyType||''}"`,`"${(c.projectCategory||'').replace(/"/g,'""')}"`,`"${(c.specificUnit||'').replace(/"/g,'""')}"`,`"${(c.budget||'').replace(/"/g,'""')}"`,c.visitDone?'Yes':'No',c.followup||'',`"${fh.replace(/"/g,'""')}"`];
+            let pType = c.propertyType || c.projectCategory || '';
+            return [c.leadDate||'',`"${(c.name||'').replace(/"/g,'""')}"`,c.phone||'',`"${c.leadTemperature||'Warm'}"`,`"${c.assignBy||''}"`,`"${c.leadSource||''}"`,c.status||'New',`"${pType}"`,`"${(c.specificUnit||'').replace(/"/g,'""')}"`,`"${(c.location||'').replace(/"/g,'""')}"`,`"${(c.budget||'').replace(/"/g,'""')}"`,c.visitDone?'Yes':'No',c.followup||'',`"${fh.replace(/"/g,'""')}"`];
         }),
-        c=[h.join(","),...r.map(x=>x.join(","))].join("\n"),b=new Blob([c],{type:'text/csv;charset=utf-8;'}),u=URL.createObjectURL(b),l=document.createElement("a");l.setAttribute("href",u);l.setAttribute("download",`CRM_Export_${currentProjectFilter.replace(/\s+/g,'_')}_${getToday()}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);setTimeout(()=>URL.revokeObjectURL(u),10000);showNotification("CSV Exported!","success");
+        c=[h.join(","),...r.map(x=>x.join(","))].join("\n"),b=new Blob([c],{type:'text/csv;charset=utf-8;'}),u=URL.createObjectURL(b),l=document.createElement("a");l.setAttribute("href",u);l.setAttribute("download",`CRM_Export_${currentPropertyFilter.replace(/\s+/g,'_')}_${getToday()}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);setTimeout(()=>URL.revokeObjectURL(u),10000);showNotification("CSV Exported!","success");
     }
     
-    $id('csvFileInput').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async ev=>{let t=String(ev.target.result||'').replace(/^\uFEFF/,'');const p=(txt)=>{let rs=[],r=[],c='',iq=false;for(let i=0;i<txt.length;i++){let ch=txt[i];if(ch==='"'){if(iq&&txt[i+1]==='"'){c+='"';i++;}else iq=!iq;}else if(ch===','&&!iq){r.push(c);c='';}else if((ch==='\n'||ch==='\r')&&!iq){if(ch==='\r'&&txt[i+1]==='\n')i++;r.push(c);c='';if(r.some(v=>String(v).trim()!==''))rs.push(r);r=[];}else{c+=ch;}}r.push(c);if(r.some(v=>String(v).trim()!==''))rs.push(r);return rs;};let rs=p(t);if(rs.length<2){showNotification('CSV empty/invalid.','error');e.target.value='';return;}const pr=r=>r.map(v=>String(v??'').trim());let hs=pr(rs[0]).map(h=>h.toLowerCase()),gi=kw=>hs.findIndex(h=>kw.some(k=>h.includes(k))),cm={name:gi(['name','client','customer','lead']),phone:gi(['phone','mobile','contact','number','whatsapp']),leadDate:gi(['date','created','time','timestamp']),source:gi(['source','origin','platform','medium','campaign']),type:gi(['type','category','property type']),project:gi(['project','site','property','building','campaign name']),unit:gi(['unit','inventory','flat','size','bhk']),location:gi(['location','locality','area','city']),budget:gi(['budget','price','amount','cost','value']),status:gi(['status','stage','state','lead stage']),assignBy:gi(['assign','owner','executive']),remark:gi(['remark','note','message','comment','description'])};if(cm.name===-1||cm.phone===-1){showNotification('Need "Name" and "Phone" cols.','error');e.target.value='';return;}if(!confirm(`Total ${rs.length-1} leads found.\n\nImport them?`)){e.target.value='';return;}showNotification('Importing...','warning');let ic=0,ep=new Set(clients.map(c=>c.phone));const nd=ds=>{if(!ds)return getToday();let c=String(ds).trim().split(/[ T]/)[0];if(/^\d{4}-\d{2}-\d{2}$/.test(c))return c;let p=c.split(/[\/\-\.]/);if(p.length<3)return getToday();let a=parseInt(p[0],10),b=parseInt(p[1],10),x=parseInt(p[2],10);if(![a,b,x].every(Number.isFinite))return getToday();let y,m,d;if(a>=1000){y=a;m=b;d=x;}else{y=x<100?2000+x:x;if(a>12){d=a;m=b;}else if(b>12){m=a;d=b;}else{d=a;m=b;}}let dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return getToday();return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;};if(!db){showNotification("DB offline","error");return;}let b=db.batch(),bc=0;for(let i=1;i<rs.length;i++){try{let cls=pr(rs[i]),cv=idx=>(idx!==-1&&cls[idx])?cls[idx].replace(/^"|"$/g,'').trim():'',n=cv(cm.name),pn=normalizePhone(cv(cm.phone));if(!n||!isValidIndianPhone(pn))continue;if(ep.has(pn))continue;ep.add(pn);let ld=nd(cv(cm.leadDate)),rsr=cv(cm.source).toLowerCase(),src=customSources[0]||'Facebook Ads',ms=customSources.find(s=>s.toLowerCase()===rsr);if(ms)src=ms;let pj=cv(cm.project).replace(/,/g,' + '),pt=cv(cm.type)||'Builder Floor',un=cv(cm.unit),lc=cv(cm.location),bg=cv(cm.budget),rst=cv(cm.status).toLowerCase(),st=customStatuses[0]||'New',mst=customStatuses.find(s=>s.toLowerCase()===rst);if(mst)st=mst;else if(rst.includes('follow')||rst.includes('call')||rst.includes('cb'))st='Follow-up';else if(rst.includes('not')||rst.includes('dead')||rst.includes('junk'))st='Not Interested';let ab=cv(cm.assignBy)||'',rm=cv(cm.remark)||'',ha=rm?[{date:formatDisplayDate(getToday()),time:getTime(),note:rm}]:[],dr=db.collection("leads").doc();
+    $id('csvFileInput').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async ev=>{let t=String(ev.target.result||'').replace(/^\uFEFF/,'');const p=(txt)=>{let rs=[],r=[],c='',iq=false;for(let i=0;i<txt.length;i++){let ch=txt[i];if(ch==='"'){if(iq&&txt[i+1]==='"'){c+='"';i++;}else iq=!iq;}else if(ch===','&&!iq){r.push(c);c='';}else if((ch==='\n'||ch==='\r')&&!iq){if(ch==='\r'&&txt[i+1]==='\n')i++;r.push(c);c='';if(r.some(v=>String(v).trim()!==''))rs.push(r);r=[];}else{c+=ch;}}r.push(c);if(r.some(v=>String(v).trim()!==''))rs.push(r);return rs;};let rs=p(t);if(rs.length<2){showNotification('CSV empty/invalid.','error');e.target.value='';return;}const pr=r=>r.map(v=>String(v??'').trim());let hs=pr(rs[0]).map(h=>h.toLowerCase()),gi=kw=>hs.findIndex(h=>kw.some(k=>h.includes(k))),cm={name:gi(['name','client','customer','lead']),phone:gi(['phone','mobile','contact','number','whatsapp']),leadDate:gi(['date','created','time','timestamp']),source:gi(['source','origin','platform','medium','campaign']),type:gi(['type','category','property type']),unit:gi(['unit','inventory','flat','size','bhk']),location:gi(['location','locality','area','city']),budget:gi(['budget','price','amount','cost','value']),status:gi(['status','stage','state','lead stage']),assignBy:gi(['assign','owner','executive']),remark:gi(['remark','note','message','comment','description'])};if(cm.name===-1||cm.phone===-1){showNotification('Need "Name" and "Phone" cols.','error');e.target.value='';return;}if(!confirm(`Total ${rs.length-1} leads found.\n\nImport them?`)){e.target.value='';return;}showNotification('Importing...','warning');let ic=0,ep=new Set(clients.map(c=>c.phone));const nd=ds=>{if(!ds)return getToday();let c=String(ds).trim().split(/[ T]/)[0];if(/^\d{4}-\d{2}-\d{2}$/.test(c))return c;let p=c.split(/[\/\-\.]/);if(p.length<3)return getToday();let a=parseInt(p[0],10),b=parseInt(p[1],10),x=parseInt(p[2],10);if(![a,b,x].every(Number.isFinite))return getToday();let y,m,d;if(a>=1000){y=a;m=b;d=x;}else{y=x<100?2000+x:x;if(a>12){d=a;m=b;}else if(b>12){m=a;d=b;}else{d=a;m=b;}}let dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return getToday();return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;};if(!db){showNotification("DB offline","error");return;}let b=db.batch(),bc=0;for(let i=1;i<rs.length;i++){try{let cls=pr(rs[i]),cv=idx=>(idx!==-1&&cls[idx])?cls[idx].replace(/^"|"$/g,'').trim():'',n=cv(cm.name),pn=normalizePhone(cv(cm.phone));if(!n||!isValidIndianPhone(pn))continue;if(ep.has(pn))continue;ep.add(pn);let ld=nd(cv(cm.leadDate)),rsr=cv(cm.source).toLowerCase(),src=customSources[0]||'Facebook Ads',ms=customSources.find(s=>s.toLowerCase()===rsr);if(ms)src=ms;let pt=cv(cm.type)||'Builder Floor',un=cv(cm.unit),lc=cv(cm.location),bg=cv(cm.budget),rst=cv(cm.status).toLowerCase(),st=customStatuses[0]||'New',mst=customStatuses.find(s=>s.toLowerCase()===rst);if(mst)st=mst;else if(rst.includes('follow')||rst.includes('call')||rst.includes('cb'))st='Follow-up';else if(rst.includes('not')||rst.includes('dead')||rst.includes('junk'))st='Not Interested';let ab=cv(cm.assignBy)||'',rm=cv(cm.remark)||'',ha=rm?[{date:formatDisplayDate(getToday()),time:getTime(),note:rm}]:[],dr=db.collection("leads").doc();
         let reqRem = (ab !== '' && !rm);
-        b.set(dr,{ownerId:auth.currentUser.uid,leadDate:ld,name:n,phone:pn,leadSource:src,projectCategory:pj,propertyType:pt,specificUnit:un,location:lc,status:st,assignBy:ab,budget:bg,visitDone:false,followup:"",leadTemperature:'Warm',remark:rm,history:ha,updatedAt:Date.now(),requiresRemark:reqRem});
+        b.set(dr,{ownerId:auth.currentUser.uid,leadDate:ld,name:n,phone:pn,leadSource:src,projectCategory:'',propertyType:pt,specificUnit:un,location:lc,status:st,assignBy:ab,budget:bg,visitDone:false,followup:"",leadTemperature:'Warm',remark:rm,history:ha,updatedAt:Date.now(),requiresRemark:reqRem});
         ic++;bc++;if(bc===400){await b.commit();b=db.batch();bc=0;}}catch(x){}}if(bc>0)await b.commit();showNotification(`🎉 ${ic} leads imported!`,`success`);e.target.value='';};r.readAsText(f);});
+    
     function removeDuplicates(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;if(clients.length===0)return;setTimeout(async()=>{if(!confirm("⚠️ Find & delete duplicate numbers?"))return;showNotification("⏳ Cleaning duplicates...","warning");try{let pm=new Map(),di=[],sc=[...clients].sort((a,b)=>(Number(b.updatedAt)||0)-(Number(a.updatedAt)||0));sc.forEach(c=>{let p=(c.phone||'').trim(),id=/^0{5,10}$|^9{5,10}$|^1{5,10}$/.test(p);if(p.length>=10&&!id){if(pm.has(p))di.push(c.id);else pm.set(p,c.id);}});if(di.length===0){showNotification("No duplicates!","success");return;}if(!db)throw new Error("DB offline");let dc=0,b=db.batch();for(let i=0;i<di.length;i++){b.delete(db.collection("leads").doc(di[i]));dc++;if(dc%400===0){await b.commit();b=db.batch();}}if(dc%400!==0)await b.commit();showNotification(`🧹 ${dc} duplicates deleted!`,"success");haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
-    async function reviveDeadLeads(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;let ta=Date.now()-(30*24*60*60*1000),dl=clients.filter(c=>(c.updatedAt||0)<ta&&!['Closed','Not Interested'].includes(c.status));if(dl.length===0){showNotification("No dead leads!","success");return;}setTimeout(async()=>{if(!confirm(`Revive ${dl.length} leads untouched >30 days?`))return;showNotification(`Reviving...`,"warning");try{let b=db.batch(),c=0;for(let l of dl){let h=l.history?[...l.history]:[],r="♻️ AI Auto-Revival: Untouched >30 days. Moved to Follow-up.";h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:r});b.update(db.collection("leads").doc(l.id),{status:'Follow-up',leadTemperature:'Cold',history:h,remark:r,updatedAt:Date.now(),requiresRemark:true});c++;if(c%400===0){await b.commit();b=db.batch();}}if(c%400!==0)await b.commit();showNotification(`Revived ${c} leads!`,"success");fireConfetti();haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
+    async function reviveDeadLeads(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;let ta=Date.now()-(30*24*60*60*1000),dl=clients.filter(c=>(c.updatedAt||0)<ta&&!['Closed','Not Interested'].includes(c.status));if(dl.length===0){showNotification("No dead leads!","success");return;}setTimeout(async()=>{if(!confirm(`Revive ${dl.length} leads untouched >30 days?`))return;showNotification(`Reviving...`,"warning");try{let b=db.batch(),c=0;for(let l of dl){let h=l.history?[...l.history]:[],r="♻️ AI Auto-Revival: Untouched >30 days. Moved to Follow-up.";h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:r});b.update(db.collection("leads").doc(l.id),{status:'Follow-up',leadTemperature:'Cold',history:h,updatedAt:Date.now(),requiresRemark:true});c++;if(c%400===0){await b.commit();b=db.batch();}}if(c%400!==0)await b.commit();showNotification(`Revived ${c} leads!`,"success");fireConfetti();haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
     
     function deleteAllLeads(){
         closeModal('cleanModal');
