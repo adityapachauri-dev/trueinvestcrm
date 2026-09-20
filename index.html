@@ -245,7 +245,7 @@
         .kanban-container{display:flex;gap:16px;overflow-x:auto;padding:20px;background:transparent;min-height:500px;-webkit-overflow-scrolling:touch;border-radius:20px;border:none;overscroll-behavior-x:contain}
         .kanban-col{flex:1;min-width:300px;padding:14px;display:flex;flex-direction:column;background:var(--input-bg);border-radius:16px;border:1px solid var(--border-color)}
         .kanban-col h3{font-size:13px;text-transform:uppercase;color:var(--text-color);margin:0 0 14px 0;padding-bottom:10px;border-bottom:2px solid var(--border-color);text-align:center;font-weight:800;letter-spacing:1px}
-        .k-card{background:var(--card-bg);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border-color);cursor:grab;transition:all .3s var(--ease-bounce);position:relative;touch-action:pan-y !important;box-shadow:0 2px 10px rgba(0,0,0,0.02)} /* PAN-Y ALLOWS MOBILE SCROLLING */
+        .k-card{background:var(--card-bg);padding:16px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border-color);cursor:grab;transition:all .3s var(--ease-bounce);position:relative;touch-action:pan-y !important;box-shadow:0 2px 10px rgba(0,0,0,0.02)}
         .k-card:hover{border-color:var(--golden);transform:translateY(-4px);box-shadow:0 12px 25px rgba(10,25,47,0.08)}.k-card:active{cursor:grabbing;transform:scale(.96)}
         .k-card-title{font-weight:800;font-size:14px;color:var(--text-color);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
         .k-card-detail{font-size:12px;color:var(--text-color);opacity:.85;margin-bottom:6px;display:flex;align-items:center;gap:6px;font-weight:600}
@@ -264,7 +264,6 @@
         .cal-day.today{background:var(--btn-gradient);color:var(--golden);border:none;box-shadow:0 4px 15px rgba(10,25,47,0.2), inset 0 1px 1px rgba(255,255,255,0.15)}
         .cal-lead-count{position:absolute;top:-6px;right:-6px;background:var(--notify-red);color:#fff;font-size:11px;padding:3px 7px;border-radius:12px;font-weight:900;box-shadow:0 2px 5px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center}
         
-        /* BULK ACTION BAR - OPTIMIZED FOR EFFICIENCY */
         #bulkActionBar {
             position:fixed; bottom:max(30px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(150px);
             z-index:10005; display:flex; gap:10px; padding:12px 20px; border-radius:50px; 
@@ -452,6 +451,12 @@
     <span id="bulkCount" style="font-weight:800;font-size:14px;color:var(--text-color);">0 Selected</span>
     <select id="bulkAssign" class="bulk-select" onchange="executeBulkAssign(this.value)"><option value="">Assign To...</option></select>
     <select id="bulkStatus" class="bulk-select" onchange="executeBulkStatus(this.value)"><option value="">Status...</option></select>
+    
+    <!-- BULK MOVE DATE CATEGORY -->
+    <select id="bulkCategory" class="bulk-select" onchange="executeBulkCategory(this.value)">
+        <option value="">Move Date Batch...</option>
+    </select>
+    
     <select id="bulkNameChange" class="bulk-select" onchange="executeBulkRename(this.value)">
         <option value="">Rename...</option>
         <option value="CUSTOM">✏️ Edit Name</option>
@@ -480,8 +485,7 @@
         <div style="font-size:40px;margin-bottom:10px;animation:popIn .4s var(--ease-bounce);">👋</div>
         <h2 style="margin-top:0;color:var(--text-color);font-size:22px;font-weight:900;">Welcome Back!</h2>
         <p style="font-size:13px;font-weight:700;color:var(--text-color);opacity:.8;margin-bottom:24px;">Which workspace do you want to open?</p>
-        <button onclick="selectInitialRole('Vanshikha')" class="btn-shine" style="width:100%;margin-bottom:12px;">👩‍💼 Vanshikha's Leads</button>
-        <button onclick="selectInitialRole('Unassigned')" class="btn-secondary" style="width:100%;border-color:rgba(220,38,38,0.3);color:#B91C1C;">❓ Unassigned Leads</button>
+        <div id="dynamicWorkspaceButtons"></div>
     </div>
 </div>
 
@@ -509,7 +513,12 @@
                 <button class="btn-secondary" onclick="downloadCSV()"><ion-icon name="share"></ion-icon> Export</button>
                 <button class="btn-secondary" onclick="openModal('cleanModal')" style="color:var(--notify-red);border-color:rgba(220,38,38,0.4);" title="Clean Options"><ion-icon name="build"></ion-icon> Tools</button>
             </div>
+            
             <div class="project-tabs glass-panel" id="projectTabs"></div>
+            
+            <!-- DATE CATEGORY TABS -->
+            <div class="project-tabs glass-panel" id="categoryTabs" style="margin-top:8px; border:1px solid rgba(197,160,89,0.3); background:var(--card-bg);"></div>
+            
             <div class="mobile-hint">👉 Tap phone numbers to copy • Tap ⋮ for Actions</div>
             <div class="table-container glass-panel" id="tableView">
                 <div id="skeletonLoader" class="skeleton-loader">Loading Data securely...</div>
@@ -551,7 +560,15 @@
             <form id="clientForm" style="padding:0;box-shadow:none;border:none;background:transparent;animation:none;">
                 <input type="hidden" id="editId" value=""><input type="hidden" id="followup">
                 
-                <div class="form-grid"><div><label>Lead Date</label><input type="date" id="leadDate"></div><div><label>Assign By</label><select id="assignBy" onchange="handleDropdownChange(event,'assignees',customAssignees,'crm_assignees_')"></select></div></div>
+                <div class="form-grid">
+                    <div><label>Lead Date</label><input type="date" id="leadDate"></div>
+                    <div>
+                        <!-- BOLD AND HIGHLIGHTED DATE BATCH DROPDOWN -->
+                        <label style="color:var(--golden-dark);">📅 Date Batch (Campaign)</label>
+                        <select id="leadCategory" onchange="handleDropdownChange(event,'categories',customCategories,'crm_categories_')" style="border: 2px solid var(--golden-dark); background: #FFFBEB; font-weight: 800; color: var(--accent-dark);"></select>
+                    </div>
+                </div>
+
                 <label>Client Details</label>
                 <input type="text" id="name" placeholder="Full Name" required>
                 <input type="tel" id="phone" placeholder="10-Digit Phone" required maxlength="10" pattern="[6-9][0-9]{9}" title="Phone number must start with 6-9 and be 10 digits long" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
@@ -570,10 +587,18 @@
                 </div>
                 <input type="hidden" id="propertyType" value="">
 
-                <div class="form-grid"><div><label>Lead Source</label><select id="leadSource" onchange="handleDropdownChange(event,'sources',customSources,'crm_sources_')"></select></div><div><label>Status</label><select id="status" onchange="handleDropdownChange(event,'statuses',customStatuses,'crm_statuses_')"></select></div></div>
+                <div class="form-grid">
+                    <div><label>Lead Source</label><select id="leadSource" onchange="handleDropdownChange(event,'sources',customSources,'crm_sources_')"></select></div>
+                    <div><label>Status</label><select id="status" onchange="handleDropdownChange(event,'statuses',customStatuses,'crm_statuses_')"></select></div>
+                </div>
                 
-                <div class="form-grid"><div><label>Specific Unit (Inventory)</label><input type="text" id="specificUnit" placeholder="e.g. Flat 101, 830 sq ft"></div><div><label>Locality / Area</label><input type="text" id="location" placeholder="e.g. Noida Sec 73"></div></div>
-                <div><label>Budget</label><input type="text" id="budget" placeholder="e.g. 1.25 Cr" onblur="formatBudgetInput(this)" style="margin-bottom:16px;"></div>
+                <div class="form-grid">
+                    <div><label>Assign By</label><select id="assignBy" onchange="handleDropdownChange(event,'assignees',customAssignees,'crm_assignees_')"></select></div>
+                    <div><label>Locality / Area</label><input type="text" id="location" placeholder="e.g. Noida Sec 73"></div>
+                </div>
+
+                <div class="form-grid"><div><label>Specific Unit (Inventory)</label><input type="text" id="specificUnit" placeholder="e.g. Flat 101, 830 sq ft"></div><div><label>Budget</label><input type="text" id="budget" placeholder="e.g. 1.25 Cr" onblur="formatBudgetInput(this)"></div></div>
+                
                 <br><div class="history-container-box" id="historyTimelineContainer"><div class="timeline-track" id="historyTimeline"></div></div>
                 <label style="display:flex; justify-content:space-between; align-items:center;">
                     <span>Add Follow-up Remark</span>
@@ -706,6 +731,28 @@
     document.addEventListener('keydown',e=>{if(e.altKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!$id('crmView').classList.contains('hidden'))openAddLeadModal();}if(e.altKey&&e.key.toLowerCase()==='f'){e.preventDefault();$id('search').focus();}if(e.altKey&&e.key.toLowerCase()==='v'){e.preventDefault();toggleView();}if(e.altKey&&e.key.toLowerCase()==='c'){e.preventDefault();openModal('emiModal');}});
     
     // ==========================================
+    // DYNAMIC WORKSPACE BUTTON RENDERER
+    // ==========================================
+    function renderWorkspaceButtons() {
+        let container = $id('dynamicWorkspaceButtons');
+        if (!container) return;
+        
+        let html = '';
+        html += `<button onclick="selectInitialRole('Aditya')" class="btn-shine" style="width:100%;margin-bottom:12px;background:var(--btn-gradient);color:var(--golden); border:1px solid var(--golden);"> Aditya's Workspace</button>`;
+
+        let addedAssignees = ['Aditya'];
+        customAssignees.forEach(assignee => {
+            let aName = assignee.trim();
+            if (aName !== '' && aName !== 'Aditya' && !addedAssignees.includes(aName)) {
+                addedAssignees.push(aName);
+                html += `<button onclick="selectInitialRole('${escapeJsArg(aName)}')" class="btn-secondary" style="width:100%;margin-bottom:12px;font-weight:800;border-color:var(--border-color);">👤 ${escapeHtml(aName)}'s Workspace</button>`;
+            }
+        });
+
+        container.innerHTML = html;
+    }
+
+    // ==========================================
     // MULTI-SELECT PROPERTY TYPES DYNAMIC LOGIC
     // ==========================================
     function renderPropTypes() {
@@ -744,7 +791,7 @@
                 currentVals.push(n);
                 $id('propertyType').value = currentVals.join(', ');
                 
-                renderDropdownsAndTabs(); // Re-render to show new tabs
+                renderDropdownsAndTabs(); 
                 renderPropTypes();
                 showNotification(`Added ${n}`, "success");
             } else {
@@ -768,7 +815,7 @@
                     let currentEditId = document.getElementById('editId').value;
                     let existing = clients.find(c => normalizePhone(c.phone) === p && c.id !== currentEditId);
                     if (existing) {
-                        document.getElementById('dupAssignee').innerText = existing.assignBy || 'Unassigned';
+                        document.getElementById('dupAssignee').innerText = existing.assignBy || 'Aditya';
                         alertDiv.style.display = 'block';
                     } else {
                         alertDiv.style.display = 'none';
@@ -781,7 +828,15 @@
     });
 
     let hasSelectedRole=false,searchIndexTable=[],searchIndexKanban=[];
-    function selectInitialRole(r){haptic('medium');if(r==='Unassigned'){if(prompt("Enter secure PIN:")==="45625879"){setAssigneeFilter('Unassigned');closeModal('welcomeRoleModal');hasSelectedRole=true;}else{showNotification("Incorrect PIN!","error");}}else{setAssigneeFilter(r);closeModal('welcomeRoleModal');hasSelectedRole=true;}}
+    
+    // NO PIN REQUIRED - JUST OPENS THE WORKSPACE
+    function selectInitialRole(r){
+        haptic('medium');
+        setAssigneeFilter(r);
+        closeModal('welcomeRoleModal');
+        hasSelectedRole=true;
+    }
+    
     function openAddLeadModal(){haptic('light');resetForm(false);$id('leadModalTitle').innerHTML='<ion-icon name="person-add"></ion-icon> Add New Lead';checkAndRestoreDraft();openModal('addLeadModal');}
     function openModal(id){haptic('light');let m=$id(id);if(m){m.classList.add('active');requestAnimationFrame(()=>{m.style.willChange='opacity';let i=m.querySelector('.modal-content, .action-modal-content');if(i)i.style.willChange='transform, opacity';});}}
     function closeModal(id){haptic('light');let m=$id(id);if(m){m.classList.remove('active');setTimeout(()=>{m.style.willChange='auto';let i=m.querySelector('.modal-content, .action-modal-content');if(i)i.style.willChange='auto';},250);}}
@@ -796,9 +851,9 @@
     const handleSmartInput=(e,u)=>{let t=e.target.value,p=extractSmartDate(t);if(p){let d=$id(u);if(d&&d.value!==p){d.value=p;showNotification(`✨ AI Date: Follow-up set to ${formatDisplayDate(p)}`,'success');haptic('light');}}};
     document.addEventListener('DOMContentLoaded',()=>{let n=$id('newRemark');if(n)n.addEventListener('input',e=>handleSmartInput(e,'followup'));if(typeof MobileDragDrop!=='undefined'&&typeof MobileDragDrop.polyfill==='function')MobileDragDrop.polyfill({dragImageTranslateOverride:MobileDragDrop.scrollBehaviourDragImageTranslateOverride});initAutoSave();});
     function initNotifications(){if("Notification" in window&&Notification.permission!=="granted"&&Notification.permission!=="denied")Notification.requestPermission();}
-    function checkReminders(){if("Notification" in window&&Notification.permission==="granted"&&clients.length>0){let t=getToday(),nl=JSON.parse(localStorage.getItem('notified_leads_'+t))||[],tn=clients.filter(c=>c.followup===t&&c.status!=='Closed'&&!nl.includes(c.id));if(tn.length>0){tn.forEach(c=>{try{new Notification(`🔥 TRUE INVEST Reminder!`,{body:`Call scheduled today for ${c.name}\nProject: ${c.projectCategory||'N/A'}\nPhone: ${c.phone}`,icon:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%230A192F'/><text x='50' y='65' font-family='Arial' font-size='40' font-weight='bold' fill='%23C5A059' text-anchor='middle'>TI</text></svg>"});}catch(e){}nl.push(c.id);});localStorage.setItem('notified_leads_'+t,JSON.stringify(nl));}}}
+    function checkReminders(){if("Notification" in window&&Notification.permission==="granted"&&clients.length>0){let t=getToday(),nl=JSON.parse(localStorage.getItem('notified_leads_'+t))||[],tn=clients.filter(c=>c.followup===t&&c.status!=='Closed'&&!nl.includes(c.id));if(tn.length>0){tn.forEach(c=>{try{new Notification(`🔥 TRUE INVEST Reminder!`,{body:`Call scheduled today for ${c.name}\nProject: ${c.propertyType||'N/A'}\nPhone: ${c.phone}`,icon:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%230A192F'/><text x='50' y='65' font-family='Arial' font-size='40' font-weight='bold' fill='%23C5A059' text-anchor='middle'>TI</text></svg>"});}catch(e){}nl.push(c.id);});localStorage.setItem('notified_leads_'+t,JSON.stringify(nl));}}}
     
-    let isFirstRender=true,currentViewMode='table',renderTableRequestId=null,renderKanbanRequestId=null,currentAssigneeFilter='All';
+    let isFirstRender=true,currentViewMode='table',renderTableRequestId=null,renderKanbanRequestId=null,currentAssigneeFilter='Aditya'; // Default filtering to Aditya
     let previousLeadsMap = new Map();
     window.currentEditHistory=[];let currentHistoryLeadId=null;
 
@@ -830,7 +885,6 @@
             let dDate = formatDisplayDate(getToday());
             let dTime = getTime();
 
-            // Setup Firebase Batch writing
             let b = db.batch();
             let batchOpCount = 0;
 
@@ -892,6 +946,8 @@
 
                             let dr = db.collection("leads").doc();
                             let pt = $id('propertyType') ? $id('propertyType').value : 'Builder Floor';
+                            let cb = $id('leadCategory') ? $id('leadCategory').value : (customCategories[0]||'1-15 September');
+                            let ab = $id('assignBy') ? $id('assignBy').value : 'Aditya'; 
                             let rmk = '🤖 Auto-extracted via AI Bulk Scanner';
                             let ha = [{date: dDate, time: dTime, note: rmk}];
                             
@@ -903,10 +959,11 @@
                                 leadSource: customSources[0] || 'Facebook Ads',
                                 projectCategory: '', 
                                 propertyType: pt,
+                                leadCategory: cb,
                                 specificUnit: '',
                                 location: '',
                                 status: customStatuses[0] || 'New',
-                                assignBy: '', 
+                                assignBy: ab, 
                                 budget: '',
                                 visitDone: false,
                                 followup: "",
@@ -958,8 +1015,8 @@
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
-            e.target.value = ''; // Reset input to allow scanning again
-            closeModal('addLeadModal'); // Auto-close modal after bulk run
+            e.target.value = ''; 
+            closeModal('addLeadModal'); 
         }
     }
 
@@ -1012,9 +1069,14 @@
         }, 10000);
     }
 
-    function setAssigneeFilter(n){haptic('light');currentAssigneeFilter=n;closeModal('assigneeModal');document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));$id('search').value='';if(n==='Unassigned')showNotification(`Filtering by Unassigned`,'success');else if(n!=='All')showNotification(`Filtering Assignee: ${n}`,'success');else showNotification(`Showing All Leads`,'success');renderData(true);}
-    function handleUnassignedClick(){haptic('medium');if(prompt("Enter PIN:")==="45625879")setAssigneeFilter('Unassigned');else showNotification("Incorrect PIN!","error");}
-    function openAssigneeStats(){haptic('light');let ct=$id('assigneeStatsContainer');if(!ct)return;let st={},uc=0,bd=clients;if(currentPropertyFilter!=='All')bd=bd.filter(c=>c.propertyType&&c.propertyType.includes(currentPropertyFilter));if(currentQuickFilter==='Hot')bd=bd.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot');else if(currentQuickFilter==='Today'){let t=getToday();bd=bd.filter(c=>c.followup===t&&c.status!=='Closed');}else if(currentQuickFilter==='Date'&&currentFilterDate){bd=bd.filter(c=>c.followup===currentFilterDate&&c.status!=='Closed');}bd.forEach(c=>{if(c.assignBy&&c.assignBy.trim()!==''){let n=c.assignBy.trim();st[n]=(st[n]||0)+1;}else uc++;});let h=``,sa=Object.keys(st).sort((a,b)=>st[b]-st[a]);sa.forEach(n=>{h+=`<div onclick="setAssigneeFilter('${n}')" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg, var(--input-bg), var(--card-bg));padding:12px 16px;border-radius:12px;border:1px solid var(--border-color);cursor:pointer;margin-bottom:8px;box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);"><span style="font-weight:800;color:var(--text-color);">👤 ${n}</span><span style="font-weight:900;background:var(--btn-gradient);color:var(--golden);padding:4px 10px;border-radius:20px;font-size:12px;box-shadow:inset 0 1px 1px rgba(255,255,255,0.2)">${st[n]} Leads</span></div>`;});if(uc>0)h+=`<div onclick="handleUnassignedClick()" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg, #FEF2F2, #FEE2E2);padding:12px 16px;border-radius:12px;border:1px solid rgba(220,38,38,0.2);cursor:pointer;"><span style="font-weight:800;color:#B91C1C;">❓ Unassigned</span><span style="font-weight:900;background:#DC2626;color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;box-shadow:inset 0 1px 1px rgba(255,255,255,0.2)">${uc} Leads</span></div>`;ct.innerHTML=h;openModal('assigneeModal');}
+    function setAssigneeFilter(n){haptic('light');currentAssigneeFilter=n;closeModal('assigneeModal');document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));$id('search').value='';showNotification(`Workspace: ${n}`,'success');renderData(true);}
+    
+    function setCategoryFilter(v, b){haptic('light');currentCategoryFilter=v;document.querySelectorAll('#categoryTabs .tab-btn').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');$id('search').value='';currentQuickFilter='All';currentFilterDate=null;document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));renderData(false);}
+    function deleteCategory(e,n){e.stopPropagation();if(confirm(`Delete "${n}" Date Batch?`)){customCategories=customCategories.filter(p=>p!==n);localStorage.setItem('crm_categories_'+(auth&&auth.currentUser?auth.currentUser.uid:''),JSON.stringify(customCategories));if(auth&&auth.currentUser)db.collection("users").doc(auth.currentUser.uid).set({categories:customCategories},{merge:true});if(currentCategoryFilter===n)currentCategoryFilter='All';renderDropdownsAndTabs();renderData(true);showNotification(`Removed ${n}`,'warning');}}
+    function addNewCategoryTab(){let n=prompt("Enter new Date Batch (e.g. 1-15 Sept):");if(n&&n.trim()!==''){n=n.trim();if(!customCategories.includes(n)){customCategories.push(n);localStorage.setItem('crm_categories_'+(auth&&auth.currentUser?auth.currentUser.uid:''),JSON.stringify(customCategories));if(auth&&auth.currentUser)db.collection("users").doc(auth.currentUser.uid).set({categories:customCategories},{merge:true});renderDropdownsAndTabs();showNotification(`Added ${n}`,"success");}else{showNotification("Batch already exists!","warning");}}}
+
+    function openAssigneeStats(){haptic('light');let ct=$id('assigneeStatsContainer');if(!ct)return;let st={'Aditya':0},bd=clients;if(currentPropertyFilter!=='All')bd=bd.filter(c=>c.propertyType&&c.propertyType.includes(currentPropertyFilter));if(currentCategoryFilter!=='All')bd=bd.filter(c=>c.leadCategory===currentCategoryFilter);if(currentQuickFilter==='Hot')bd=bd.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot');else if(currentQuickFilter==='Today'){let t=getToday();bd=bd.filter(c=>c.followup===t&&c.status!=='Closed');}else if(currentQuickFilter==='Date'&&currentFilterDate){bd=bd.filter(c=>c.followup===currentFilterDate&&c.status!=='Closed');}bd.forEach(c=>{let n=(c.assignBy&&c.assignBy.trim()!=='')?c.assignBy.trim():'Aditya';st[n]=(st[n]||0)+1;});let h=``,sa=Object.keys(st).sort((a,b)=>st[b]-st[a]);sa.forEach(n=>{h+=`<div onclick="setAssigneeFilter('${n}')" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg, var(--input-bg), var(--card-bg));padding:12px 16px;border-radius:12px;border:1px solid var(--border-color);cursor:pointer;margin-bottom:8px;box-shadow:0 2px 5px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.8);"><span style="font-weight:800;color:var(--text-color);">👤 ${n}</span><span style="font-weight:900;background:var(--btn-gradient);color:var(--golden);padding:4px 10px;border-radius:20px;font-size:12px;box-shadow:inset 0 1px 1px rgba(255,255,255,0.2)">${st[n]} Leads</span></div>`;});ct.innerHTML=h;openModal('assigneeModal');}
+    
     function openWaModal(p,n,pj,leadId=null){$id('waTargetName').innerText="Sending to: "+n;$id('waTargetPhone').value=p;$id('waTargetId').value=leadId||"";$id('waTemplateSelector').value="";$id('waEditArea').style.display="none";openModal('waModal');}
     function loadWaTemplate(){let t=$id('waTemplateSelector').value,ea=$id('waEditArea'),mb=$id('waMessageText'),n=$id('waTargetName').innerText.replace("Sending to: ","").trim();if(t){ea.style.display='block';if(t==="1")mb.value=`Hi ${n},\nHere is the project brochure and details you requested.`;else if(t==="2")mb.value=`Hi ${n},\nHere is the exact location pin for your site visit.`;else if(t==="3")mb.value=`Hi ${n},\nJust checking in!`;else if(t==="4")mb.value=`Hi ${n},\nWe have a special offer going on.`;else if(t==="5")mb.value=`Hi ${n},\n`;}else ea.style.display='none';}
     function executeWaSend(){
@@ -1133,7 +1195,8 @@
     const firebaseConfig={apiKey:safeAtob("QUl6YVN5QXNiOWN3WXAzTEpXTTdtb3RXU0s2VUF5MmN0N3QtNnpZ"),authDomain:safeAtob("dHJ1ZWNybS02Y2Y4ZS5maXJlYmFzZWFwcC5jb20="),projectId:safeAtob("dHJ1ZWNybS02Y2Y4ZQ=="),storageBucket:safeAtob("dHJ1ZWNybS02Y2Y4ZS5maXJlYmFzZXN0b3JhZ2UuYXBw"),messagingSenderId:safeAtob("NzkxMzgxNDA3NTM3"),appId:safeAtob("MTo3OTEzODE0MDc1Mzc6d2ViOjQ1ZTk5NDZhOTM5ZjhkMjNiNTYyMTA=")};
     let auth,db;try{if(typeof firebase!=='undefined'){firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();try{db.enableMultiTabIndexedDbPersistence().catch(e=>{});}catch(e){}}}catch(e){}
     
-    let clients=[],customPropTypes=['Builder Floor', 'Villa', 'Apartment', 'Plot', 'Commercial'],customSources=['Facebook Ads'],customStatuses=['New'],customAssignees=['Vanshikha'],currentPropertyFilter='All',currentQuickFilter='All',currentFilterDate=null,initialLoad=true,unsubscribeSnapshot=null,sortColumn='updatedAt',sortAscending=false;
+    // CUSTOM ASSIGNEES DEFAULTS TO ADITYA
+    let clients=[],customPropTypes=['Builder Floor', 'Villa', 'Apartment', 'Plot', 'Commercial'],customSources=['Facebook Ads'],customStatuses=['New'],customAssignees=['Aditya', 'Vanshikha'],customCategories=['1-15 September'],currentPropertyFilter='All',currentQuickFilter='All',currentCategoryFilter='All',currentFilterDate=null,initialLoad=true,unsubscribeSnapshot=null,sortColumn='updatedAt',sortAscending=false;
     
     const getToday=()=>{let d=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};const getTime=()=>new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true});
     const formatDisplayDate=s=>{if(!s)return '-';let p=s.split('-');if(p.length!==3)return s;let m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return `${p[2]}-${m[parseInt(p[1])-1]}-${p[0]}`;};
@@ -1156,15 +1219,18 @@
                     let us=['Direct/Organic','Google Ads','99acres','MagicBricks','Referral','Website Form','Other'],
                         ust=['Follow-up','Hot','Broker','Closed','Not Interested'],
                         ls=dt.sources||JSON.parse(localStorage.getItem('crm_sources_'+u.uid))||['Facebook Ads'],
-                        lst=dt.statuses||JSON.parse(localStorage.getItem('crm_statuses_'+u.uid))||['New'];
+                        lst=dt.statuses||JSON.parse(localStorage.getItem('crm_statuses_'+u.uid))||['New'],
+                        lc=dt.categories||JSON.parse(localStorage.getItem('crm_categories_'+u.uid))||['1-15 September'];
                     
                     customSources=ls.filter(s=>!us.includes(s)||s==='Facebook Ads');
                     customStatuses=lst.filter(s=>!ust.includes(s)||s==='New');
                     customAssignees=dt.assignees||JSON.parse(localStorage.getItem('crm_assignees_'+u.uid))||customAssignees;
+                    customCategories=lc;
                     
+                    if(!customAssignees.includes('Aditya')) customAssignees.unshift('Aditya');
                     if(!customSources.includes('Facebook Ads'))customSources.unshift('Facebook Ads');
                     if(!customStatuses.includes('New'))customStatuses.unshift('New');
-                    db.collection("users").doc(u.uid).set({propTypes:customPropTypes,sources:customSources,statuses:customStatuses,assignees:customAssignees},{merge:true});
+                    db.collection("users").doc(u.uid).set({propTypes:customPropTypes,sources:customSources,statuses:customStatuses,assignees:customAssignees,categories:customCategories},{merge:true});
                     renderDropdownsAndTabs();
                     renderPropTypes();
                 }).catch(e=>{
@@ -1231,7 +1297,7 @@
                 }
                 setTimeout(restorePendingCallLog,0);
                 
-                let dpSet=new Set(customPropTypes),srcSet=new Set(customSources),statSet=new Set(customStatuses),assignSet=new Set(customAssignees),ad=false;
+                let dpSet=new Set(customPropTypes),srcSet=new Set(customSources),statSet=new Set(customStatuses),assignSet=new Set(customAssignees),catSet=new Set(customCategories),ad=false;
                 clients.forEach(c=>{
                     let pt = c.propertyType || c.projectCategory;
                     if(pt) {
@@ -1243,12 +1309,15 @@
                     if(c.leadSource&&!srcSet.has(c.leadSource)){srcSet.add(c.leadSource);ad=true;}
                     if(c.status&&!statSet.has(c.status)){statSet.add(c.status);ad=true;}
                     if(c.assignBy&&!assignSet.has(c.assignBy)){assignSet.add(c.assignBy);ad=true;}
+                    if(c.leadCategory&&!catSet.has(c.leadCategory)){catSet.add(c.leadCategory);ad=true;}
                 });
                 
                 if(ad){
-                    customPropTypes=Array.from(dpSet);customSources=Array.from(srcSet);customStatuses=Array.from(statSet);customAssignees=Array.from(assignSet);
+                    customPropTypes=Array.from(dpSet);customSources=Array.from(srcSet);customStatuses=Array.from(statSet);customAssignees=Array.from(assignSet);customCategories=Array.from(catSet);
+                    if(!customAssignees.includes('Aditya')) customAssignees.unshift('Aditya');
                     localStorage.setItem('crm_propTypes_'+auth.currentUser.uid,JSON.stringify(customPropTypes));
-                    db.collection("users").doc(auth.currentUser.uid).set({propTypes:customPropTypes,sources:customSources,statuses:customStatuses,assignees:customAssignees},{merge:true});
+                    localStorage.setItem('crm_categories_'+auth.currentUser.uid,JSON.stringify(customCategories));
+                    db.collection("users").doc(auth.currentUser.uid).set({propTypes:customPropTypes,sources:customSources,statuses:customStatuses,assignees:customAssignees,categories:customCategories},{merge:true});
                     renderDropdownsAndTabs();
                     renderPropTypes();
                 }
@@ -1270,6 +1339,7 @@
     function handleDropdownChange(e,t,a,sk){if(e.target.value==="ADD_NEW"){let n=prompt(`Enter custom ${t}:`);if(n&&n.trim()!==""){n=n.trim();if(!a.includes(n)){a.push(n);localStorage.setItem(sk+(auth.currentUser?auth.currentUser.uid:''),JSON.stringify(a));if(auth&&auth.currentUser){let u={};u[t]=a;db.collection("users").doc(auth.currentUser.uid).set(u,{merge:true});}renderDropdownsAndTabs();setTimeout(()=>{$id(e.target.id).value=n;},50);showNotification(`Added: ${n}`,'success');}else{e.target.value=a[0]||"";showNotification("Exists!","warning");}}else{e.target.value=a[0]||"";}}}
     
     function renderDropdownsAndTabs(){
+        // Property Tabs
         let tc=$id('projectTabs');
         if(tc){
             tc.innerHTML=`<button class="tab-btn ${currentPropertyFilter==='All'?'active':''}" onclick="setPropertyFilter('All', this)">All Types</button>`;
@@ -1278,7 +1348,46 @@
                 tc.insertAdjacentHTML('beforeend',`<div class="tab-wrapper"><button class="tab-btn ${currentPropertyFilter===p?'active':''}" onclick="setPropertyFilter('${sp}', this)">${escapeHtml(p)}</button><button class="tab-delete-btn" onclick="deletePropType(event, '${sp}')">×</button></div>`);
             });
         }
-        let ss=$id('leadSource'),cs=ss?ss.value:'';if(ss){ss.innerHTML=customSources.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;ss.value=customSources.includes(cs)?cs:(customSources[0]||"");}let st=$id('status'),cst=st?st.value:'';if(st){st.innerHTML=customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;st.value=customStatuses.includes(cst)?cst:(customStatuses[0]||"");}let sa=$id('assignBy'),ca=sa?sa.value:'';[$id('assignBy'),$id('bulkAssign')].forEach((s,i)=>{if(s){let h=(i===1)?'<option value="">Assign To...</option>':'<option value="">-- Unassigned --</option>';h+=customAssignees.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');if(i===0)h+=`<option value="ADD_NEW">➕ Custom...</option>`;s.innerHTML=h;if(i===0)s.value=customAssignees.includes(ca)?ca:"";}});let bs=$id('bulkStatus');if(bs)bs.innerHTML='<option value="">Status...</option>'+customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');let kc=$id('kanbanView');if(kc){kc.innerHTML='';customStatuses.forEach(s=>{if(s==='Not Interested')return;let c='var(--accent-brand)',i='';if(s==='Follow-up')c='#B45309';if(s==='Hot'){c='var(--notify-red)';i='🔥';}if(s==='Broker')c='var(--golden)';if(s==='Closed'){c='#15803D';i='✔️';}kc.innerHTML+=`<div class="kanban-col"><h3 style="border-bottom-color:${c};">${s} <span style="font-size:16px">${i}</span></h3><div class="kanban-dropzone" data-status="${s}"></div></div>`;});bindKanbanDropzones();}
+        
+        // Date Category Tabs
+        let catTabs = $id('categoryTabs');
+        if(catTabs){
+            catTabs.innerHTML = `<span style="font-size:12px;font-weight:900;margin-right:8px;color:var(--text-color);">📆 DATE BATCH:</span>
+            <button class="tab-btn ${currentCategoryFilter==='All'?'active':''}" onclick="setCategoryFilter('All', this)">All Dates</button>`;
+            customCategories.forEach(c => {
+                let sc = escapeHtml(escapeJsArg(c));
+                catTabs.insertAdjacentHTML('beforeend', `<div class="tab-wrapper"><button class="tab-btn ${currentCategoryFilter===c?'active':''}" onclick="setCategoryFilter('${sc}', this)">${escapeHtml(c)}</button><button class="tab-delete-btn" onclick="deleteCategory(event, '${sc}')">×</button></div>`);
+            });
+            catTabs.insertAdjacentHTML('beforeend', `<button class="tab-add-btn" onclick="addNewCategoryTab()" title="Add New Date Batch">➕</button>`);
+        }
+
+        let ss=$id('leadSource'),cs=ss?ss.value:'';if(ss){ss.innerHTML=customSources.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;ss.value=customSources.includes(cs)?cs:(customSources[0]||"");}
+        let st=$id('status'),cst=st?st.value:'';if(st){st.innerHTML=customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;st.value=customStatuses.includes(cst)?cst:(customStatuses[0]||"");}
+        
+        let sa=$id('assignBy'),ca=sa?sa.value:'';
+        [$id('assignBy'),$id('bulkAssign')].forEach((s,i)=>{
+            if(s){
+                let h=(i===1)?'<option value="">Assign To...</option>':'<option value="Aditya">-- Aditya --</option>';
+                customAssignees.forEach(x => {
+                    if(x!=='Aditya') h+=`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`;
+                });
+                if(i===0)h+=`<option value="ADD_NEW">➕ Custom...</option>`;
+                s.innerHTML=h;
+                if(i===0)s.value=customAssignees.includes(ca)?ca:(ca===''?'Aditya':'Aditya');
+            }
+        });
+        
+        let bs=$id('bulkStatus');if(bs)bs.innerHTML='<option value="">Status...</option>'+customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+        
+        let cb=$id('leadCategory'),ccb=cb?cb.value:'';
+        if(cb){cb.innerHTML=customCategories.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;cb.value=customCategories.includes(ccb)?ccb:(customCategories[0]||"");}
+        
+        let bcat=$id('bulkCategory');
+        if(bcat){bcat.innerHTML='<option value="">Move Date Batch...</option>'+customCategories.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');}
+        
+        let kc=$id('kanbanView');if(kc){kc.innerHTML='';customStatuses.forEach(s=>{if(s==='Not Interested')return;let c='var(--accent-brand)',i='';if(s==='Follow-up')c='#B45309';if(s==='Hot'){c='var(--notify-red)';i='🔥';}if(s==='Broker')c='var(--golden)';if(s==='Closed'){c='#15803D';i='✔️';}kc.innerHTML+=`<div class="kanban-col"><h3 style="border-bottom-color:${c};">${s} <span style="font-size:16px">${i}</span></h3><div class="kanban-dropzone" data-status="${s}"></div></div>`;});bindKanbanDropzones();}
+        
+        renderWorkspaceButtons();
     }
     
     function deletePropType(e,n){
@@ -1387,7 +1496,11 @@
         e.preventDefault();
         let p=$id('phone').value.trim();
         if(!/^[6-9]\d{9}$/.test(p)){showNotification("Invalid phone","error");return;}
-        let id=$id('editId').value,sv=$id('status').value,av=$id('assignBy').value,nr=$id('newRemark').value.trim(),b=$id('saveBtn');
+        
+        let av=$id('assignBy').value;
+        if(av.trim() === '') av = 'Aditya';
+
+        let id=$id('editId').value,sv=$id('status').value,nr=$id('newRemark').value.trim(),b=$id('saveBtn');
         let ot=b.innerText;
         b.disabled=true;b.innerText="Saving...";
     
@@ -1402,9 +1515,11 @@
                 isVisitDone = !!exist.visitDone; 
                 reqRem = !!exist.requiresRemark; 
                 existingRemark = exist.remark || '';
-                if(av !== exist.assignBy) { 
+                
+                let oldAssign = (exist.assignBy && exist.assignBy.trim()!=='') ? exist.assignBy : 'Aditya';
+                if(av !== oldAssign) { 
                     ha = [];
-                    let logMsg = `🔄 Freshly Assigned to ${av || 'Unassigned'}`;
+                    let logMsg = `🔄 Freshly Assigned to ${av}`;
                     ha.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:logMsg});
                     if(av !== '') reqRem = true;
                 }
@@ -1424,10 +1539,11 @@
         if(nr){let pd=extractSmartDate(nr);if(pd)ff=pd;}
         if(!auth||!auth.currentUser){showNotification("Auth error","error");b.disabled=false;return;}
         
-        // SAVE MULTI-SELECT PROPERTY TYPE
+        // SAVE MULTI-SELECT PROPERTY TYPE & CATEGORY
         let pType = $id('propertyType').value;
+        let cCat = $id('leadCategory') ? $id('leadCategory').value : (customCategories[0]||'1-15 September');
 
-        let dt={ownerId:auth.currentUser.uid,leadDate:$id('leadDate').value||getToday(),followup:ff,assignBy:av,name:$id('name').value.trim(),phone:p,leadSource:$id('leadSource').value,projectCategory:'',propertyType:pType,specificUnit:$id('specificUnit').value.trim(),location:$id('location').value,status:sv,budget:$id('budget').value,visitDone:isVisitDone,leadTemperature:st,history:ha,remark:finalRemark,updatedAt:Date.now(),requiresRemark:reqRem};
+        let dt={ownerId:auth.currentUser.uid,leadDate:$id('leadDate').value||getToday(),followup:ff,assignBy:av,name:$id('name').value.trim(),phone:p,leadSource:$id('leadSource').value,projectCategory:'',propertyType:pType,leadCategory:cCat,specificUnit:$id('specificUnit').value.trim(),location:$id('location').value,status:sv,budget:$id('budget').value,visitDone:isVisitDone,leadTemperature:st,history:ha,remark:finalRemark,updatedAt:Date.now(),requiresRemark:reqRem};
         let ss=false;
         try{
             if(!db)throw new Error("DB offline");
@@ -1464,8 +1580,15 @@
             let pt = c.propertyType || c.projectCategory || '';
             return pt.includes(currentPropertyFilter);
         });
-        if(currentAssigneeFilter==='Unassigned')d=d.filter(c=>!c.assignBy||c.assignBy.trim()==='');
-        else if(currentAssigneeFilter!=='All')d=d.filter(c=>c.assignBy===currentAssigneeFilter);
+        
+        if(currentCategoryFilter!=='All')d=d.filter(c=>c.leadCategory===currentCategoryFilter);
+        
+        if(currentAssigneeFilter === 'Aditya') {
+            d = d.filter(c => !c.assignBy || c.assignBy.trim() === '' || c.assignBy === 'Aditya');
+        } else if (currentAssigneeFilter !== 'All') {
+            d = d.filter(c => c.assignBy === currentAssigneeFilter);
+        }
+
         if(currentQuickFilter==='Hot')d=d.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot');
         else if(currentQuickFilter==='Today'){let t=getToday();d=d.filter(c=>c.followup===t&&c.status!=='Closed');}
         else if(currentQuickFilter==='Date'&&currentFilterDate){d=d.filter(c=>c.followup===currentFilterDate&&c.status!=='Closed');}
@@ -1475,7 +1598,7 @@
     
     const selectedLeadIds=new Set();let pendingCallLog=null;const escapeHtml=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');const escapeJsArg=v=>String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     function normalizePhone(v){let p=String(v??'').replace(/\D/g,'');if(p.length===12&&p.startsWith('91'))p=p.slice(2);if(p.length===11&&p.startsWith('0'))p=p.slice(1);return p;}function isValidIndianPhone(v){return /^[6-9]\d{9}$/.test(normalizePhone(v));}function chunkArray(a,s=450){let c=[];for(let i=0;i<a.length;i+=s)c.push(a.slice(i,i+s));return c;}async function commitInChunks(i,o){if(!db)throw new Error('DB offline');for(const c of chunkArray(i,450)){let b=db.batch();c.forEach(x=>o(b,x));if(c.length)await b.commit();}}function getSelectedLeadIds(){return Array.from(selectedLeadIds);}
-    function handleBulkCheckbox(c){if(!c||!c.value)return;if(c.checked)selectedLeadIds.add(c.value);else selectedLeadIds.delete(c.value);updateBulkBar();}
+    function handleBulkCheckbox(c){if(!c||c.value==='')return;if(c.checked)selectedLeadIds.add(c.value);else selectedLeadIds.delete(c.value);updateBulkBar();}
     let bsActionId='',bsActionPhone='',bsActionName='',bsActionProj='',callTargetId=null,callStartTime=0;
     function triggerActionMenu(b){haptic('medium');let p=b.closest('tr')||b.closest('.k-card');if(!p)return;bsActionId=p.dataset.id;bsActionPhone=p.dataset.phone;bsActionName=p.dataset.name;bsActionProj=p.dataset.proj;$id('actionModal').classList.add('active');}
     function closeActionMenu(){$id('actionModal').classList.remove('active');setTimeout(()=>{bsActionId='';bsActionPhone='';bsActionName='';bsActionProj='';},300);}
@@ -1548,10 +1671,11 @@
     
     function clearBulkSelection(){
         selectedLeadIds.clear();
-        let a=$id('bulkAssign'), s=$id('bulkStatus'), n=$id('bulkNameChange');
+        let a=$id('bulkAssign'), s=$id('bulkStatus'), n=$id('bulkNameChange'), cat=$id('bulkCategory');
         if(a) a.value='';
         if(s) s.value='';
         if(n) n.value='';
+        if(cat) cat.value='';
         document.querySelectorAll('.bulk-cb').forEach(cb=>cb.checked=false);
         updateBulkBar();
     }
@@ -1576,7 +1700,20 @@
     
     async function executeBulkStatus(v){if(!v)return;let i=getSelectedLeadIds();if(i.length===0)return;if(!confirm(`Move ${i.length} to ${v}?`)){$id('bulkStatus').value='';return;}showNotification("Updating...","warning");try{let n=Date.now();await commitInChunks(i,(b,id)=>b.update(db.collection("leads").doc(id),{status:v,updatedAt:n}));showNotification(`Moved ${i.length}!`,"success");if(v==='Closed')fireConfetti(true);clearBulkSelection();}catch(e){showNotification("Error","error");}}
 
-    // NEW BULK RENAME FUNCTION
+    // NEW: BULK MOVE DATE CATEGORY
+    async function executeBulkCategory(v){
+        if(!v)return;
+        let i=getSelectedLeadIds();if(i.length===0)return;
+        if(!confirm(`Move ${i.length} leads into the "${v}" Date Batch?`)){$id('bulkCategory').value='';return;}
+        showNotification("Moving...","warning");
+        try{
+            let n=Date.now();
+            await commitInChunks(i,(b,id)=>b.update(db.collection("leads").doc(id),{leadCategory:v,updatedAt:n}));
+            showNotification(`Moved ${i.length} leads!`,"success");
+            clearBulkSelection();
+        }catch(e){showNotification("Error","error");}
+    }
+
     async function executeBulkRename(v) {
         let sel = $id('bulkNameChange');
         if(!v) return;
@@ -1639,6 +1776,7 @@
                     if(reqRem) hl += ' needs-remark-row';
                     
                     let pTypeClean = sanitizeText(c.propertyType || c.projectCategory || '');
+                    let cCatClean = sanitizeText(c.leadCategory || '1-15 September');
                     let ptBadge = pTypeClean ? `<span style="display:inline-block; margin-bottom:4px; font-size:9px; background:rgba(197,160,89,0.1); color:var(--golden-dark); padding:2px 6px; border-radius:4px; font-weight:900; letter-spacing:0.5px; border:1px solid rgba(197,160,89,0.3); text-transform:uppercase;">${pTypeClean}</span><br>` : '';
                     let ud=c.specificUnit?`<span style="font-size:10px;opacity:0.7;font-weight:800;">${sanitizeText(c.specificUnit)}</span>`:'';
                     
@@ -1649,7 +1787,7 @@
                     if(reqRem) newBdg += `<span class="needs-remark-badge">⏳ NO REMARK</span>`;
                     let sn=sanitizeText(c.name);
 
-                    let sa=c.assignBy?sanitizeText(c.assignBy):'<span style="opacity:0.4">Unassigned</span>',ls=calculateSmartScore(c),sg=ls>=70?'linear-gradient(135deg,#15803D,#22C55E)':(ls>=40?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#B91C1C,#EF4444)'),sb=`<span class="score-badge" style="background:${sg};color:white;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="AI Predictive Score">🧠 ${ls}%</span>`,tv=c.leadTemperature||'Warm',tbBadge='';if(tv==='Hot')tbBadge='<span class="temp-badge" style="background-color:var(--hot-bg);color:var(--hot-text);border:1px solid rgba(185,28,28,0.2);">🔥 HOT</span>';else if(tv==='Warm')tbBadge='<span class="temp-badge" style="background-color:#FFFBEB;color:#B45309;border:1px solid rgba(180,83,9,0.2);">☀️ WARM</span>';else if(tv==='Cold')tbBadge='<span class="temp-badge" style="background-color:var(--cold-bg);color:var(--cold-text);border:1px solid rgba(51,65,85,0.2);">❄️ COLD</span>';
+                    let sa=(c.assignBy&&c.assignBy.trim()!=='')?sanitizeText(c.assignBy):'<span style="opacity:0.8;color:var(--golden-dark);font-weight:900;">Aditya</span>',ls=calculateSmartScore(c),sg=ls>=70?'linear-gradient(135deg,#15803D,#22C55E)':(ls>=40?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#B91C1C,#EF4444)'),sb=`<span class="score-badge" style="background:${sg};color:white;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.15);" title="AI Predictive Score">🧠 ${ls}%</span>`,tv=c.leadTemperature||'Warm',tbBadge='';if(tv==='Hot')tbBadge='<span class="temp-badge" style="background-color:var(--hot-bg);color:var(--hot-text);border:1px solid rgba(185,28,28,0.2);">🔥 HOT</span>';else if(tv==='Warm')tbBadge='<span class="temp-badge" style="background-color:#FFFBEB;color:#B45309;border:1px solid rgba(180,83,9,0.2);">☀️ WARM</span>';else if(tv==='Cold')tbBadge='<span class="temp-badge" style="background-color:var(--cold-bg);color:var(--cold-text);border:1px solid rgba(51,65,85,0.2);">❄️ COLD</span>';
                     
                     let vb = c.visitDone ? `<span class="badge status-closed visit-toggle" style="font-size:9px; cursor:pointer; box-shadow:0 2px 10px rgba(21,128,61,0.2); transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', false)">✅ VISITED</span>` : `<span class="badge visit-toggle" style="font-size:9px; cursor:pointer; background:var(--input-bg); border:1px dashed var(--border-color); color:var(--text-color); transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', true)">📍 MARK VISIT</span>`;
                     
@@ -1658,7 +1796,7 @@
                     tr.innerHTML=`<td onclick="event.stopPropagation()"><div style="display:flex;align-items:center;justify-content:center;"><input type="checkbox" class="bulk-cb" value="${escapeHtml(c.id)}" onchange="handleBulkCheckbox(this)" ${ic}></div></td><td style="opacity:0.4;font-weight:800;">${sr++}</td><td class="date-cell" style="font-weight:700">${formatDisplayDate(c.leadDate)}</td><td style="font-weight:800;white-space:nowrap;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span style="display:flex;align-items:center;gap:4px;">${sn} ${newBdg} ${stb}</span><span style="display:flex;align-items:center;justify-content:center;gap:4px;">${tbBadge} ${sb}</span></div></td><td class="copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')" style="font-weight:700">${c.phone}</td><td style="font-size:12px;font-weight:700;">${sa}</td><td style="vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;"><span class="badge ${b}">${c.status}</span>${vb}</div></td><td style="font-size:11px;font-weight:800;opacity:0.7;">${c.leadSource||'-'}</td><td style="font-size:12px;font-weight:800;color:var(--text-color);vertical-align:middle;"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;">${ptBadge}<span style="display:flex;align-items:center;gap:4px;">${sanitizeText(c.location)||'-'}${ml}</span>${ud}</div></td><td style="color:var(--golden-dark);font-weight:900">${sanitizeText(c.budget)||'-'}</td><td class="date-cell" style="font-weight:900;color:var(--text-color);cursor:pointer;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')"><div style="display:inline-flex;align-items:center;justify-content:center;gap:4px;">${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div></td><td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;"><span class="history-link" onclick="event.stopPropagation();openHistoryModal('${c.id}')">${displayRemark}</span></td><td style="vertical-align:middle;"><div style="display:flex;justify-content:center;align-items:center;">${tk}<span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div></td>`;
                     
                     f.appendChild(tr);
-                    searchIndexTable.push({el:tr,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} type ${String(pTypeClean)} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} assignee ${String(c.assignBy||'')} remark ${String(rawRemark||'')}`.toLowerCase()});
+                    searchIndexTable.push({el:tr,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} type ${String(pTypeClean)} category ${String(cCatClean)} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} assignee ${String(c.assignBy||'')} remark ${String(rawRemark||'')}`.toLowerCase()});
                 }catch(x){}
             }
             tb.appendChild(f);ci=en;if(ci<ed.length){renderTableRequestId=requestAnimationFrame(rc);}else{renderTableRequestId=null;tc.style.minHeight='';tc.scrollTop=tst;tc.scrollLeft=tsl;window.scrollTo(sx,sy);updateBulkBar();let s=$id('search').value.toLowerCase().trim();if(s)applyDOMFilters(s);}
@@ -1686,7 +1824,7 @@
                     
                     let tv=c.leadTemperature||'Warm',ti='';if(tv==='Hot')ti='<span style="font-size:14px;">🔥</span>';else if(tv==='Warm')ti='<span style="font-size:14px;">☀️</span>';else if(tv==='Cold')ti='<span style="font-size:14px;">❄️</span>';
                     let vi = c.visitDone ? `<span class="visit-toggle" style="font-size:12px;cursor:pointer;transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', false)" title="Unmark Visit">✅</span>` : `<span class="visit-toggle" style="font-size:12px;cursor:pointer;opacity:0.5;transition:transform 0.2s;" onclick="event.stopPropagation(); toggleVisitStatus('${c.id}', true)" title="Mark Visit">📍</span>`;
-                    let sn=sanitizeText(c.name).replace(/"/g,'&quot;').replace(/'/g,'&apos;'),sp=sanitizeText(c.propertyType||c.projectCategory||'').replace(/"/g,'&quot;').replace(/'/g,'&apos;'),su=sanitizeText(c.specificUnit||''),du=Math.floor((Date.now()-(c.updatedAt||0))/86400000),stb='';if(du>=7&&c.status!=='Closed'&&c.status!=='Not Interested')stb=`<span class="pulse-dot"></span>`;let ml=c.location?`<a href="https://maps.google.com/?q=${encodeURIComponent(c.location)}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;font-size:14px;">📍</a>`:'',d=document.createElement('div');
+                    let sn=sanitizeText(c.name).replace(/"/g,'&quot;').replace(/'/g,'&apos;'),sp=sanitizeText(c.propertyType||c.projectCategory||'').replace(/"/g,'&quot;').replace(/'/g,'&apos;'),cCatClean = sanitizeText(c.leadCategory||'').replace(/"/g,'&quot;').replace(/'/g,'&apos;'),su=sanitizeText(c.specificUnit||''),du=Math.floor((Date.now()-(c.updatedAt||0))/86400000),stb='';if(du>=7&&c.status!=='Closed'&&c.status!=='Not Interested')stb=`<span class="pulse-dot"></span>`;let ml=c.location?`<a href="https://maps.google.com/?q=${encodeURIComponent(c.location)}" target="_blank" onclick="event.stopPropagation();" style="text-decoration:none;font-size:14px;">📍</a>`:'',d=document.createElement('div');
                     
                     let ptBadge = sp ? `<span style="font-size:9px; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-color); padding:2px 6px; border-radius:4px; font-weight:900; margin-right:4px;">${sp}</span>` : '';
 
@@ -1694,7 +1832,7 @@
                     d.style.cssText=`touch-action:pan-y !important;`;d.setAttribute("draggable","true");d.dataset.id=c.id;d.dataset.phone=normalizePhone(c.phone);d.dataset.name=String(c.name||'');d.dataset.proj=String(sp);d.onclick=()=>editLead(c.id);
                     d.innerHTML=`<div class="k-card-title"><span style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${sn} ${newBdg} ${stb} ${ti} ${vi}</span><span class="action-dots" style="font-size:16px;font-weight:bold;" onclick="event.stopPropagation();triggerActionMenu(this)">⋮</span></div><div class="k-card-detail copyable" onclick="event.stopPropagation();copyToClipboard('${c.phone}','Phone')">📞 ${c.phone}</div><div class="k-card-detail" style="color:var(--text-color);font-weight:800;display:flex;justify-content:space-between;align-items:center;"><span style="display:flex;align-items:center;gap:4px;">📍 ${ptBadge}${su||sanitizeText(c.location)||'-'} ${ml}</span></div><div class="k-card-detail" style="cursor:pointer;display:flex;align-items:center;gap:4px;" onclick="event.stopPropagation();openQuickFollowupModal('${c.id}','${c.followup}')">💰 <span style="font-weight:800;color:var(--golden-dark);">${sanitizeText(c.budget)||'N/A'}</span> &nbsp;|&nbsp; 📅 ${formatDisplayDate(c.followup)} <span style="font-size:12px;opacity:0.8;">✏️</span></div>`;
                     
-                    fc[c.status].appendChild(d);let rRem=c.remark||'';searchIndexKanban.push({el:d,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} type ${String(sp)} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} assignee ${String(c.assignBy||'')} remark ${String(rRem||'')}`.toLowerCase()});
+                    fc[c.status].appendChild(d);let rRem=c.remark||'';searchIndexKanban.push({el:d,text:`name ${String(c.name||'')} phone ${String(c.phone||'')} type ${String(sp)} category ${String(cCatClean)} unit ${String(c.specificUnit||'')} location ${String(c.location||'')} budget ${String(c.budget||'')} status ${String(c.status||'')} temp ${String(c.leadTemperature||'')} assignee ${String(c.assignBy||'')} remark ${String(rRem||'')}`.toLowerCase()});
                 }catch(x){}
             }
             Object.keys(fc).forEach(s=>{if(fc[s].childElementCount>0){let z=document.querySelector(`.kanban-dropzone[data-status="${s}"]`);if(z)z.appendChild(fc[s]);}});ci=en;if(ci<ed.length)renderKanbanRequestId=requestAnimationFrame(rk);else{renderKanbanRequestId=null;customStatuses.forEach(s=>{let z=document.querySelector(`.kanban-dropzone[data-status="${s}"]`);if(z){z.style.minHeight='';z.scrollTop=zs[s]||0;}});kc.scrollLeft=ksl;window.scrollTo(sx,sy);let s=$id('search').value.toLowerCase().trim();if(s)applyDOMFilters(s);}
@@ -1744,7 +1882,7 @@
 
     function editLead(id){
         haptic('medium');let c=clients.find(x=>x.id===id);if(!c)return;
-        $id('editId').value=c.id;['leadDate','followup','name','phone','leadSource','specificUnit','location','status','budget','assignBy'].forEach(f=>{if($id(f))$id(f).value=c[f]||'';});
+        $id('editId').value=c.id;['leadDate','followup','name','phone','leadSource','specificUnit','location','status','budget','assignBy','leadCategory'].forEach(f=>{if($id(f))$id(f).value=c[f]||'';});
         
         // Load Property Type (supports multi-select mapping)
         $id('propertyType').value = c.propertyType || c.projectCategory || '';
@@ -1755,7 +1893,8 @@
     
     function resetForm(s=true){
         if(s)localStorage.removeItem('crm_lead_draft');let f=$id('clientForm');if(f)f.reset();
-        if($id('editId'))$id('editId').value="";if($id('saveBtn'))$id('saveBtn').innerText="Save Record";if($id('leadDate'))$id('leadDate').value=getToday();if($id('newRemark'))$id('newRemark').value="";if($id('followup'))$id('followup').value="";if($id('search'))$id('search').value="";if($id('assignBy'))$id('assignBy').value="";if($id('leadSource'))$id('leadSource').value=customSources[0]||'Facebook Ads';if($id('status'))$id('status').value=customStatuses[0]||'New';
+        if($id('editId'))$id('editId').value="";if($id('saveBtn'))$id('saveBtn').innerText="Save Record";if($id('leadDate'))$id('leadDate').value=getToday();if($id('newRemark'))$id('newRemark').value="";if($id('followup'))$id('followup').value="";if($id('search'))$id('search').value="";if($id('assignBy'))$id('assignBy').value="Aditya";if($id('leadSource'))$id('leadSource').value=customSources[0]||'Facebook Ads';if($id('status'))$id('status').value=customStatuses[0]||'New';
+        if($id('leadCategory'))$id('leadCategory').value=customCategories[0]||'1-15 September';
         
         // Reset Property Type Selection
         if($id('propertyType')) $id('propertyType').value = '';
@@ -1766,20 +1905,21 @@
     
     function downloadCSV(){
         if(clients.length===0){showNotification("Data missing",'error');return;}
-        let h=["Date","Name","Phone","Priority","Assign By","Source","Status","Property Type","Specific Unit","Location","Budget","Visit Done","Follow-up","Full Remark History"],ed=getFilteredData(),r=ed.map(c=>{
+        let h=["Date","Name","Phone","Priority","Assign By","Source","Date Batch","Status","Property Type","Specific Unit","Location","Budget","Visit Done","Follow-up","Full Remark History"],ed=getFilteredData(),r=ed.map(c=>{
             let fh="";if(c.history&&c.history.length>0)fh=[...c.history].reverse().map(x=>`[${x.date}] ${x.note}`).join(" || ");else fh=c.remark||"";
             let pType = c.propertyType || c.projectCategory || '';
-            return [c.leadDate||'',`"${(c.name||'').replace(/"/g,'""')}"`,c.phone||'',`"${c.leadTemperature||'Warm'}"`,`"${c.assignBy||''}"`,`"${c.leadSource||''}"`,c.status||'New',`"${pType}"`,`"${(c.specificUnit||'').replace(/"/g,'""')}"`,`"${(c.location||'').replace(/"/g,'""')}"`,`"${(c.budget||'').replace(/"/g,'""')}"`,c.visitDone?'Yes':'No',c.followup||'',`"${fh.replace(/"/g,'""')}"`];
+            let lCat = c.leadCategory || 'Organic Leads';
+            return [c.leadDate||'',`"${(c.name||'').replace(/"/g,'""')}"`,c.phone||'',`"${c.leadTemperature||'Warm'}"`,`"${c.assignBy||''}"`,`"${c.leadSource||''}"`,`"${lCat}"`,c.status||'New',`"${pType}"`,`"${(c.specificUnit||'').replace(/"/g,'""')}"`,`"${(c.location||'').replace(/"/g,'""')}"`,`"${(c.budget||'').replace(/"/g,'""')}"`,c.visitDone?'Yes':'No',c.followup||'',`"${fh.replace(/"/g,'""')}"`];
         }),
         c=[h.join(","),...r.map(x=>x.join(","))].join("\n"),b=new Blob([c],{type:'text/csv;charset=utf-8;'}),u=URL.createObjectURL(b),l=document.createElement("a");l.setAttribute("href",u);l.setAttribute("download",`CRM_Export_${currentPropertyFilter.replace(/\s+/g,'_')}_${getToday()}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);setTimeout(()=>URL.revokeObjectURL(u),10000);showNotification("CSV Exported!","success");
     }
     
-    $id('csvFileInput').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async ev=>{let t=String(ev.target.result||'').replace(/^\uFEFF/,'');const p=(txt)=>{let rs=[],r=[],c='',iq=false;for(let i=0;i<txt.length;i++){let ch=txt[i];if(ch==='"'){if(iq&&txt[i+1]==='"'){c+='"';i++;}else iq=!iq;}else if(ch===','&&!iq){r.push(c);c='';}else if((ch==='\n'||ch==='\r')&&!iq){if(ch==='\r'&&txt[i+1]==='\n')i++;r.push(c);c='';if(r.some(v=>String(v).trim()!==''))rs.push(r);r=[];}else{c+=ch;}}r.push(c);if(r.some(v=>String(v).trim()!==''))rs.push(r);return rs;};let rs=p(t);if(rs.length<2){showNotification('CSV empty/invalid.','error');e.target.value='';return;}const pr=r=>r.map(v=>String(v??'').trim());let hs=pr(rs[0]).map(h=>h.toLowerCase()),gi=kw=>hs.findIndex(h=>kw.some(k=>h.includes(k))),cm={name:gi(['name','client','customer','lead']),phone:gi(['phone','mobile','contact','number','whatsapp']),leadDate:gi(['date','created','time','timestamp']),source:gi(['source','origin','platform','medium','campaign']),type:gi(['type','category','property type']),unit:gi(['unit','inventory','flat','size','bhk']),location:gi(['location','locality','area','city']),budget:gi(['budget','price','amount','cost','value']),status:gi(['status','stage','state','lead stage']),assignBy:gi(['assign','owner','executive']),remark:gi(['remark','note','message','comment','description'])};if(cm.name===-1||cm.phone===-1){showNotification('Need "Name" and "Phone" cols.','error');e.target.value='';return;}if(!confirm(`Total ${rs.length-1} leads found.\n\nImport them?`)){e.target.value='';return;}showNotification('Importing...','warning');let ic=0,ep=new Set(clients.map(c=>c.phone));const nd=ds=>{if(!ds)return getToday();let c=String(ds).trim().split(/[ T]/)[0];if(/^\d{4}-\d{2}-\d{2}$/.test(c))return c;let p=c.split(/[\/\-\.]/);if(p.length<3)return getToday();let a=parseInt(p[0],10),b=parseInt(p[1],10),x=parseInt(p[2],10);if(![a,b,x].every(Number.isFinite))return getToday();let y,m,d;if(a>=1000){y=a;m=b;d=x;}else{y=x<100?2000+x:x;if(a>12){d=a;m=b;}else if(b>12){m=a;d=b;}else{d=a;m=b;}}let dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return getToday();return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;};if(!db){showNotification("DB offline","error");return;}let b=db.batch(),bc=0;for(let i=1;i<rs.length;i++){try{let cls=pr(rs[i]),cv=idx=>(idx!==-1&&cls[idx])?cls[idx].replace(/^"|"$/g,'').trim():'',n=cv(cm.name),pn=normalizePhone(cv(cm.phone));if(!n||!isValidIndianPhone(pn))continue;if(ep.has(pn))continue;ep.add(pn);let ld=nd(cv(cm.leadDate)),rsr=cv(cm.source).toLowerCase(),src=customSources[0]||'Facebook Ads',ms=customSources.find(s=>s.toLowerCase()===rsr);if(ms)src=ms;let pt=cv(cm.type)||'Builder Floor',un=cv(cm.unit),lc=cv(cm.location),bg=cv(cm.budget),rst=cv(cm.status).toLowerCase(),st=customStatuses[0]||'New',mst=customStatuses.find(s=>s.toLowerCase()===rst);if(mst)st=mst;else if(rst.includes('follow')||rst.includes('call')||rst.includes('cb'))st='Follow-up';else if(rst.includes('not')||rst.includes('dead')||rst.includes('junk'))st='Not Interested';let ab=cv(cm.assignBy)||'',rm=cv(cm.remark)||'',ha=rm?[{date:formatDisplayDate(getToday()),time:getTime(),note:rm}]:[],dr=db.collection("leads").doc();
+    $id('csvFileInput').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async ev=>{let t=String(ev.target.result||'').replace(/^\uFEFF/,'');const p=(txt)=>{let rs=[],r=[],c='',iq=false;for(let i=0;i<txt.length;i++){let ch=txt[i];if(ch==='"'){if(iq&&txt[i+1]==='"'){c+='"';i++;}else iq=!iq;}else if(ch===','&&!iq){r.push(c);c='';}else if((ch==='\n'||ch==='\r')&&!iq){if(ch==='\r'&&txt[i+1]==='\n')i++;r.push(c);c='';if(r.some(v=>String(v).trim()!==''))rs.push(r);r=[];}else{c+=ch;}}r.push(c);if(r.some(v=>String(v).trim()!==''))rs.push(r);return rs;};let rs=p(t);if(rs.length<2){showNotification('CSV empty/invalid.','error');e.target.value='';return;}const pr=r=>r.map(v=>String(v??'').trim());let hs=pr(rs[0]).map(h=>h.toLowerCase()),gi=kw=>hs.findIndex(h=>kw.some(k=>h.includes(k))),cm={name:gi(['name','client','customer','lead']),phone:gi(['phone','mobile','contact','number','whatsapp']),leadDate:gi(['date','created','time','timestamp']),source:gi(['source','origin','platform','medium','campaign']),type:gi(['type','category','property type']),unit:gi(['unit','inventory','flat','size','bhk']),location:gi(['location','locality','area','city']),budget:gi(['budget','price','amount','cost','value']),status:gi(['status','stage','state','lead stage']),assignBy:gi(['assign','owner','executive']),remark:gi(['remark','note','message','comment','description']),leadCat:gi(['batch','date batch','campaign'])};if(cm.name===-1||cm.phone===-1){showNotification('Need "Name" and "Phone" cols.','error');e.target.value='';return;}if(!confirm(`Total ${rs.length-1} leads found.\n\nImport them?`)){e.target.value='';return;}showNotification('Importing...','warning');let ic=0,ep=new Set(clients.map(c=>c.phone));const nd=ds=>{if(!ds)return getToday();let c=String(ds).trim().split(/[ T]/)[0];if(/^\d{4}-\d{2}-\d{2}$/.test(c))return c;let p=c.split(/[\/\-\.]/);if(p.length<3)return getToday();let a=parseInt(p[0],10),b=parseInt(p[1],10),x=parseInt(p[2],10);if(![a,b,x].every(Number.isFinite))return getToday();let y,m,d;if(a>=1000){y=a;m=b;d=x;}else{y=x<100?2000+x:x;if(a>12){d=a;m=b;}else if(b>12){m=a;d=b;}else{d=a;m=b;}}let dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return getToday();return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;};if(!db){showNotification("DB offline","error");return;}let b=db.batch(),bc=0;for(let i=1;i<rs.length;i++){try{let cls=pr(rs[i]),cv=idx=>(idx!==-1&&cls[idx])?cls[idx].replace(/^"|"$/g,'').trim():'',n=cv(cm.name),pn=normalizePhone(cv(cm.phone));if(!n||!isValidIndianPhone(pn))continue;if(ep.has(pn))continue;ep.add(pn);let ld=nd(cv(cm.leadDate)),rsr=cv(cm.source).toLowerCase(),src=customSources[0]||'Facebook Ads',ms=customSources.find(s=>s.toLowerCase()===rsr);if(ms)src=ms;let pt=cv(cm.type)||'Builder Floor',un=cv(cm.unit),lc=cv(cm.location),bg=cv(cm.budget),rst=cv(cm.status).toLowerCase(),st=customStatuses[0]||'New',mst=customStatuses.find(s=>s.toLowerCase()===rst);if(mst)st=mst;else if(rst.includes('follow')||rst.includes('call')||rst.includes('cb'))st='Follow-up';else if(rst.includes('not')||rst.includes('dead')||rst.includes('junk'))st='Not Interested';let ab=cv(cm.assignBy)||'Aditya',rm=cv(cm.remark)||'',lcCsv=cv(cm.leadCat)||customCategories[0],ha=rm?[{date:formatDisplayDate(getToday()),time:getTime(),note:rm}]:[],dr=db.collection("leads").doc();
         let reqRem = (ab !== '' && !rm);
-        b.set(dr,{ownerId:auth.currentUser.uid,leadDate:ld,name:n,phone:pn,leadSource:src,projectCategory:'',propertyType:pt,specificUnit:un,location:lc,status:st,assignBy:ab,budget:bg,visitDone:false,followup:"",leadTemperature:'Warm',remark:rm,history:ha,updatedAt:Date.now(),requiresRemark:reqRem});
+        b.set(dr,{ownerId:auth.currentUser.uid,leadDate:ld,name:n,phone:pn,leadSource:src,leadCategory:lcCsv,projectCategory:'',propertyType:pt,specificUnit:un,location:lc,status:st,assignBy:ab,budget:bg,visitDone:false,followup:"",leadTemperature:'Warm',remark:rm,history:ha,updatedAt:Date.now(),requiresRemark:reqRem});
         ic++;bc++;if(bc===400){await b.commit();b=db.batch();bc=0;}}catch(x){}}if(bc>0)await b.commit();showNotification(`🎉 ${ic} leads imported!`,`success`);e.target.value='';};r.readAsText(f);});
     
-    function removeDuplicates(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;if(clients.length===0)return;setTimeout(async()=>{if(!confirm("⚠️ Find & delete duplicate numbers?"))return;showNotification("⏳ Cleaning duplicates...","warning");try{let pm=new Map(),di=[],sc=[...clients].sort((a,b)=>(Number(b.updatedAt)||0)-(Number(a.updatedAt)||0));sc.forEach(c=>{let p=(c.phone||'').trim(),id=/^0{5,10}$|^9{5,10}$|^1{5,10}$/.test(p);if(p.length>=10&&!id){if(pm.has(p))di.push(c.id);else pm.set(p,c.id);}});if(di.length===0){showNotification("No duplicates!","success");return;}if(!db)throw new Error("DB offline");let dc=0,b=db.batch();for(let i=0;i<di.length;i++){b.delete(db.collection("leads").doc(di[i]));dc++;if(dc%400===0){await b.commit();b=db.batch();}}if(dc%400!==0)await b.commit();showNotification(`🧹 ${dc} duplicates deleted!`,"success");haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
+    function removeDuplicates(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;if(clients.length===0)return;setTimeout(async()=>{if(!confirm("⚠️ Find & delete duplicate numbers?"))return;showNotification("⏳ Cleaning duplicates...","warning");try{let pm=new Map(),di=[],sc=[...clients].sort((a,b)=>(Number(b.updatedAt)||0)-(Number(a.updatedAt)||0));sc.forEach(c=>{let p=(c.phone||'').trim(),id=/^0{5,10}$|^9{5,10}$\vert{}^1{5,10}$/.test(p);if(p.length>=10&&!id){if(pm.has(p))di.push(c.id);else pm.set(p,c.id);}});if(di.length===0){showNotification("No duplicates!","success");return;}if(!db)throw new Error("DB offline");let dc=0,b=db.batch();for(let i=0;i<di.length;i++){b.delete(db.collection("leads").doc(di[i]));dc++;if(dc%400===0){await b.commit();b=db.batch();}}if(dc%400!==0)await b.commit();showNotification(`🧹 ${dc} duplicates deleted!`,"success");haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
     async function reviveDeadLeads(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;let ta=Date.now()-(30*24*60*60*1000),dl=clients.filter(c=>(c.updatedAt||0)<ta&&!['Closed','Not Interested'].includes(c.status));if(dl.length===0){showNotification("No dead leads!","success");return;}setTimeout(async()=>{if(!confirm(`Revive ${dl.length} leads untouched >30 days?`))return;showNotification(`Reviving...`,"warning");try{let b=db.batch(),c=0;for(let l of dl){let h=l.history?[...l.history]:[],r="♻️ AI Auto-Revival: Untouched >30 days. Moved to Follow-up.";h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:r});b.update(db.collection("leads").doc(l.id),{status:'Follow-up',leadTemperature:'Cold',history:h,updatedAt:Date.now(),requiresRemark:true});c++;if(c%400===0){await b.commit();b=db.batch();}}if(c%400!==0)await b.commit();showNotification(`Revived ${c} leads!`,"success");fireConfetti();haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
     
     function deleteAllLeads(){
