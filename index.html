@@ -18,7 +18,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@3.0.0-rc.0/default.css">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    <!-- Tesseract.js AI OCR Library -->
     <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
@@ -749,7 +748,28 @@
             }
         });
 
+        // CREATE NEW WORKSPACE BUTTON
+        html += `<button onclick="createNewWorkspace()" class="btn-secondary" style="width:100%;margin-top:12px;font-weight:800;color:var(--whatsapp-green);border:1px dashed var(--whatsapp-green);background:transparent;">➕ Create New Workspace</button>`;
+
         container.innerHTML = html;
+    }
+
+    function createNewWorkspace() {
+        let n = prompt("Enter Name for New Workspace / Member:");
+        if (n && n.trim() !== "") {
+            n = n.trim();
+            if (!customAssignees.includes(n)) {
+                customAssignees.push(n);
+                localStorage.setItem('crm_assignees_' + (auth && auth.currentUser ? auth.currentUser.uid : ''), JSON.stringify(customAssignees));
+                if (auth && auth.currentUser) {
+                    db.collection("users").doc(auth.currentUser.uid).set({ assignees: customAssignees }, { merge: true });
+                }
+                renderDropdownsAndTabs();
+                showNotification(`Workspace ${n} created!`, "success");
+            } else {
+                showNotification("Workspace already exists!", "warning");
+            }
+        }
     }
 
     // ==========================================
@@ -850,8 +870,31 @@
     function formatDateCore(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
     const handleSmartInput=(e,u)=>{let t=e.target.value,p=extractSmartDate(t);if(p){let d=$id(u);if(d&&d.value!==p){d.value=p;showNotification(`✨ AI Date: Follow-up set to ${formatDisplayDate(p)}`,'success');haptic('light');}}};
     document.addEventListener('DOMContentLoaded',()=>{let n=$id('newRemark');if(n)n.addEventListener('input',e=>handleSmartInput(e,'followup'));if(typeof MobileDragDrop!=='undefined'&&typeof MobileDragDrop.polyfill==='function')MobileDragDrop.polyfill({dragImageTranslateOverride:MobileDragDrop.scrollBehaviourDragImageTranslateOverride});initAutoSave();});
+    
     function initNotifications(){if("Notification" in window&&Notification.permission!=="granted"&&Notification.permission!=="denied")Notification.requestPermission();}
-    function checkReminders(){if("Notification" in window&&Notification.permission==="granted"&&clients.length>0){let t=getToday(),nl=JSON.parse(localStorage.getItem('notified_leads_'+t))||[],tn=clients.filter(c=>c.followup===t&&c.status!=='Closed'&&!nl.includes(c.id));if(tn.length>0){tn.forEach(c=>{try{new Notification(`🔥 TRUE INVEST Reminder!`,{body:`Call scheduled today for ${c.name}\nProject: ${c.propertyType||'N/A'}\nPhone: ${c.phone}`,icon:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%230A192F'/><text x='50' y='65' font-family='Arial' font-size='40' font-weight='bold' fill='%23C5A059' text-anchor='middle'>TI</text></svg>"});}catch(e){}nl.push(c.id);});localStorage.setItem('notified_leads_'+t,JSON.stringify(nl));}}}
+    function checkReminders(){
+        if("Notification" in window&&Notification.permission==="granted"&&clients.length>0){
+            let t=getToday();
+            let nl=JSON.parse(localStorage.getItem('notified_leads_'+t))||[];
+            
+            // STRICT WORKSPACE ISOLATION FOR NOTIFICATIONS
+            let workspaceClients = clients;
+            if(currentAssigneeFilter === 'Aditya') {
+                workspaceClients = clients.filter(c => !c.assignBy || c.assignBy.trim() === '' || c.assignBy === 'Aditya');
+            } else if (currentAssigneeFilter !== 'All') {
+                workspaceClients = clients.filter(c => c.assignBy === currentAssigneeFilter);
+            }
+
+            let tn=workspaceClients.filter(c=>c.followup===t&&c.status!=='Closed'&&!nl.includes(c.id));
+            if(tn.length>0){
+                tn.forEach(c=>{
+                    try{new Notification(`🔥 TRUE INVEST Reminder!`,{body:`Call scheduled today for ${c.name}\nProject: ${c.propertyType||'N/A'}\nPhone: ${c.phone}`,icon:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%230A192F'/><text x='50' y='65' font-family='Arial' font-size='40' font-weight='bold' fill='%23C5A059' text-anchor='middle'>TI</text></svg>"});}catch(e){}
+                    nl.push(c.id);
+                });
+                localStorage.setItem('notified_leads_'+t,JSON.stringify(nl));
+            }
+        }
+    }
     
     let isFirstRender=true,currentViewMode='table',renderTableRequestId=null,renderKanbanRequestId=null,currentAssigneeFilter='Aditya'; // Default filtering to Aditya
     let previousLeadsMap = new Map();
@@ -946,7 +989,7 @@
 
                             let dr = db.collection("leads").doc();
                             let pt = $id('propertyType') ? $id('propertyType').value : 'Builder Floor';
-                            let cb = $id('leadCategory') ? $id('leadCategory').value : (customCategories[0]||'1-15 September');
+                            let cb = $id('leadCategory') ? $id('leadCategory').value : '';
                             let ab = $id('assignBy') ? $id('assignBy').value : 'Aditya'; 
                             let rmk = '🤖 Auto-extracted via AI Bulk Scanner';
                             let ha = [{date: dDate, time: dTime, note: rmk}];
@@ -1379,8 +1422,12 @@
         
         let bs=$id('bulkStatus');if(bs)bs.innerHTML='<option value="">Status...</option>'+customStatuses.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
         
+        // FIX: Start Date Batch with empty option
         let cb=$id('leadCategory'),ccb=cb?cb.value:'';
-        if(cb){cb.innerHTML=customCategories.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;cb.value=customCategories.includes(ccb)?ccb:(customCategories[0]||"");}
+        if(cb){
+            cb.innerHTML= `<option value="">-- Select Date Batch --</option>` + customCategories.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('')+`<option value="ADD_NEW">➕ Custom...</option>`;
+            cb.value=customCategories.includes(ccb)?ccb:"";
+        }
         
         let bcat=$id('bulkCategory');
         if(bcat){bcat.innerHTML='<option value="">Move Date Batch...</option>'+customCategories.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');}
@@ -1411,17 +1458,26 @@
     
     function updateDashboard(){
         let t=getToday();
-        let f=clients.filter(c=>c.followup===t&&c.status!=='Closed').length,
+        
+        // STRICT WORKSPACE ISOLATION
+        let workspaceClients = clients;
+        if(currentAssigneeFilter === 'Aditya') {
+            workspaceClients = clients.filter(c => !c.assignBy || c.assignBy.trim() === '' || c.assignBy === 'Aditya');
+        } else if (currentAssigneeFilter !== 'All') {
+            workspaceClients = clients.filter(c => c.assignBy === currentAssigneeFilter);
+        }
+
+        let f=workspaceClients.filter(c=>c.followup===t&&c.status!=='Closed').length,
             te=$id('statTotal'),he=$id('statHot'),fb=$id('statFollowBadge'),
-            nt=clients.length,
-            nh=clients.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot').length;
+            nt=workspaceClients.length,
+            nh=workspaceClients.filter(c=>c.leadTemperature==='Hot'||c.status==='Hot').length;
         
         animateValue(te,parseInt(te.innerText)||0,nt,1200);
         animateValue(he,parseInt(he.innerText)||0,nh,1200);
         if(fb){fb.innerText=f;fb.style.display=f>0?'block':'none';}
         
         let now = Date.now();
-        let dripLeads = clients.filter(c => c.leadTemperature === 'Hot' && c.status !== 'Closed');
+        let dripLeads = workspaceClients.filter(c => c.leadTemperature === 'Hot' && c.status !== 'Closed');
         let dripAlerts = [];
         dripLeads.forEach(c => {
             let lastInteraction = c.updatedAt || 0;
@@ -1541,7 +1597,7 @@
         
         // SAVE MULTI-SELECT PROPERTY TYPE & CATEGORY
         let pType = $id('propertyType').value;
-        let cCat = $id('leadCategory') ? $id('leadCategory').value : (customCategories[0]||'1-15 September');
+        let cCat = $id('leadCategory') ? $id('leadCategory').value : '';
 
         let dt={ownerId:auth.currentUser.uid,leadDate:$id('leadDate').value||getToday(),followup:ff,assignBy:av,name:$id('name').value.trim(),phone:p,leadSource:$id('leadSource').value,projectCategory:'',propertyType:pType,leadCategory:cCat,specificUnit:$id('specificUnit').value.trim(),location:$id('location').value,status:sv,budget:$id('budget').value,visitDone:isVisitDone,leadTemperature:st,history:ha,remark:finalRemark,updatedAt:Date.now(),requiresRemark:reqRem};
         let ss=false;
@@ -1776,7 +1832,7 @@
                     if(reqRem) hl += ' needs-remark-row';
                     
                     let pTypeClean = sanitizeText(c.propertyType || c.projectCategory || '');
-                    let cCatClean = sanitizeText(c.leadCategory || '1-15 September');
+                    let cCatClean = sanitizeText(c.leadCategory || '');
                     let ptBadge = pTypeClean ? `<span style="display:inline-block; margin-bottom:4px; font-size:9px; background:rgba(197,160,89,0.1); color:var(--golden-dark); padding:2px 6px; border-radius:4px; font-weight:900; letter-spacing:0.5px; border:1px solid rgba(197,160,89,0.3); text-transform:uppercase;">${pTypeClean}</span><br>` : '';
                     let ud=c.specificUnit?`<span style="font-size:10px;opacity:0.7;font-weight:800;">${sanitizeText(c.specificUnit)}</span>`:'';
                     
@@ -1840,7 +1896,7 @@
         if(ed.length>0)renderKanbanRequestId=requestAnimationFrame(rk);else{customStatuses.forEach(s=>{let z=document.querySelector(`.kanban-dropzone[data-status="${s}"]`);if(z)z.style.minHeight='';});}
     }
     
-    let calCurrentDate=new Date();function renderCalendar(){try{let g=$id('calendarGrid'),h=$id('calMonthYear');if(!g||!h)return;let y=calCurrentDate.getFullYear(),m=calCurrentDate.getMonth(),ms=["January","February","March","April","May","June","July","August","September","October","November","December"];h.innerText=`${ms[m]} ${y}`;g.innerHTML=`<div class="cal-day-name">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>`;let fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate(),fm={};clients.forEach(c=>{if(c.followup&&c.status!=='Closed'&&c.status!=='Not Interested'){let p=c.followup.split('-');if(p.length===3&&parseInt(p[0])===y&&parseInt(p[1])-1===m){let d=parseInt(p[2]);fm[d]=(fm[d]||0)+1;}}});let to=new Date(),ic=(to.getMonth()===m&&to.getFullYear()===y);for(let i=0;i<fd;i++)g.innerHTML+=`<div class="cal-day empty"></div>`;for(let d=1;d<=dim;d++){let c="cal-day",ch="",fs=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;if(ic&&d===to.getDate())c+=" today";if(fm[d]){c+=" has-leads";ch=`<span class="cal-lead-count">${fm[d]}</span>`;}g.innerHTML+=`<div class="${c}" onclick="filterByCalendarDate('${fs}')">${d}${ch}</div>`;}}catch(e){}}
+    let calCurrentDate=new Date();function renderCalendar(){try{let g=$id('calendarGrid'),h=$id('calMonthYear');if(!g||!h)return;let y=calCurrentDate.getFullYear(),m=calCurrentDate.getMonth(),ms=["January","February","March","April","May","June","July","August","September","October","November","December"];h.innerText=`${ms[m]} ${y}`;g.innerHTML=`<div class="cal-day-name">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>`;let fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate(),fm={};getFilteredData().forEach(c=>{if(c.followup&&c.status!=='Closed'&&c.status!=='Not Interested'){let p=c.followup.split('-');if(p.length===3&&parseInt(p[0])===y&&parseInt(p[1])-1===m){let d=parseInt(p[2]);fm[d]=(fm[d]||0)+1;}}});let to=new Date(),ic=(to.getMonth()===m&&to.getFullYear()===y);for(let i=0;i<fd;i++)g.innerHTML+=`<div class="cal-day empty"></div>`;for(let d=1;d<=dim;d++){let c="cal-day",ch="",fs=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;if(ic&&d===to.getDate())c+=" today";if(fm[d]){c+=" has-leads";ch=`<span class="cal-lead-count">${fm[d]}</span>`;}g.innerHTML+=`<div class="${c}" onclick="filterByCalendarDate('${fs}')">${d}${ch}</div>`;}}catch(e){}}
     function changeMonth(d){haptic('light');calCurrentDate.setMonth(calCurrentDate.getMonth()+d);renderCalendar();}
     function filterByCalendarDate(d){haptic('medium');currentQuickFilter='Date';currentFilterDate=d;document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));setViewMode('table');showNotification(`Follow-ups on: ${formatDisplayDate(d)}`,'success');}
     let draggedCardId=null;function initDragAndDrop(){let k=$id('kanbanView');if(k){k.addEventListener('dragstart',e=>{let c=e.target.closest('.k-card');if(!c)return;if(e.target.tagName==='ION-ICON'||e.target.tagName==='SPAN'){e.preventDefault();return;}haptic('light');draggedCardId=c.dataset.id;requestAnimationFrame(()=>c.style.opacity='0.5');c.style.transform='scale(0.95)';});k.addEventListener('dragend',e=>{let c=e.target.closest('.k-card');if(!c)return;c.style.opacity='1';c.style.transform='scale(1) translateY(0)';draggedCardId=null;});}}
@@ -1894,46 +1950,48 @@
     function resetForm(s=true){
         if(s)localStorage.removeItem('crm_lead_draft');let f=$id('clientForm');if(f)f.reset();
         if($id('editId'))$id('editId').value="";if($id('saveBtn'))$id('saveBtn').innerText="Save Record";if($id('leadDate'))$id('leadDate').value=getToday();if($id('newRemark'))$id('newRemark').value="";if($id('followup'))$id('followup').value="";if($id('search'))$id('search').value="";if($id('assignBy'))$id('assignBy').value="Aditya";if($id('leadSource'))$id('leadSource').value=customSources[0]||'Facebook Ads';if($id('status'))$id('status').value=customStatuses[0]||'New';
-        if($id('leadCategory'))$id('leadCategory').value=customCategories[0]||'1-15 September';
+        if($id('leadCategory'))$id('leadCategory').value="";
         
         // Reset Property Type Selection
-        if($id('propertyType')) $id('propertyType').value = '';
+        if($id('propertyType'))$id('propertyType').value = '';
         renderPropTypes();
 
         window.currentEditHistory=[];renderHistoryTimeline();if($id('tempWarm'))$id('tempWarm').checked=true;if($id('duplicateAlert'))$id('duplicateAlert').style.display='none';currentQuickFilter='All';currentFilterDate=null;document.querySelectorAll('.expandable-stat-pill').forEach(c=>c.classList.remove('active'));renderData(false);
     }
     
     function downloadCSV(){
-        if(clients.length===0){showNotification("Data missing",'error');return;}
-        let h=["Date","Name","Phone","Priority","Assign By","Source","Date Batch","Status","Property Type","Specific Unit","Location","Budget","Visit Done","Follow-up","Full Remark History"],ed=getFilteredData(),r=ed.map(c=>{
+        let ed=getFilteredData();
+        if(ed.length===0){showNotification("Data missing",'error');return;}
+        let h=["Date","Name","Phone","Priority","Assign By","Source","Date Batch","Status","Property Type","Specific Unit","Location","Budget","Visit Done","Follow-up","Full Remark History"],r=ed.map(c=>{
             let fh="";if(c.history&&c.history.length>0)fh=[...c.history].reverse().map(x=>`[${x.date}] ${x.note}`).join(" || ");else fh=c.remark||"";
             let pType = c.propertyType || c.projectCategory || '';
             let lCat = c.leadCategory || 'Organic Leads';
             return [c.leadDate||'',`"${(c.name||'').replace(/"/g,'""')}"`,c.phone||'',`"${c.leadTemperature||'Warm'}"`,`"${c.assignBy||''}"`,`"${c.leadSource||''}"`,`"${lCat}"`,c.status||'New',`"${pType}"`,`"${(c.specificUnit||'').replace(/"/g,'""')}"`,`"${(c.location||'').replace(/"/g,'""')}"`,`"${(c.budget||'').replace(/"/g,'""')}"`,c.visitDone?'Yes':'No',c.followup||'',`"${fh.replace(/"/g,'""')}"`];
         }),
-        c=[h.join(","),...r.map(x=>x.join(","))].join("\n"),b=new Blob([c],{type:'text/csv;charset=utf-8;'}),u=URL.createObjectURL(b),l=document.createElement("a");l.setAttribute("href",u);l.setAttribute("download",`CRM_Export_${currentPropertyFilter.replace(/\s+/g,'_')}_${getToday()}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);setTimeout(()=>URL.revokeObjectURL(u),10000);showNotification("CSV Exported!","success");
+        c=[h.join(","),...r.map(x=>x.join(","))].join("\n"),b=new Blob([c],{type:'text/csv;charset=utf-8;'}),u=URL.createObjectURL(b),l=document.createElement("a");l.setAttribute("href",u);l.setAttribute("download",`CRM_Export_${currentAssigneeFilter}_${currentPropertyFilter.replace(/\s+/g,'_')}_${getToday()}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);setTimeout(()=>URL.revokeObjectURL(u),10000);showNotification("CSV Exported!","success");
     }
     
-    $id('csvFileInput').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async ev=>{let t=String(ev.target.result||'').replace(/^\uFEFF/,'');const p=(txt)=>{let rs=[],r=[],c='',iq=false;for(let i=0;i<txt.length;i++){let ch=txt[i];if(ch==='"'){if(iq&&txt[i+1]==='"'){c+='"';i++;}else iq=!iq;}else if(ch===','&&!iq){r.push(c);c='';}else if((ch==='\n'||ch==='\r')&&!iq){if(ch==='\r'&&txt[i+1]==='\n')i++;r.push(c);c='';if(r.some(v=>String(v).trim()!==''))rs.push(r);r=[];}else{c+=ch;}}r.push(c);if(r.some(v=>String(v).trim()!==''))rs.push(r);return rs;};let rs=p(t);if(rs.length<2){showNotification('CSV empty/invalid.','error');e.target.value='';return;}const pr=r=>r.map(v=>String(v??'').trim());let hs=pr(rs[0]).map(h=>h.toLowerCase()),gi=kw=>hs.findIndex(h=>kw.some(k=>h.includes(k))),cm={name:gi(['name','client','customer','lead']),phone:gi(['phone','mobile','contact','number','whatsapp']),leadDate:gi(['date','created','time','timestamp']),source:gi(['source','origin','platform','medium','campaign']),type:gi(['type','category','property type']),unit:gi(['unit','inventory','flat','size','bhk']),location:gi(['location','locality','area','city']),budget:gi(['budget','price','amount','cost','value']),status:gi(['status','stage','state','lead stage']),assignBy:gi(['assign','owner','executive']),remark:gi(['remark','note','message','comment','description']),leadCat:gi(['batch','date batch','campaign'])};if(cm.name===-1||cm.phone===-1){showNotification('Need "Name" and "Phone" cols.','error');e.target.value='';return;}if(!confirm(`Total ${rs.length-1} leads found.\n\nImport them?`)){e.target.value='';return;}showNotification('Importing...','warning');let ic=0,ep=new Set(clients.map(c=>c.phone));const nd=ds=>{if(!ds)return getToday();let c=String(ds).trim().split(/[ T]/)[0];if(/^\d{4}-\d{2}-\d{2}$/.test(c))return c;let p=c.split(/[\/\-\.]/);if(p.length<3)return getToday();let a=parseInt(p[0],10),b=parseInt(p[1],10),x=parseInt(p[2],10);if(![a,b,x].every(Number.isFinite))return getToday();let y,m,d;if(a>=1000){y=a;m=b;d=x;}else{y=x<100?2000+x:x;if(a>12){d=a;m=b;}else if(b>12){m=a;d=b;}else{d=a;m=b;}}let dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return getToday();return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;};if(!db){showNotification("DB offline","error");return;}let b=db.batch(),bc=0;for(let i=1;i<rs.length;i++){try{let cls=pr(rs[i]),cv=idx=>(idx!==-1&&cls[idx])?cls[idx].replace(/^"|"$/g,'').trim():'',n=cv(cm.name),pn=normalizePhone(cv(cm.phone));if(!n||!isValidIndianPhone(pn))continue;if(ep.has(pn))continue;ep.add(pn);let ld=nd(cv(cm.leadDate)),rsr=cv(cm.source).toLowerCase(),src=customSources[0]||'Facebook Ads',ms=customSources.find(s=>s.toLowerCase()===rsr);if(ms)src=ms;let pt=cv(cm.type)||'Builder Floor',un=cv(cm.unit),lc=cv(cm.location),bg=cv(cm.budget),rst=cv(cm.status).toLowerCase(),st=customStatuses[0]||'New',mst=customStatuses.find(s=>s.toLowerCase()===rst);if(mst)st=mst;else if(rst.includes('follow')||rst.includes('call')||rst.includes('cb'))st='Follow-up';else if(rst.includes('not')||rst.includes('dead')||rst.includes('junk'))st='Not Interested';let ab=cv(cm.assignBy)||'Aditya',rm=cv(cm.remark)||'',lcCsv=cv(cm.leadCat)||customCategories[0],ha=rm?[{date:formatDisplayDate(getToday()),time:getTime(),note:rm}]:[],dr=db.collection("leads").doc();
+    $id('csvFileInput').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async ev=>{let t=String(ev.target.result||'').replace(/^\uFEFF/,'');const p=(txt)=>{let rs=[],r=[],c='',iq=false;for(let i=0;i<txt.length;i++){let ch=txt[i];if(ch==='"'){if(iq&&txt[i+1]==='"'){c+='"';i++;}else iq=!iq;}else if(ch===','&&!iq){r.push(c);c='';}else if((ch==='\n'||ch==='\r')&&!iq){if(ch==='\r'&&txt[i+1]==='\n')i++;r.push(c);c='';if(r.some(v=>String(v).trim()!==''))rs.push(r);r=[];}else{c+=ch;}}r.push(c);if(r.some(v=>String(v).trim()!==''))rs.push(r);return rs;};let rs=p(t);if(rs.length<2){showNotification('CSV empty/invalid.','error');e.target.value='';return;}const pr=r=>r.map(v=>String(v??'').trim());let hs=pr(rs[0]).map(h=>h.toLowerCase()),gi=kw=>hs.findIndex(h=>kw.some(k=>h.includes(k))),cm={name:gi(['name','client','customer','lead']),phone:gi(['phone','mobile','contact','number','whatsapp']),leadDate:gi(['date','created','time','timestamp']),source:gi(['source','origin','platform','medium','campaign']),type:gi(['type','category','property type']),unit:gi(['unit','inventory','flat','size','bhk']),location:gi(['location','locality','area','city']),budget:gi(['budget','price','amount','cost','value']),status:gi(['status','stage','state','lead stage']),assignBy:gi(['assign','owner','executive']),remark:gi(['remark','note','message','comment','description']),leadCat:gi(['batch','date batch','campaign'])};if(cm.name===-1||cm.phone===-1){showNotification('Need "Name" and "Phone" cols.','error');e.target.value='';return;}if(!confirm(`Total ${rs.length-1} leads found.\n\nImport them?`)){e.target.value='';return;}showNotification('Importing...','warning');let ic=0,ep=new Set(clients.map(c=>c.phone));const nd=ds=>{if(!ds)return getToday();let c=String(ds).trim().split(/[ T]/)[0];if(/^\d{4}-\d{2}-\d{2}$/.test(c))return c;let p=c.split(/[\/\-\.]/);if(p.length<3)return getToday();let a=parseInt(p[0],10),b=parseInt(p[1],10),x=parseInt(p[2],10);if(![a,b,x].every(Number.isFinite))return getToday();let y,m,d;if(a>=1000){y=a;m=b;d=x;}else{y=x<100?2000+x:x;if(a>12){d=a;m=b;}else if(b>12){m=a;d=b;}else{d=a;m=b;}}let dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return getToday();return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;};if(!db){showNotification("DB offline","error");return;}let b=db.batch(),bc=0;for(let i=1;i<rs.length;i++){try{let cls=pr(rs[i]),cv=idx=>(idx!==-1&&cls[idx])?cls[idx].replace(/^"|"$/g,'').trim():'',n=cv(cm.name),pn=normalizePhone(cv(cm.phone));if(!n||!isValidIndianPhone(pn))continue;if(ep.has(pn))continue;ep.add(pn);let ld=nd(cv(cm.leadDate)),rsr=cv(cm.source).toLowerCase(),src=customSources[0]||'Facebook Ads',ms=customSources.find(s=>s.toLowerCase()===rsr);if(ms)src=ms;let pt=cv(cm.type)||'Builder Floor',un=cv(cm.unit),lc=cv(cm.location),bg=cv(cm.budget),rst=cv(cm.status).toLowerCase(),st=customStatuses[0]||'New',mst=customStatuses.find(s=>s.toLowerCase()===rst);if(mst)st=mst;else if(rst.includes('follow')||rst.includes('call')||rst.includes('cb'))st='Follow-up';else if(rst.includes('not')||rst.includes('dead')||rst.includes('junk'))st='Not Interested';let ab=cv(cm.assignBy)||'Aditya',rm=cv(cm.remark)||'',lcCsv=cv(cm.leadCat)||'',ha=rm?[{date:formatDisplayDate(getToday()),time:getTime(),note:rm}]:[],dr=db.collection("leads").doc();
         let reqRem = (ab !== '' && !rm);
         b.set(dr,{ownerId:auth.currentUser.uid,leadDate:ld,name:n,phone:pn,leadSource:src,leadCategory:lcCsv,projectCategory:'',propertyType:pt,specificUnit:un,location:lc,status:st,assignBy:ab,budget:bg,visitDone:false,followup:"",leadTemperature:'Warm',remark:rm,history:ha,updatedAt:Date.now(),requiresRemark:reqRem});
         ic++;bc++;if(bc===400){await b.commit();b=db.batch();bc=0;}}catch(x){}}if(bc>0)await b.commit();showNotification(`🎉 ${ic} leads imported!`,`success`);e.target.value='';};r.readAsText(f);});
     
-    function removeDuplicates(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;if(clients.length===0)return;setTimeout(async()=>{if(!confirm("⚠️ Find & delete duplicate numbers?"))return;showNotification("⏳ Cleaning duplicates...","warning");try{let pm=new Map(),di=[],sc=[...clients].sort((a,b)=>(Number(b.updatedAt)||0)-(Number(a.updatedAt)||0));sc.forEach(c=>{let p=(c.phone||'').trim(),id=/^0{5,10}$|^9{5,10}$\vert{}^1{5,10}$/.test(p);if(p.length>=10&&!id){if(pm.has(p))di.push(c.id);else pm.set(p,c.id);}});if(di.length===0){showNotification("No duplicates!","success");return;}if(!db)throw new Error("DB offline");let dc=0,b=db.batch();for(let i=0;i<di.length;i++){b.delete(db.collection("leads").doc(di[i]));dc++;if(dc%400===0){await b.commit();b=db.batch();}}if(dc%400!==0)await b.commit();showNotification(`🧹 ${dc} duplicates deleted!`,"success");haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
-    async function reviveDeadLeads(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;let ta=Date.now()-(30*24*60*60*1000),dl=clients.filter(c=>(c.updatedAt||0)<ta&&!['Closed','Not Interested'].includes(c.status));if(dl.length===0){showNotification("No dead leads!","success");return;}setTimeout(async()=>{if(!confirm(`Revive ${dl.length} leads untouched >30 days?`))return;showNotification(`Reviving...`,"warning");try{let b=db.batch(),c=0;for(let l of dl){let h=l.history?[...l.history]:[],r="♻️ AI Auto-Revival: Untouched >30 days. Moved to Follow-up.";h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:r});b.update(db.collection("leads").doc(l.id),{status:'Follow-up',leadTemperature:'Cold',history:h,updatedAt:Date.now(),requiresRemark:true});c++;if(c%400===0){await b.commit();b=db.batch();}}if(c%400!==0)await b.commit();showNotification(`Revived ${c} leads!`,"success");fireConfetti();haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
+    function removeDuplicates(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;let wd=getFilteredData();if(wd.length===0)return;setTimeout(async()=>{if(!confirm("⚠️ Find & delete duplicate numbers? (Applies ONLY to current workspace)"))return;showNotification("⏳ Cleaning duplicates...","warning");try{let pm=new Map(),di=[],sc=[...wd].sort((a,b)=>(Number(b.updatedAt)||0)-(Number(a.updatedAt)||0));sc.forEach(c=>{let p=(c.phone||'').trim(),id=/^0{5,10}$|^9{5,10}$\vert{}^1{5,10}$/.test(p);if(p.length>=10&&!id){if(pm.has(p))di.push(c.id);else pm.set(p,c.id);}});if(di.length===0){showNotification("No duplicates!","success");return;}if(!db)throw new Error("DB offline");let dc=0,b=db.batch();for(let i=0;i<di.length;i++){b.delete(db.collection("leads").doc(di[i]));dc++;if(dc%400===0){await b.commit();b=db.batch();}}if(dc%400!==0)await b.commit();showNotification(`🧹 ${dc} duplicates deleted!`,"success");haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
+    async function reviveDeadLeads(){closeModal('cleanModal');if(!auth||!auth.currentUser)return;let ta=Date.now()-(30*24*60*60*1000),dl=getFilteredData().filter(c=>(c.updatedAt||0)<ta&&!['Closed','Not Interested'].includes(c.status));if(dl.length===0){showNotification("No dead leads!","success");return;}setTimeout(async()=>{if(!confirm(`Revive ${dl.length} leads untouched >30 days? (Applies ONLY to current workspace)`))return;showNotification(`Reviving...`,"warning");try{let b=db.batch(),c=0;for(let l of dl){let h=l.history?[...l.history]:[],r="♻️ AI Auto-Revival: Untouched >30 days. Moved to Follow-up.";h.unshift({date:formatDisplayDate(getToday()),time:getTime(),note:r});b.update(db.collection("leads").doc(l.id),{status:'Follow-up',leadTemperature:'Cold',history:h,updatedAt:Date.now(),requiresRemark:true});c++;if(c%400===0){await b.commit();b=db.batch();}}if(c%400!==0)await b.commit();showNotification(`Revived ${c} leads!`,"success");fireConfetti();haptic('heavy');}catch(x){showNotification("Error","error");}},350);}
     
     function deleteAllLeads(){
         closeModal('cleanModal');
         if(!auth||!auth.currentUser)return;
-        if(clients.length===0)return;
+        let wd=getFilteredData();
+        if(wd.length===0)return;
         setTimeout(async()=>{
-            if(prompt(`⚠️ DANGER: Delete ALL leads?\nType "DELETE":`)!=="DELETE")return;
+            if(prompt(`⚠️ DANGER: Delete ALL leads in this workspace?\nType "DELETE":`)!=="DELETE")return;
             showNotification("⏳ Deleting all...","warning");
             try{
                 if(!db)throw new Error("DB offline");
                 let dc=0,b=db.batch();
-                for(let i=0;i<clients.length;i++){
-                    b.delete(db.collection("leads").doc(clients[i].id));
+                for(let i=0;i<wd.length;i++){
+                    b.delete(db.collection("leads").doc(wd[i].id));
                     dc++;
                     if(dc%400===0){await b.commit();b=db.batch();}
                 }
